@@ -1,0 +1,80 @@
+// ============================================================================
+// JWT UTILITIES - Access & Refresh Tokens
+// ============================================================================
+
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+
+const ACCESS_SECRET = process.env.ACCESS_SECRET || 'access-secret-dev';
+const REFRESH_SECRET = process.env.REFRESH_SECRET || 'refresh-secret-dev';
+
+export interface TokenPayload {
+  userId: string;
+  email: string;
+  role: string;
+}
+
+export interface RefreshPayload {
+  userId: string;
+  iat?: number;
+}
+
+/**
+ * Sign an access token (15 minute expiry)
+ * @param payload User data to encode
+ * @returns JWT access token
+ */
+export function signAccessToken(payload: TokenPayload): string {
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: '15m' });
+}
+
+/**
+ * Verify an access token
+ * @param token JWT access token
+ * @returns Decoded payload or throws
+ */
+export function verifyAccessToken(token: string): TokenPayload {
+  return jwt.verify(token, ACCESS_SECRET) as TokenPayload;
+}
+
+/**
+ * Sign a refresh token (7 day expiry)
+ * @param payload Minimal refresh payload
+ * @returns JWT refresh token
+ */
+export function signRefreshToken(payload: RefreshPayload): string {
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: '7d' });
+}
+
+/**
+ * Verify a refresh token
+ * @param token JWT refresh token
+ * @returns Decoded payload or throws
+ */
+export function verifyRefreshToken(token: string): RefreshPayload {
+  return jwt.verify(token, REFRESH_SECRET) as RefreshPayload;
+}
+
+/**
+ * Hash a token for storage (SHA-256)
+ * Prevents storing raw tokens in database
+ * @param token Raw token string
+ * @returns Hex hash
+ */
+export function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+/**
+ * Decode JWT without verification (for debugging)
+ * DO NOT use for security decisions
+ * @param token JWT token
+ * @returns Decoded payload or null
+ */
+export function decodeToken(token: string): any {
+  try {
+    return jwt.decode(token);
+  } catch {
+    return null;
+  }
+}

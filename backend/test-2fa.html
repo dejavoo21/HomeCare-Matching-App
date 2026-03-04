@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2FA API Tester</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+        Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: white;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 18px;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    input,
+    textarea,
+    button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background: #5568d3;
+    }
+
+    button:active {
+      background: #4557c7;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .button-group button {
+      flex: 1;
+      min-width: 150px;
+      margin-right: 0;
+    }
+
+    .response {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      margin-top: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .response h3 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .response code {
+      display: block;
+      background: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+      font-size: 12px;
+      overflow-x: auto;
+      color: #667eea;
+    }
+
+    .status-success {
+      color: #28a745;
+    }
+
+    .status-error {
+      color: #dc3545;
+    }
+
+    .status-info {
+      color: #17a2b8;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    @media (max-width: 768px) {
+      .input-row {
+        grid-template-columns: 1fr;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .button-group button {
+        margin-right: 0;
+      }
+    }
+
+    .token-display {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      word-break: break-all;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .info-box {
+      background: #e7f3ff;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+    }
+
+    .info-box p {
+      color: #0c5aa0;
+      margin: 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 2FA API Tester</h1>
+
+    <!-- OTP Testing Section -->
+    <div class="section">
+      <h2>📧 OTP Testing</h2>
+      <div class="info-box">
+        <p>
+          <strong>Note:</strong> Make sure the backend is running and SMTP is configured. Check email
+          inbox or database for OTP codes.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="otpEmail">Email Address:</label>
+        <input
+          type="email"
+          id="otpEmail"
+          placeholder="user@example.com"
+          value="onboarding@sochristventures.com"
+        />
+      </div>
+
+      <div class="button-group">
+        <button onclick="testRequestOtp()">Request OTP</button>
+      </div>
+
+      <div class="form-group">
+        <label for="otpCode">OTP Code:</label>
+        <input type="text" id="otpCode" placeholder="Enter 6-digit OTP" />
+      </div>
+
+      <div class="button-group">
+        <button onclick="testVerifyOtp()">Verify OTP</button>
+      </div>
+
+      <div id="otpResponse" class="response" style="display: none;">
+        <h3>Response:</h3>
+        <code id="otpResponseCode"></code>
+      </div>
+    </div>
+
+    <!-- Authentication Token -->
+    <div class="section">
+      <h2>🔑 Authentication Token</h2>
+      <div class="form-group">
+        <label for="authToken">Token (from OTP verification):</label>
+        <textarea
+          id="authToken"
+          placeholder="Paste auth token here"
+          rows="3"
+        ></textarea>
+      </div>
+      <div id="tokenInfo"></div>
+    </div>
+
+    <!-- 2FA Settings Section -->
+    <div class="section">
+      <h2>⚙️ 2FA Settings</h2>
+
+      <div class="button-group">
+        <button onclick="testGet2faSettings()">Get 2FA Settings</button>
+        <button onclick="testEnable2fa()">Enable 2FA</button>
+        <button onclick="testDisable2fa()">Disable 2FA</button>
+      </div>
+
+      <div id="settingsResponse" class="response" style="display: none;">
+        <h3>Response:</h3>
+        <code id="settingsResponseCode"></code>
+      </div>
+    </div>
+
+    <!-- Passphrase Section -->
+    <div class="section">
+      <h2>🛡️ Passphrase (Security Questions)</h2>
+
+      <div class="form-group">
+        <label>Security Questions & Answers:</label>
+        <div style="margin-bottom: 10px;">
+          <input
+            type="text"
+            id="q1"
+            placeholder="Question 1"
+            value="What is your childhood pet's name?"
+            style="margin-bottom: 5px;"
+          />
+          <input
+            type="text"
+            id="a1"
+            placeholder="Answer 1"
+            value="Fluffy"
+            style="margin-bottom: 10px;"
+          />
+
+          <input
+            type="text"
+            id="q2"
+            placeholder="Question 2"
+            value="What city were you born in?"
+            style="margin-bottom: 5px;"
+          />
+          <input
+            type="text"
+            id="a2"
+            placeholder="Answer 2"
+            value="New York"
+            style="margin-bottom: 10px;"
+          />
+
+          <input
+            type="text"
+            id="q3"
+            placeholder="Question 3"
+            value="What is your favorite color?"
+            style="margin-bottom: 5px;"
+          />
+          <input
+            type="text"
+            id="a3"
+            placeholder="Answer 3"
+            value="Blue"
+          />
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button onclick="testSetupPassphrase()">Setup Passphrase</button>
+      </div>
+
+      <div id="passphraseResponse" class="response" style="display: none;">
+        <h3>Response:</h3>
+        <code id="passphraseResponseCode"></code>
+      </div>
+    </div>
+
+    <!-- WebAuthn Section -->
+    <div class="section">
+      <h2>🔐 WebAuthn (Biometric/Hardware Keys)</h2>
+
+      <div class="form-group">
+        <label for="deviceName">Device Name:</label>
+        <input
+          type="text"
+          id="deviceName"
+          placeholder="e.g., iPhone Face ID, YubiKey 5"
+          value="Test Device"
+        />
+      </div>
+
+      <div class="button-group">
+        <button onclick="testGetWebauthnChallenge()">Get Challenge</button>
+        <button onclick="testCompleteWebauthn()">Register Credential (Test)</button>
+      </div>
+
+      <div id="webauthnResponse" class="response" style="display: none;">
+        <h3>Response:</h3>
+        <code id="webauthnResponseCode"></code>
+      </div>
+    </div>
+
+    <!-- 2FA Verification Section -->
+    <div class="section">
+      <h2>✅ 2FA Verification (Login)</h2>
+
+      <div class="input-row">
+        <div class="form-group">
+          <label for="userId">User ID (or fetch from token):</label>
+          <input type="text" id="userId" placeholder="UUID" />
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button onclick="testVerify2faWithOtp()">Verify with OTP</button>
+        <button onclick="testVerify2faWithPassphrase()">Verify with Passphrase</button>
+      </div>
+
+      <div id="verifyResponse" class="response" style="display: none;">
+        <h3>Response:</h3>
+        <code id="verifyResponseCode"></code>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://localhost:3000';
+
+    // API Helper
+    async function apiRequest(method, endpoint, body = null, token = null) {
+      const options = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      if (token) {
+        options.headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      if (body) {
+        options.body = JSON.stringify(body);
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}${endpoint}`, options);
+        const data = await response.json();
+
+        return {
+          status: response.status,
+          success: response.ok,
+          data,
+        };
+      } catch (error) {
+        return {
+          status: 0,
+          success: false,
+          data: { error: error.message },
+        };
+      }
+    }
+
+    // Helper to display response
+    function showResponse(elementId, data) {
+      const element = document.getElementById(elementId);
+      const codeElement = document.getElementById(elementId + 'Code');
+
+      element.style.display = 'block';
+      codeElement.textContent = JSON.stringify(data, null, 2);
+
+      // Store token if present
+      if (data.data?.token) {
+        document.getElementById('authToken').value = data.data.token;
+        updateTokenInfo();
+      }
+    }
+
+    // Token info
+    function updateTokenInfo() {
+      const token = document.getElementById('authToken').value;
+      if (token) {
+        try {
+          const decoded = JSON.parse(atob(token));
+          document.getElementById('tokenInfo').innerHTML =
+            `<div class="token-display"><strong>Decoded Token:</strong><br>${JSON.stringify(decoded, null, 2)}</div>`;
+        } catch (e) {
+          document.getElementById('tokenInfo').innerHTML =
+            `<div class="token-display"><strong>Token:</strong><br>${token}</div>`;
+        }
+      }
+    }
+
+    // OTP Tests
+    async function testRequestOtp() {
+      const email = document.getElementById('otpEmail').value;
+
+      if (!email) {
+        alert('Please enter an email');
+        return;
+      }
+
+      const result = await apiRequest('POST', '/auth/request-otp', { email });
+      showResponse('otpResponse', result);
+    }
+
+    async function testVerifyOtp() {
+      const email = document.getElementById('otpEmail').value;
+      const otp = document.getElementById('otpCode').value;
+
+      if (!email || !otp) {
+        alert('Please enter email and OTP');
+        return;
+      }
+
+      const result = await apiRequest('POST', '/auth/verify-otp', { email, otp });
+      showResponse('otpResponse', result);
+    }
+
+    // 2FA Settings Tests
+    async function testGet2faSettings() {
+      const token = document.getElementById('authToken').value;
+
+      if (!token) {
+        alert('Please authenticate first (use OTP verification)');
+        return;
+      }
+
+      const result = await apiRequest('GET', '/auth/2fa/settings', null, token);
+      showResponse('settingsResponse', result);
+    }
+
+    async function testEnable2fa() {
+      const token = document.getElementById('authToken').value;
+
+      if (!token) {
+        alert('Please authenticate first');
+        return;
+      }
+
+      const result = await apiRequest('POST', '/auth/2fa/enable', { primaryMethod: 'otp' }, token);
+      showResponse('settingsResponse', result);
+    }
+
+    async function testDisable2fa() {
+      const token = document.getElementById('authToken').value;
+
+      if (!token) {
+        alert('Please authenticate first');
+        return;
+      }
+
+      const result = await apiRequest('POST', '/auth/2fa/disable', {}, token);
+      showResponse('settingsResponse', result);
+    }
+
+    // Passphrase Tests
+    async function testSetupPassphrase() {
+      const token = document.getElementById('authToken').value;
+
+      if (!token) {
+        alert('Please authenticate first');
+        return;
+      }
+
+      const questions = [
+        {
+          question: document.getElementById('q1').value,
+          answer: document.getElementById('a1').value,
+        },
+        {
+          question: document.getElementById('q2').value,
+          answer: document.getElementById('a2').value,
+        },
+        {
+          question: document.getElementById('q3').value,
+          answer: document.getElementById('a3').value,
+        },
+      ];
+
+      const result = await apiRequest(
+        'POST',
+        '/auth/2fa/passphrase/setup',
+        { questions },
+        token
+      );
+      showResponse('passphraseResponse', result);
+    }
+
+    // WebAuthn Tests
+    async function testGetWebauthnChallenge() {
+      const token = document.getElementById('authToken').value;
+
+      if (!token) {
+        alert('Please authenticate first');
+        return;
+      }
+
+      const result = await apiRequest('POST', '/auth/2fa/webauthn/register/challenge', {}, token);
+      showResponse('webauthnResponse', result);
+    }
+
+    async function testCompleteWebauthn() {
+      const token = document.getElementById('authToken').value;
+      const deviceName = document.getElementById('deviceName').value;
+
+      if (!token) {
+        alert('Please authenticate first');
+        return;
+      }
+
+      // Generate test credential data
+      const mockCredentialId = 'test-credential-' + Date.now();
+      const mockPublicKey = Buffer.from('mock-public-key-data-12345').toString('base64');
+
+      const result = await apiRequest(
+        'POST',
+        '/auth/2fa/webauthn/register/complete',
+        {
+          credentialId: mockCredentialId,
+          publicKey: mockPublicKey,
+          deviceName,
+        },
+        token
+      );
+      showResponse('webauthnResponse', result);
+    }
+
+    // 2FA Verification Tests
+    async function testVerify2faWithOtp() {
+      const otpCode = document.getElementById('otpCode').value;
+      const userId = document.getElementById('userId').value;
+
+      if (!userId && !document.getElementById('authToken').value) {
+        alert('Please enter User ID or authenticate first');
+        return;
+      }
+
+      let uid = userId;
+      if (!uid && document.getElementById('authToken').value) {
+        try {
+          const decoded = JSON.parse(atob(document.getElementById('authToken').value));
+          uid = decoded.userId;
+        } catch (e) {
+          alert('Could not extract user ID from token');
+          return;
+        }
+      }
+
+      const result = await apiRequest('POST', '/auth/2fa/verify', {
+        userId: uid,
+        otp: otpCode,
+      });
+      showResponse('verifyResponse', result);
+    }
+
+    async function testVerify2faWithPassphrase() {
+      const userId = document.getElementById('userId').value;
+
+      if (!userId && !document.getElementById('authToken').value) {
+        alert('Please enter User ID or authenticate first');
+        return;
+      }
+
+      let uid = userId;
+      if (!uid && document.getElementById('authToken').value) {
+        try {
+          const decoded = JSON.parse(atob(document.getElementById('authToken').value));
+          uid = decoded.userId;
+        } catch (e) {
+          alert('Could not extract user ID from token');
+          return;
+        }
+      }
+
+      const result = await apiRequest('POST', '/auth/2fa/verify', {
+        userId: uid,
+        passphraseAnswers: {
+          "What is your childhood pet's name?": document.getElementById('a1').value,
+          'What city were you born in?': document.getElementById('a2').value,
+          'What is your favorite color?': document.getElementById('a3').value,
+        },
+      });
+      showResponse('verifyResponse', result);
+    }
+
+    // Initialize
+    document.getElementById('authToken').addEventListener('change', updateTokenInfo);
+  </script>
+</body>
+</html>
