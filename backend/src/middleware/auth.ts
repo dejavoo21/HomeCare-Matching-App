@@ -18,6 +18,17 @@ export function authMiddleware(
   res: Response,
   next: NextFunction
 ): void {
+  // Development bypass - allow all requests without auth
+  if (process.env.NODE_ENV === 'development') {
+    req.user = {
+      userId: 'dev-admin',
+      role: 'admin',
+      email: 'dev@localhost',
+    };
+    next();
+    return;
+  }
+
   const token = req.headers.authorization?.replace('Bearer ', '');
 
   if (!token) {
@@ -43,6 +54,12 @@ export function authMiddleware(
 
 export function requireRole(...roles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    // Development bypass
+    if (process.env.NODE_ENV === 'development') {
+      next();
+      return;
+    }
+
     if (!req.user) {
       res.status(403).json({ error: 'Insufficient permissions' });
       return;
