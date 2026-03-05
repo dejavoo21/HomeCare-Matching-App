@@ -115,7 +115,7 @@ app.post('/seed-test-user', async (req: Request, res: Response) => {
     const password = 'test123456';
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // First, ensure the users table exists
+    // First, ensure all required tables exist
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -130,6 +130,34 @@ app.post('/seed-test-user', async (req: Request, res: Response) => {
       );
     `);
 
+    // Create refresh_tokens table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token_hash VARCHAR(255) NOT NULL,
+        revoked BOOLEAN DEFAULT false,
+        expires_at TIMESTAMPTZ NOT NULL,
+        user_agent TEXT,
+        ip_address VARCHAR(45),
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create audit_events table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS audit_events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        actor_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        action VARCHAR(100) NOT NULL,
+        entity_type VARCHAR(100),
+        entity_id VARCHAR(100),
+        metadata JSONB,
+        severity VARCHAR(20) DEFAULT 'info',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
     const result = await pool.query(
       `INSERT INTO users (id, name, email, password_hash, role, is_active, created_at, updated_at)
        VALUES (gen_random_uuid(), 'Onboarding Admin', $1, $2, 'admin', true, now(), now())
@@ -140,7 +168,7 @@ app.post('/seed-test-user', async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      message: 'Test user created/updated',
+      message: 'Test user created/updated and tables verified',
       user: result.rows[0],
       credentials: { email, password }
     });
