@@ -93,7 +93,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     token,
     isLoading,
-    isAuthenticated: !!user && !!token,
+    // User is authenticated if we have user data (token may be in HttpOnly cookies for Phase 4)
+    isAuthenticated: !!user,
     register,
     login,
     setAuthData,
