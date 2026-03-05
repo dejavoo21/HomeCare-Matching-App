@@ -49,22 +49,14 @@ const PORT = parseInt(process.env.PORT || '6005', 10);
 // MIDDLEWARE
 // ============================================================================
 
-// Configure CORS to allow credentials from production frontend
-const isProduction = process.env.NODE_ENV === 'production';
-const allowedOrigins = isProduction
-  ? [
-      'https://beneficial-solace-production-0743.up.railway.app',
-      'https://homecare-matching-app-production.up.railway.app',
-      'http://localhost:3000',
-    ]
-  : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:6005'];
-
+// Configure CORS for development and production
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: ['https://beneficial-solace-production-0743.up.railway.app', 'http://localhost:3000', 'http://localhost:5173'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200,
   })
 );
 
