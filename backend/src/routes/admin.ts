@@ -401,6 +401,63 @@ function setupDashboardRoutes(router: Router, pool: Pool) {
   );
 
   /**
+   * POST /admin/update-test-password
+   * Update the test user password
+   * Body: { password }
+   */
+  router.post(
+    '/update-test-password',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const { password } = req.body;
+        
+        if (!password) {
+          res.status(400).json({ error: 'Password is required' });
+          return;
+        }
+
+        const bcrypt = require('bcrypt');
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        // Update test user password
+        const result = await pool.query(
+          `UPDATE users 
+           SET password_hash = $1, updated_at = NOW()
+           WHERE email = $2
+           RETURNING id, email, name`,
+          [passwordHash, 'onboarding@sochristventures.com']
+        );
+
+        if (result.rows.length === 0) {
+          res.status(404).json({ error: 'Test user not found' });
+          return;
+        }
+
+        const user = result.rows[0];
+
+        res.json({
+          success: true,
+          message: 'Password updated successfully',
+          data: {
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            password: password,
+          },
+        });
+      } catch (err) {
+        console.error('Password update error:', err);
+        res.status(500).json({
+          error: 'Password update failed',
+          details: (err as any).message,
+        });
+      }
+    }
+  );
+
+  /**
    * Get all healthcare professionals (Postgres-based)
    * GET /admin/professionals
    */
