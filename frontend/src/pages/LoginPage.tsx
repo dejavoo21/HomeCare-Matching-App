@@ -53,7 +53,18 @@ export function LoginPage() {
           return;
         }
         
-        // Legacy path: if OTP disabled, use token directly
+        // Phase 4 path: HttpOnly cookies are automatically set by the server
+        // Check if we have user data (which indicates successful login)
+        if (loginResponse.data?.user) {
+          // Store user in localStorage for AuthContext to pick up
+          localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+          
+          // Tokens are in HttpOnly cookies, browser will send them automatically
+          navigate('/dashboard');
+          return;
+        }
+        
+        // Legacy path: if tokens are in response (fallback)
         if (loginResponse.data?.accessToken && loginResponse.data?.user) {
           // Store both token and user in localStorage
           api.setToken(loginResponse.data.accessToken);
