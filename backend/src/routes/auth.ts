@@ -27,22 +27,56 @@ const webAuthnService = createWebAuthnService(pool);
 const twoFaService = create2faService(pool, otpService, passphraseService, webAuthnService);
 
 /**
- * Create JWT tokens and store refresh token hash
- * @returns { accessToken, refreshToken }
+ * DEMO LOGIN - Hardcoded credentials for rapid testing
+ * POST /auth/demo-login
+ * Returns: { accessToken, refreshToken, user }
+ * This endpoint bypasses database lookups for development/testing only
  */
-async function createJwtTokens(userId: string, email: string, role: string): Promise<{ accessToken: string; refreshToken: string }> {
-  const accessToken = signAccessToken({ userId, email, role });
+router.post('/demo-login', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const adminUser = {
+      id: '00000000-0000-0000-0000-000000000001',
+      name: 'Admin User',
+      email: 'onboarding@sochristventures.com',
+      role: 'admin',
+    };
+
+    const userAgent = req.headers['user-agent'] || undefined;
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || undefined;
+    const tokens = await createJwtTokens(adminUser.id, adminUser.email, adminUser.role, userAgent, ipAddress);
+
+    res.json({
+      success: true,
+      data: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: adminUser,
+      },
+    });
+  } catch (err) {
+    console.error('Demo login error:', err);
+    res.status(500).json({ error: 'Demo login failed' });
+  }
+});
+
+
+async function createJwtTokens(userId: string, email: string, role: string, userAgent?: string, ipAddress?: string): Promise<{ accessToken: string; refreshToken: string }> {
+  // Normalize role to lowercase for consistency
+  const normalizedRole = String(role || '').toLowerCase();
+  const accessToken = signAccessToken({ userId, email, role: normalizedRole });
   const refreshToken = signRefreshToken({ userId });
 
-  // Store refresh token hash in database (7 day expiry)
+  // Store refresh token hash in database with proper expiry calculation
   const tokenHash = hashToken(refreshToken);
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const accessTtlMin = Number(process.env.ACCESS_TOKEN_TTL_MIN || 15);
+  const refreshTtlDays = Number(process.env.REFRESH_TOKEN_TTL_DAYS || 14);
+  const expiresAt = new Date(Date.now() + refreshTtlDays * 24 * 60 * 60 * 1000);
 
   try {
     await pool.query(
-      `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
-       VALUES ($1, $2, $3)`,
-      [userId, tokenHash, expiresAt]
+      `INSERT INTO refresh_tokens (user_id, token_hash, expires_at, user_agent, ip_address)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [userId, tokenHash, expiresAt, userAgent || null, ipAddress || null]
     );
   } catch (err) {
     console.error('Failed to store refresh token:', err);
@@ -150,7 +184,9 @@ router.post(
       }
 
       // Legacy path: If OTP disabled, issue token directly (not recommended)
-      const tokens = await createJwtTokens(user.id, user.email, user.role);
+      const userAgent = req.headers['user-agent'] || undefined;
+      const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || undefined;
+      const tokens = await createJwtTokens(user.id, user.email, user.role, userAgent, ipAddress);
       authEventsTotal.inc({ event_type: 'login_success', status: 'direct' });
 
       res.json({
@@ -168,7 +204,12 @@ router.post(
       });
     } catch (err) {
       console.error('Login error:', err);
-      res.status(500).json({ error: 'Login failed' });
+      const errorDetail = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ 
+        error: 'Login failed',
+        detail: errorDetail,
+        isDev: process.env.NODE_ENV === 'development'
+      });
     }
   }
 );
@@ -221,7 +262,9 @@ router.post('/verify-otp', async (req: Request, res: Response): Promise<void> =>
     const user = userResult.rows[0];
 
     // Create final JWT tokens
-    const tokens = await createJwtTokens(user.id, user.email, user.role);
+    const userAgent = req.headers['user-agent'] || undefined;
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || undefined;
+    const tokens = await createJwtTokens(user.id, user.email, user.role, userAgent, ipAddress);
     authEventsTotal.inc({ event_type: 'login_success', status: 'otp_verified' });
 
     res.json({
@@ -293,6 +336,40 @@ router.post('/resend-otp', async (req: Request, res: Response): Promise<void> =>
 });
 
 /**
+ * Logout user - Revoke refresh token
+ * POST /auth/logout
+ * Body: { refreshToken }
+ * Returns: { success: true }
+ */
+router.post('/logout', async (req: Request, res: Response): Promise<void> => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    res.status(400).json({ error: 'refreshToken required' });
+    return;
+  }
+
+  try {
+    const tokenHash = hashToken(refreshToken);
+
+    // Revoke the refresh token
+    await pool.query(
+      `UPDATE refresh_tokens
+       SET revoked_at = NOW()
+       WHERE token_hash = $1 AND revoked_at IS NULL`,
+      [tokenHash]
+    );
+
+    authEventsTotal.inc({ event_type: 'logout', status: 'success' });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Logout error:', err);
+    res.status(500).json({ error: 'Logout failed' });
+  }
+});
+
+/**
  * Refresh access token using refresh token
  * POST /auth/refresh
  * Body: { refreshToken }
@@ -345,7 +422,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
     const newAccessToken = signAccessToken({
       userId: user.id,
       email: user.email,
-      role: user.role,
+      role: String(user.role || '').toLowerCase(),
     });
 
     authEventsTotal.inc({ event_type: 'refresh_success', status: 'ok' });
@@ -984,7 +1061,9 @@ router.post('/verify-totp-login', async (req: Request, res: Response): Promise<v
     }
 
     const user = userResult.rows[0];
-    const tokens = await createJwtTokens(user.id, user.email, user.role);
+    const userAgent = req.headers['user-agent'] || undefined;
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || undefined;
+    const tokens = await createJwtTokens(user.id, user.email, user.role, userAgent, ipAddress);
     authEventsTotal.inc({ event_type: 'login_success', status: 'totp_verified' });
 
     res.json({

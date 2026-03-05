@@ -110,9 +110,8 @@ export async function runMigrations(): Promise<void> {
   } catch (err) {
     console.error('❌ Migration runner error:', err);
     throw err;
-  } finally {
-    await pool.end();
   }
+  // NOTE: Do NOT close the pool here - server needs it for requests
 }
 
 // Run if called directly

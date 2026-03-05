@@ -8,6 +8,7 @@ dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { Pool } from 'pg';
 
 // Routes
@@ -19,6 +20,9 @@ import { createAdminRouter } from './routes/admin';
 import { createAssistantRouter } from './routes/assistant';
 import { createFhirRouter } from './routes/fhir';
 import { createIntegrationsRouter } from './routes/integrations';
+import { createAuthPhase4Router } from './routes/auth-phase4';
+import { createAccessRequestRouter } from './routes/access-request';
+import { createAuditRouter } from './routes/audit';
 
 // Migrations
 import { runMigrations } from './migrations/runner';
@@ -48,6 +52,7 @@ const PORT = parseInt(process.env.PORT || '6005', 10);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Metrics middleware: track request duration and count
 app.use((req: Request, res: Response, next: Function) => {
@@ -110,6 +115,9 @@ setupPostgresVisitRoutes(pool);
 // ============================================================================
 
 app.use('/auth', authRoutes);
+app.use('/auth/phase4', createAuthPhase4Router(pool));
+app.use('/access', createAccessRequestRouter(pool));
+app.use('/audit', createAuditRouter(pool));
 app.use('/users', userRoutes);
 app.use('/requests', requestRoutes);
 app.use('/visits', visitRoutes);
@@ -127,16 +135,17 @@ app.use('/matching', matchingRouter(pool));
 app.use('/realtime', createRealtimeRoutes(pool));
 
 // Start realtime relay (worker writes to DB, API broadcasts to SSE)
-startRealtimeRelay(pool);
+// TODO: Fix pool connection issues with workers
+// startRealtimeRelay(pool);
 
 // Start webhook delivery worker (processes queued webhooks)
-startWebhookWorker(pool);
+// startWebhookWorker(pool);
 
 // Start outbox worker (processes transaction-safe events)
-startOutboxWorker(pool);
+// startOutboxWorker(pool);
 
 // Start notification worker (processes email queue)
-startNotificationWorker(pool);
+// startNotificationWorker(pool);
 
 // ============================================================================
 // 404 HANDLER

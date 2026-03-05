@@ -1,11 +1,14 @@
 import { useMemo, useState, useEffect } from "react";
 import { CareRequest } from "../types/index";
+import { UrgencyQuickSet } from "./UrgencyQuickSet";
 
 type Props = {
   requests: CareRequest[];
   onView: (r: CareRequest) => void;
+  onOffer?: (requestId: string) => Promise<void>;
   onRequeue?: (requestId: string) => Promise<void>;
   onCancel?: (requestId: string) => Promise<void>;
+  onSetUrgency?: (requestId: string, urgency: string) => Promise<void>;
   search: string;
   onSearchChange: (q: string) => void;
 };
@@ -63,7 +66,7 @@ function Countdown({ expiresAt }: { expiresAt?: string }) {
   return <span className={danger ? "countdown countdown-danger" : "countdown"}>{m}:{s}</span>;
 }
 
-export function DispatchQueueTable({ requests, onView, onRequeue, onCancel, search, onSearchChange }: Props) {
+export function DispatchQueueTable({ requests, onView, onOffer, onRequeue, onCancel, onSetUrgency, search, onSearchChange }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [urgencyFilter, setUrgencyFilter] = useState<string>("all");
 
@@ -95,37 +98,63 @@ export function DispatchQueueTable({ requests, onView, onRequeue, onCancel, sear
 
   return (
     <div className="queue-card">
-      <div className="queue-header">
-        <div>
-          <h2 className="section-title">Dispatch Queue</h2>
-          <p className="muted">Filter and manage requests in real time.</p>
-        </div>
+      <div className="queueHeader">
+        <div className="queueTools" role="toolbar" aria-label="Dispatch queue filters">
+          <div className="searchField">
+            <span className="searchIcon" aria-hidden="true">⌕</span>
+            <input
+              className="input inputSearch"
+              placeholder="Search service, address, client, ID…"
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              aria-label="Search requests"
+            />
+            {search?.trim() ? (
+              <button
+                type="button"
+                className="clearBtn"
+                onClick={() => onSearchChange("")}
+                aria-label="Clear search"
+                title="Clear"
+              >
+                ✕
+              </button>
+            ) : null}
+          </div>
 
-        <div className="queue-filters">
-          <input
-            className="input"
-            placeholder="Search (service, address, client, ID)…"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
+          <div className="filterPills">
+            <select
+              className="select selectPill"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by status"
+            >
+              <option value="all">Status: All</option>
+              <option value="queued">Status: Queued</option>
+              <option value="offered">Status: Offered</option>
+              <option value="accepted">Status: Accepted</option>
+              <option value="en_route">Status: En Route</option>
+              <option value="completed">Status: Completed</option>
+              <option value="cancelled">Status: Cancelled</option>
+            </select>
 
-          <select className="select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">All statuses</option>
-            <option value="queued">Queued</option>
-            <option value="offered">Offered</option>
-            <option value="accepted">Accepted</option>
-            <option value="en_route">En Route</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+            <select
+              className="select selectPill"
+              value={urgencyFilter}
+              onChange={(e) => setUrgencyFilter(e.target.value)}
+              aria-label="Filter by urgency"
+            >
+              <option value="all">Urgency: All</option>
+              <option value="low">Urgency: Low</option>
+              <option value="medium">Urgency: Medium</option>
+              <option value="high">Urgency: High</option>
+              <option value="critical">Urgency: Critical</option>
+            </select>
+          </div>
 
-          <select className="select" value={urgencyFilter} onChange={(e) => setUrgencyFilter(e.target.value)}>
-            <option value="all">All urgency</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
-          </select>
+          <div className="queueStatusBadge">
+            Showing: <b>{statusFilter === 'all' ? 'ALL' : statusFilter.replace('_', ' ').toUpperCase()}</b>
+          </div>
         </div>
       </div>
 
@@ -153,16 +182,29 @@ export function DispatchQueueTable({ requests, onView, onRequeue, onCancel, sear
               filtered.slice(0, 20).map((r) => (
                 <tr key={r.id}>
                   <td>
-                    <div className="req-main">
-                      <div className="req-title">{r.description || r.serviceType}</div>
-                      <div className="req-sub muted">
-                        <span className="mono">{r.id.slice(0, 8)}</span> • {r.address}
+                    <div className="reqMain">
+                      <div className="reqTitleRow">
+                        <div className="reqTitle">{r.description || r.serviceType}</div>
+                        <span className="reqId mono">{r.id.slice(0, 8)}</span>
+                      </div>
+                      <div className="reqMeta">
+                        <span className="reqMetaItem">{String(r.serviceType).replace(/_/g, " ")}</span>
+                        <span className="dotSep" aria-hidden="true">•</span>
+                        <span className="reqMetaItem">{r.address}</span>
                       </div>
                     </div>
                   </td>
 
                   <td>
-                    <span className={urgencyPill(r.urgency)}>{String(r.urgency).toUpperCase()}</span>
+                    {onSetUrgency ? (
+                      <UrgencyQuickSet
+                        requestId={r.id}
+                        currentUrgency={r.urgency || 'low'}
+                        onSetUrgency={onSetUrgency}
+                      />
+                    ) : (
+                      <span className={urgencyPill(r.urgency)}>{String(r.urgency).toUpperCase()}</span>
+                    )}
                   </td>
 
                   <td>
@@ -173,7 +215,7 @@ export function DispatchQueueTable({ requests, onView, onRequeue, onCancel, sear
 
                   <td>
                     {r.assignedProfessionalId ? (
-                      <span className="mono">{r.assignedProfessionalId.slice(0, 8)}</span>
+                      <span className="chip mono">{r.assignedProfessionalId.slice(0, 8)}</span>
                     ) : (
                       <span className="muted">—</span>
                     )}
@@ -184,22 +226,59 @@ export function DispatchQueueTable({ requests, onView, onRequeue, onCancel, sear
                     <Countdown expiresAt={(r as any).offerExpiresAt} />
                   </td>
 
-                  <td className="actions">
-                    <button className="btn btn-small" onClick={() => onView(r)}>
-                      View
-                    </button>
+                  <td className="actionsCell">
+                    <div className="actionsRow">
+                      <button className="btn btn-small" onClick={() => onView(r)}>
+                        View
+                      </button>
 
-                    {onRequeue && ["offered", "accepted", "en_route"].includes(String(r.status).toLowerCase()) && (
-                      <button className="btn btn-small btn-secondary" onClick={() => onRequeue(r.id)}>
+                      <button
+                        className="btn btn-small btn-ghost"
+                        onClick={() => {
+                          if (onOffer) onOffer(r.id);
+                        }}
+                        disabled={!['queued'].includes(String(r.status).toLowerCase())}
+                        aria-disabled={!['queued'].includes(String(r.status).toLowerCase())}
+                      >
+                        Offer
+                      </button>
+
+                      <button
+                        className="btn btn-small btn-ghost"
+                        onClick={() => {
+                          if (onRequeue) onRequeue(r.id);
+                        }}
+                        disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
+                        aria-disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
+                      >
                         Requeue
                       </button>
-                    )}
 
-                    {onCancel && ["queued", "offered"].includes(String(r.status).toLowerCase()) && (
-                      <button className="btn btn-small btn-danger" onClick={() => onCancel(r.id)}>
+                      <button
+                        className="btn btn-small btn-danger"
+                        onClick={() => {
+                          if (onCancel) onCancel(r.id);
+                        }}
+                        disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
+                        aria-disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
+                      >
                         Cancel
                       </button>
-                    )}
+
+                      <select
+                        className="select mini"
+                        value={String(r.urgency).toLowerCase()}
+                        onChange={(e) => {
+                          if (onSetUrgency) onSetUrgency(r.id, e.target.value);
+                        }}
+                        aria-label="Set urgency"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                      </select>
+                    </div>
                   </td>
                 </tr>
               ))

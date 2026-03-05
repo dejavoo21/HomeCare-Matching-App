@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   });
   const [token, setToken] = useState<string | null>(
-    localStorage.getItem('token')
+    localStorage.getItem('accessToken')
   );
   const [isLoading, setIsLoading] = useState(false);
 
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    api.clearToken();
+    api.clearTokens();
     setToken(null);
     setUser(null);
   }, []);
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     api.setToken(token);
     setToken(token);
     setUser(user);
-    localStorage.setItem('token', token);
+    localStorage.setItem('accessToken', token);
     localStorage.setItem('user', JSON.stringify(user));
   }, []);
 

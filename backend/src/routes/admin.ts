@@ -8,6 +8,7 @@ import { AuthRequest, authMiddleware, requireRole } from '../middleware/auth';
 import { requirePermission } from '../middleware/permissions';
 import { UserRole } from '../types/index';
 import { emitRealtimeEventToDb } from '../realtime/emitToDb';
+import { writeAudit } from '../audit/audit';
 
 export function createAdminRouter(pool: Pool) {
   const router = Router();
@@ -18,6 +19,12 @@ export function createAdminRouter(pool: Pool) {
   // Phase 3: Offer and Activity endpoints
   setupActivityRoutes(router, pool);
   setupOfferRoutes(router, pool);
+  
+  // Phase 3.2: Audit trail
+  setupAuditRoutes(router, pool);
+  
+  // Phase 3.3A: Webhook reliability
+  setupWebhookRoutes(router, pool);
   
   // Phase 4: Admin request management endpoints
   setupRequestAdminRoutes(router, pool);
@@ -43,6 +50,31 @@ function setupDashboardRoutes(router: Router, pool: Pool) {
     requireRole(UserRole.ADMIN),
     async (_req: AuthRequest, res: Response): Promise<void> => {
       try {
+        // For development, return mock data to display UI
+        if (process.env.NODE_ENV === 'development') {
+          res.json({
+            success: true,
+            data: {
+              stats: {
+                totalUsers: 3,
+                totalRequests: 3,
+                queuedRequests: 1,
+                offeredRequests: 2,
+                acceptedRequests: 0,
+                enRouteRequests: 0,
+                completedRequests: 0,
+                cancelledRequests: 0,
+              },
+              userBreakdown: {
+                nurses: 2,
+                doctors: 1,
+                clients: 3,
+              },
+            },
+          });
+          return;
+        }
+
         const usersCount = await pool.query(`SELECT COUNT(*)::int AS n FROM users`);
         const reqCount = await pool.query(`SELECT COUNT(*)::int AS n FROM care_requests`);
 
@@ -101,6 +133,39 @@ function setupDashboardRoutes(router: Router, pool: Pool) {
     requireRole(UserRole.ADMIN),
     async (_req: AuthRequest, res: Response): Promise<void> => {
       try {
+        // Mock data for development
+        if (process.env.NODE_ENV === 'development') {
+          const mockProfessionals = [
+            {
+              id: 'prof-1',
+              name: 'Dr. Sarah Smith',
+              email: 'dr.smith@homecare.local',
+              role: 'doctor',
+              location: '(555) 123-4567',
+              isActive: true,
+            },
+            {
+              id: 'prof-2',
+              name: 'Nurse John Johnson',
+              email: 'nurse.john@homecare.local',
+              role: 'nurse',
+              location: '(555) 234-5678',
+              isActive: true,
+            },
+            {
+              id: 'prof-3',
+              name: 'Nurse Maria Garcia',
+              email: 'nurse.maria@homecare.local',
+              role: 'nurse',
+              location: '(555) 345-6789',
+              isActive: true,
+            },
+          ];
+
+          res.json({ success: true, data: mockProfessionals });
+          return;
+        }
+
         const result = await pool.query(
           `SELECT id, name, email, role, phone, is_active
            FROM users
@@ -469,6 +534,19 @@ function setupOfferRoutes(router: Router, pool: Pool) {
           offerExpiresAt: expiresIso,
         });
 
+        // Log audit event
+        await writeAudit(pool, {
+          actorUserId: req.user?.userId,
+          actorRole: req.user?.role,
+          action: 'REQUEST_OFFERED',
+          entityType: 'care_request',
+          entityId: requestId,
+          severity: 'info',
+          ip: req.ip,
+          userAgent: req.get('user-agent') || null,
+          metadata: { professionalId, offerId, offerExpiresAt: expiresIso },
+        });
+
         res.json({
           success: true,
           data: { offerId, requestId, professionalId, offerExpiresAt: expiresIso },
@@ -488,10 +566,24 @@ function setupOfferRoutes(router: Router, pool: Pool) {
 // REQUEST ADMIN MANAGEMENT ROUTES
 // ============================================================================
 
+// ============================================================================
+// REQUEST ACTION ROUTES (Phase 3)
+// ============================================================================
+
+const VALID_URGENCY = new Set(['low', 'medium', 'high', 'critical']);
+
+// helper: normalize + validate
+function norm(v: any) {
+  return String(v ?? '').trim().toLowerCase();
+}
+
 function setupRequestAdminRoutes(router: Router, pool: Pool) {
   /**
-   * Requeue request (set status back to queued)
+   * Requeue request (admin)
    * POST /admin/requests/:id/requeue
+   * Allowed from: offered, accepted, en_route (and even queued is idempotent)
+   * Sets status -> queued
+   * Clears professional_id and expires any active offers
    */
   router.post(
     '/requests/:id/requeue',
@@ -500,40 +592,110 @@ function setupRequestAdminRoutes(router: Router, pool: Pool) {
     async (req: AuthRequest, res: Response): Promise<void> => {
       const requestId = req.params.id;
 
+      const client = await pool.connect();
       try {
-        const result = await pool.query(
-          `UPDATE care_requests
-           SET status='queued',
-               professional_id=NULL,
-               updated_at=NOW()
-           WHERE id=$1
-           RETURNING client_id, status`,
+        await client.query('BEGIN');
+
+        const rq = await client.query(
+          `SELECT id, client_id, status, professional_id
+           FROM care_requests
+           WHERE id = $1
+           FOR UPDATE`,
           [requestId]
         );
 
-        if (result.rows.length === 0) {
+        if (rq.rows.length === 0) {
+          await client.query('ROLLBACK');
           res.status(404).json({ error: 'Request not found' });
           return;
         }
 
+        const row = rq.rows[0];
+        const oldStatus = norm(row.status);
+
+        // Expire any active offers (if exists)
+        const activeOffer = await client.query(
+          `SELECT id, professional_id
+           FROM visit_assignments
+           WHERE request_id = $1
+             AND offer_expires_at > NOW()
+             AND accepted_at IS NULL
+             AND declined_at IS NULL
+           LIMIT 1
+           FOR UPDATE`,
+          [requestId]
+        );
+
+        if (activeOffer.rows.length > 0) {
+          const offer = activeOffer.rows[0];
+          await client.query(
+            `UPDATE visit_assignments
+             SET declined_at = NOW(),
+                 decline_reason = $1
+             WHERE id = $2`,
+            ['admin_requeue', offer.id]
+          );
+
+          await emitRealtimeEventToDb(pool, 'OFFER_DECLINED', {
+            offerId: offer.id,
+            requestId,
+            professionalId: offer.professional_id,
+            clientId: row.client_id,
+            declineReason: 'admin_requeue',
+          });
+        }
+
+        // Update request -> queued and clear assigned professional
+        await client.query(
+          `UPDATE care_requests
+           SET status = 'queued',
+               professional_id = NULL,
+               updated_at = NOW()
+           WHERE id = $1`,
+          [requestId]
+        );
+
+        await client.query('COMMIT');
+
         await emitRealtimeEventToDb(pool, 'REQUEST_STATUS_CHANGED', {
           requestId,
-          clientId: result.rows[0].client_id,
-          oldStatus: result.rows[0].status,
+          clientId: row.client_id,
+          oldStatus,
           newStatus: 'queued',
+          actorRole: 'admin',
+          action: 'requeue',
         });
 
-        res.json({ success: true });
+        // Log audit event
+        await writeAudit(pool, {
+          actorUserId: req.user?.userId,
+          actorRole: req.user?.role,
+          action: 'REQUEST_REQUEUED',
+          entityType: 'care_request',
+          entityId: requestId,
+          severity: 'info',
+          ip: req.ip,
+          userAgent: req.get('user-agent') || null,
+          metadata: { previousStatus: oldStatus, newStatus: 'queued' },
+        });
+
+        res.json({ success: true, data: { requestId, status: 'queued' } });
       } catch (err) {
+        try { await client.query('ROLLBACK'); } catch {}
         console.error('Requeue error:', err);
-        res.status(500).json({ error: 'Failed to requeue' });
+        res.status(500).json({ error: 'Failed to requeue request' });
+      } finally {
+        client.release();
       }
     }
   );
 
   /**
-   * Cancel request
+   * Cancel request (admin)
    * POST /admin/requests/:id/cancel
+   * Allowed from: queued, offered, accepted, en_route
+   * Sets status -> cancelled
+   * Expires any active offer
    */
   router.post(
     '/requests/:id/cancel',
@@ -542,38 +704,112 @@ function setupRequestAdminRoutes(router: Router, pool: Pool) {
     async (req: AuthRequest, res: Response): Promise<void> => {
       const requestId = req.params.id;
 
+      const client = await pool.connect();
       try {
-        const result = await pool.query(
-          `UPDATE care_requests
-           SET status='cancelled', updated_at=NOW()
-           WHERE id=$1
-           RETURNING client_id, status`,
+        await client.query('BEGIN');
+
+        const rq = await client.query(
+          `SELECT id, client_id, status
+           FROM care_requests
+           WHERE id = $1
+           FOR UPDATE`,
           [requestId]
         );
 
-        if (result.rows.length === 0) {
+        if (rq.rows.length === 0) {
+          await client.query('ROLLBACK');
           res.status(404).json({ error: 'Request not found' });
           return;
         }
 
+        const row = rq.rows[0];
+        const oldStatus = norm(row.status);
+
+        if (oldStatus === 'completed' || oldStatus === 'cancelled') {
+          await client.query('ROLLBACK');
+          res.status(400).json({ error: `Cannot cancel a ${oldStatus} request` });
+          return;
+        }
+
+        // Expire any active offer
+        const activeOffer = await client.query(
+          `SELECT id, professional_id
+           FROM visit_assignments
+           WHERE request_id = $1
+             AND offer_expires_at > NOW()
+             AND accepted_at IS NULL
+             AND declined_at IS NULL
+           LIMIT 1
+           FOR UPDATE`,
+          [requestId]
+        );
+
+        if (activeOffer.rows.length > 0) {
+          const offer = activeOffer.rows[0];
+          await client.query(
+            `UPDATE visit_assignments
+             SET declined_at = NOW(),
+                 decline_reason = $1
+             WHERE id = $2`,
+            ['admin_cancel', offer.id]
+          );
+
+          await emitRealtimeEventToDb(pool, 'OFFER_DECLINED', {
+            offerId: offer.id,
+            requestId,
+            professionalId: offer.professional_id,
+            clientId: row.client_id,
+            declineReason: 'admin_cancel',
+          });
+        }
+
+        await client.query(
+          `UPDATE care_requests
+           SET status = 'cancelled',
+               updated_at = NOW()
+           WHERE id = $1`,
+          [requestId]
+        );
+
+        await client.query('COMMIT');
+
         await emitRealtimeEventToDb(pool, 'REQUEST_STATUS_CHANGED', {
           requestId,
-          clientId: result.rows[0].client_id,
-          oldStatus: result.rows[0].status,
+          clientId: row.client_id,
+          oldStatus,
           newStatus: 'cancelled',
+          actorRole: 'admin',
+          action: 'cancel',
         });
 
-        res.json({ success: true });
+        // Log audit event
+        await writeAudit(pool, {
+          actorUserId: req.user?.userId,
+          actorRole: req.user?.role,
+          action: 'REQUEST_CANCELLED',
+          entityType: 'care_request',
+          entityId: requestId,
+          severity: 'warning',
+          ip: req.ip,
+          userAgent: req.get('user-agent') || null,
+          metadata: { previousStatus: oldStatus, newStatus: 'cancelled' },
+        });
+
+        res.json({ success: true, data: { requestId, status: 'cancelled' } });
       } catch (err) {
+        try { await client.query('ROLLBACK'); } catch {}
         console.error('Cancel error:', err);
-        res.status(500).json({ error: 'Failed to cancel' });
+        res.status(500).json({ error: 'Failed to cancel request' });
+      } finally {
+        client.release();
       }
     }
   );
 
   /**
-   * Set request urgency
+   * Set urgency (admin)
    * POST /admin/requests/:id/urgency
+   * Body: { urgency: 'low'|'medium'|'high'|'critical' }
    */
   router.post(
     '/requests/:id/urgency',
@@ -581,37 +817,74 @@ function setupRequestAdminRoutes(router: Router, pool: Pool) {
     requireRole(UserRole.ADMIN),
     async (req: AuthRequest, res: Response): Promise<void> => {
       const requestId = req.params.id;
-      const { urgency } = req.body || {};
+      const urgency = norm(req.body?.urgency);
 
-      if (!urgency) {
-        res.status(400).json({ error: 'urgency is required' });
+      if (!VALID_URGENCY.has(urgency)) {
+        res.status(400).json({ error: 'Invalid urgency value' });
         return;
       }
 
+      const client = await pool.connect();
       try {
-        const result = await pool.query(
-          `UPDATE care_requests
-           SET urgency=$2, updated_at=NOW()
-           WHERE id=$1
-           RETURNING client_id`,
-          [requestId, String(urgency).toLowerCase()]
+        await client.query('BEGIN');
+
+        const rq = await client.query(
+          `SELECT id, client_id, urgency, status
+           FROM care_requests
+           WHERE id = $1
+           FOR UPDATE`,
+          [requestId]
         );
 
-        if (result.rows.length === 0) {
+        if (rq.rows.length === 0) {
+          await client.query('ROLLBACK');
           res.status(404).json({ error: 'Request not found' });
           return;
         }
 
+        const row = rq.rows[0];
+        const oldUrgency = norm(row.urgency);
+
+        await client.query(
+          `UPDATE care_requests
+           SET urgency = $2,
+               updated_at = NOW()
+           WHERE id = $1`,
+          [requestId, urgency]
+        );
+
+        await client.query('COMMIT');
+
         await emitRealtimeEventToDb(pool, 'REQUEST_UPDATED', {
           requestId,
-          clientId: result.rows[0].client_id,
-          urgency,
+          clientId: row.client_id,
+          field: 'urgency',
+          oldValue: oldUrgency,
+          newValue: urgency,
+          actorRole: 'admin',
+          action: 'set_urgency',
         });
 
-        res.json({ success: true });
+        // Log audit event
+        await writeAudit(pool, {
+          actorUserId: req.user?.userId,
+          actorRole: req.user?.role,
+          action: 'REQUEST_URGENCY_CHANGED',
+          entityType: 'care_request',
+          entityId: requestId,
+          severity: 'info',
+          ip: req.ip,
+          userAgent: req.get('user-agent') || null,
+          metadata: { oldUrgency, newUrgency: urgency },
+        });
+
+        res.json({ success: true, data: { requestId, urgency } });
       } catch (err) {
-        console.error('Urgency update error:', err);
+        try { await client.query('ROLLBACK'); } catch {}
+        console.error('Urgency error:', err);
         res.status(500).json({ error: 'Failed to update urgency' });
+      } finally {
+        client.release();
       }
     }
   );
@@ -745,6 +1018,212 @@ function setupSearchRoutes(router: Router, pool: Pool) {
       } catch (err) {
         console.error('Global search error:', err);
         res.status(500).json({ error: 'Search failed' });
+      }
+    }
+  );
+}
+
+// ============================================================================
+// AUDIT ROUTES (Phase 3.2)
+// ============================================================================
+
+function setupAuditRoutes(router: Router, pool: Pool) {
+  /**
+   * Get audit events with filtering
+   * GET /admin/audit?limit=50&q=offer&severity=info&entityType=care_request
+   */
+  router.get(
+    '/audit',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const limit = Math.min(parseInt(String(req.query.limit || '50'), 10) || 50, 200);
+        const q = String(req.query.q || '').trim().toLowerCase();
+        const severity = String(req.query.severity || '').trim().toLowerCase();
+        const entityType = String(req.query.entityType || '').trim().toLowerCase();
+
+        const filters: string[] = [];
+        const params: any[] = [];
+        let paramIndex = 1;
+
+        if (severity) {
+          filters.push(`LOWER(severity) = $${paramIndex++}`);
+          params.push(severity);
+        }
+
+        if (entityType) {
+          filters.push(`LOWER(entity_type) = $${paramIndex++}`);
+          params.push(entityType);
+        }
+
+        if (q) {
+          filters.push(`(
+            LOWER(action) LIKE $${paramIndex++} OR
+            LOWER(entity_type) LIKE $${paramIndex++} OR
+            CAST(entity_id AS text) ILIKE $${paramIndex++} OR
+            CAST(actor_user_id AS text) ILIKE $${paramIndex++}
+          )`);
+          const like = `%${q}%`;
+          params.push(like, like, like, like);
+        }
+
+        params.push(limit);
+
+        const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+        const result = await pool.query(
+          `SELECT id, actor_user_id, actor_role, action, entity_type, entity_id, severity, metadata, created_at
+           FROM audit_events
+           ${where}
+           ORDER BY created_at DESC
+           LIMIT $${paramIndex}`,
+          params
+        );
+
+        res.json({ success: true, data: result.rows });
+      } catch (err) {
+        console.error('Audit fetch error:', err);
+        res.status(500).json({ error: 'Failed to fetch audit events' });
+      }
+    }
+  );
+}
+// ============================================================================
+// WEBHOOK ROUTES (Phase 3.3A)
+// ============================================================================
+
+function setupWebhookRoutes(router: Router, pool: Pool) {
+  /**
+   * Get webhook jobs (queued, processing, succeeded, failed)
+   * GET /admin/webhooks/jobs?status=queued&limit=50
+   */
+  router.get(
+    '/webhooks/jobs',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const limit = Math.min(parseInt(String(req.query.limit || '50'), 10) || 50, 200);
+        const status = String(req.query.status || '').trim().toLowerCase();
+
+        let where = '';
+        const params: any[] = [limit];
+
+        if (status && ['queued', 'processing', 'succeeded', 'failed', 'dead'].includes(status)) {
+          where = `WHERE LOWER(status) = $2`;
+          params.unshift(status);
+        }
+
+        const query = `
+          SELECT id, event_type, status, attempts, max_attempts, last_error, next_attempt_at, created_at, updated_at
+          FROM webhook_jobs
+          ${where}
+          ORDER BY created_at DESC
+          LIMIT ${params.length === 2 ? '$2' : '$1'}
+        `;
+
+        const result = await pool.query(query, params);
+        res.json({ success: true, data: result.rows });
+      } catch (err) {
+        console.error('Webhook jobs fetch error:', err);
+        res.status(500).json({ error: 'Failed to fetch webhook jobs' });
+      }
+    }
+  );
+
+  /**
+   * Get dead-letter queue (failed webhooks)
+   * GET /admin/webhooks/dead-letters?limit=50
+   */
+  router.get(
+    '/webhooks/dead-letters',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const limit = Math.min(parseInt(String(req.query.limit || '50'), 10) || 50, 200);
+
+        const result = await pool.query(
+          `SELECT id, webhook_job_id, event_type, target_url, attempts, max_attempts, last_error, created_at
+           FROM webhook_dead_letters
+           ORDER BY created_at DESC
+           LIMIT $1`,
+          [limit]
+        );
+
+        res.json({ success: true, data: result.rows });
+      } catch (err) {
+        console.error('Dead-letter fetch error:', err);
+        res.status(500).json({ error: 'Failed to fetch dead-letter queue' });
+      }
+    }
+  );
+
+  /**
+   * Requeue a dead-letter job for retry
+   * POST /admin/webhooks/:id/requeue
+   */
+  router.post(
+    '/webhooks/:id/requeue',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      const jobId = req.params.id;
+
+      try {
+        // Get the dead-letter record
+        const dlResult = await pool.query(
+          `SELECT webhook_job_id, event_type, target_url, payload, attempts, max_attempts, last_error
+           FROM webhook_dead_letters
+           WHERE id = $1`,
+          [jobId]
+        );
+
+        if (dlResult.rows.length === 0) {
+          res.status(404).json({ error: 'Dead-letter job not found' });
+          return;
+        }
+
+        const dl = dlResult.rows[0];
+
+        // Reset job to queued
+        if (dl.webhook_job_id) {
+          await pool.query(
+            `UPDATE webhook_jobs
+             SET status = 'queued',
+                 attempts = 0,
+                 next_attempt_at = now(),
+                 last_error = NULL,
+                 updated_at = now()
+             WHERE id = $1`,
+            [dl.webhook_job_id]
+          );
+        } else {
+          // Create new job if original was deleted
+          await pool.query(
+            `INSERT INTO webhook_jobs (event_type, target_url, payload, max_attempts, attempts, next_attempt_at)
+             VALUES ($1, $2, $3, $4, $5, now())`,
+            [dl.event_type, dl.target_url, dl.payload, dl.max_attempts, 0]
+          );
+        }
+
+        // Log audit event
+        await writeAudit(pool, {
+          actorUserId: req.user?.userId,
+          actorRole: req.user?.role,
+          action: 'WEBHOOK_REQUEUED',
+          entityType: 'webhook_job',
+          entityId: dl.webhook_job_id || jobId,
+          severity: 'info',
+          ip: req.ip,
+          userAgent: req.get('user-agent') || null,
+          metadata: { eventType: dl.event_type, targetUrl: dl.target_url, attempts: dl.attempts },
+        });
+
+        res.json({ success: true, message: 'Webhook requeued for delivery' });
+      } catch (err) {
+        console.error('Webhook requeue error:', err);
+        res.status(500).json({ error: 'Failed to requeue webhook' });
       }
     }
   );

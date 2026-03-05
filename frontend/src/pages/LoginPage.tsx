@@ -56,15 +56,14 @@ export function LoginPage() {
         // Legacy path: if OTP disabled, use token directly
         if (loginResponse.data?.accessToken && loginResponse.data?.user) {
           // Store both token and user in localStorage
-          localStorage.setItem('token', loginResponse.data.accessToken);
+          api.setToken(loginResponse.data.accessToken);
           localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
           
           // Store refresh token if available
           if (loginResponse.data?.refreshToken) {
-            localStorage.setItem('refreshToken', loginResponse.data.refreshToken);
+            api.setRefreshToken(loginResponse.data.refreshToken);
           }
           
-          api.setToken(loginResponse.data.accessToken);
           navigate('/dashboard');
           return;
         }
@@ -91,13 +90,12 @@ export function LoginPage() {
 
       if (response.success && response.data?.accessToken && response.data?.user) {
         // Store token and user in localStorage for AuthContext to pick up
-        localStorage.setItem('token', response.data.accessToken);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
         api.setToken(response.data.accessToken);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         
         // Store refresh token if available
         if (response.data?.refreshToken) {
-          localStorage.setItem('refreshToken', response.data.refreshToken);
+          api.setRefreshToken(response.data.refreshToken);
         }
         
         // Navigate to dashboard - AuthContext will immediately see the new localStorage values

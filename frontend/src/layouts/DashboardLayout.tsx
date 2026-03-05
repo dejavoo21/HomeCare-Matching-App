@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navbar } from '../components/Navbar';
 import { CommandBar } from '../components/CommandBar';
 import { AiHelper } from '../components/AiHelper';
+import { CommandPalette } from '../components/CommandPalette';
 import '../index.css';
 
 interface SearchItem {
@@ -23,6 +24,7 @@ interface DashboardLayoutProps {
   isConnected?: boolean;
   onSearchSelect?: (item: SearchItem) => void;
   searchScope?: 'admin';
+  paletteContextRequestId?: string | null;
 }
 
 export function DashboardLayout({
@@ -31,20 +33,51 @@ export function DashboardLayout({
   isConnected,
   onSearchSelect,
   searchScope = 'admin',
+  paletteContextRequestId,
 }: DashboardLayoutProps) {
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Ctrl+K (Cmd+K on Mac) / Escape to close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toLowerCase().includes('mac');
+      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+      if (cmdOrCtrl && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+      if (e.key === 'Escape') setPaletteOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
   return (
-    <div className="dashboard-layout">
+    <div className="appShell">
       <Navbar />
-      <CommandBar
-        stats={stats}
-        isConnected={isConnected}
-        onSearchSelect={onSearchSelect}
-        searchScope={searchScope}
-      />
-      <div className="dashboard-container">
-        <div className="dashboard-content">{children}</div>
+
+      <div className="appBody">
+        <CommandBar
+          stats={stats}
+          isConnected={isConnected}
+          onSearchSelect={onSearchSelect}
+          searchScope={searchScope}
+        />
+
+        <div className="container">
+          <div className="content">{children}</div>
+        </div>
       </div>
+
       <AiHelper />
+
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onSearchSelect={onSearchSelect}
+        contextRequestId={paletteContextRequestId || null}
+      />
     </div>
   );
 }

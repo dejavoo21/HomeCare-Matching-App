@@ -8,7 +8,9 @@ import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
-import { CommandPalette } from '../components/CommandPalette';
+import { AuditPanel } from '../components/AuditPanel';
+import { Toast } from '../components/Toast';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { api } from '../services/api';
 import { CareRequest } from '../types/index';
 import type { AssistantAction } from '../types/assistant';
@@ -35,6 +37,10 @@ interface DashboardData {
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
 type TabFilter = typeof TABS[number];
 
+type ConfirmState =
+  | { open: false }
+  | { open: true; title: string; message: string; onConfirm: () => Promise<void>; tone?: 'danger' | 'primary' };
+
 export function AdminDashboard() {
   const { on } = useRealTime();
   const [data, setData] = useState<DashboardData | null>(null);
@@ -44,8 +50,12 @@ export function AdminDashboard() {
   const [tab, setTab] = useState<TabFilter>('queued');
   const [search, setSearch] = useState<string>('');
   const [activityKey, setActivityKey] = useState(0);
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [professionals, setProfessionals] = useState<any[]>([]);
+  const [confirm, setConfirm] = useState<ConfirmState>({ open: false });
+  const [toast, setToast] = useState<{ msg: string; tone?: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = useCallback((msg: string, tone: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ msg, tone });
+  }, []);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -55,9 +65,6 @@ export function AdminDashboard() {
 
       const reqs = await api.getAllRequests() as any;
       setRequests(reqs?.data || []);
-
-      const pros = await api.getAllProfessionals() as any;
-      setProfessionals(pros?.data || []);
 
       setActivityKey((k) => k + 1);
     } catch (err) {
@@ -83,21 +90,7 @@ export function AdminDashboard() {
     return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); };
   }, [on, loadDashboard]);
 
-  // Handle Ctrl+K (or Cmd+K on Mac) to open command palette
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-      const isCtrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
-      if (isCtrlOrCmd && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setPaletteOpen(true);
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, []);
-
-  // Filter and sort requests based on active tab
+  // Handle Ctrl+K (or Cmder and sort requests based on active tab
   const tabbed = useMemo(() => {
     return (requests || [])
       .filter((r) => String(r.status).toLowerCase() === tab)
@@ -144,22 +137,58 @@ export function AdminDashboard() {
   }, [loadDashboard, requests]);
 
   const onRequeue = useCallback(async (requestId: string) => {
-    try {
-      await api.requeueRequest(requestId);
-      loadDashboard();
-    } catch (err) {
-      console.error('Failed to requeue:', err);
-    }
-  }, [loadDashboard]);
+    setConfirm({
+      open: true,
+      title: 'Requeue request?',
+      message: 'This will move the request back to QUEUED and expire any active offer.',
+      tone: 'primary',
+      onConfirm: async () => {
+        try {
+          await api.requeueRequest(requestId);
+          showToast('Requeued successfully ✅', 'success');
+          await loadDashboard();
+        } catch (e: any) {
+          showToast(e?.message || 'Failed to requeue', 'error');
+        }
+      },
+    });
+  }, [loadDashboard, showToast]);
 
   const onCancel = useCallback(async (requestId: string) => {
+    setConfirm({
+      open: true,
+      title: 'Cancel request?',
+      message: 'This will mark the request as CANCELLED and stop dispatch.',
+      tone: 'danger',
+      onConfirm: async () => {
+        try {
+          await api.cancelRequest(requestId);
+          showToast('Cancelled successfully ✅', 'success');
+          await loadDashboard();
+        } catch (e: any) {
+          showToast(e?.message || 'Failed to cancel', 'error');
+        }
+      },
+    });
+  }, [loadDashboard, showToast]);
+
+  const onSetUrgency = useCallback(async (requestId: string, urgency: string) => {
     try {
-      await api.cancelRequest(requestId);
-      loadDashboard();
-    } catch (err) {
-      console.error('Failed to cancel:', err);
+      await api.setUrgency(requestId, urgency);
+      showToast(`Urgency → ${urgency.toUpperCase()}`, 'info');
+      await loadDashboard();
+    } catch (e: any) {
+      showToast(e?.message || 'Failed to set urgency', 'error');
     }
-  }, [loadDashboard]);
+  }, [loadDashboard, showToast]);
+
+  const onOffer = useCallback(async (requestId: string) => {
+    // Find and select the request, which will open the drawer
+    const found = (requests || []).find((r) => r.id === requestId);
+    if (found) {
+      setSelectedRequest(found);
+    }
+  }, [requests]);
 
   const handleSearchSelect = useCallback((item: any) => {
     if (item?.kind === 'request') {
@@ -190,16 +219,36 @@ export function AdminDashboard() {
       isConnected={true}
       onSearchSelect={handleSearchSelect}
       searchScope="admin"
+      paletteContextRequestId={selectedRequest?.id || null}
     >
       <AssistantActionsProvider onActions={executeActions}>
         <main className="dashboardPremium" role="main" aria-label="Admin dashboard">
-          <div className="pageHeader">
-            <div>
+
+          {/* ===== Header Card ===== */}
+          <header className="headerCard">
+            <div className="headerLeft">
               <h1 className="pageTitle">Admin Dashboard</h1>
               <p className="subtitle">Dispatch and system overview</p>
             </div>
-          </div>
 
+            <div className="headerRight">
+              <button
+                className="btn btn-ghost"
+                onClick={() => {
+                  const searchInput = document.querySelector('input[placeholder="Search requests, users, events..."]') as HTMLInputElement | null;
+                  if (searchInput) searchInput.focus();
+                }}
+                title="Open search (Ctrl+K)"
+              >
+                🔍 Search
+              </button>
+              <button className="btn btnSoft" onClick={loadDashboard}>
+                Refresh
+              </button>
+            </div>
+          </header>
+
+          {/* ===== Stats ===== */}
           <section className="stats-grid" aria-label="Dashboard statistics">
             <StatCard label="Queued" value={data.stats.queuedRequests} Icon={ListChecks} tone="indigo" hint="Waiting for dispatch" />
             <StatCard label="Offered" value={data.stats.offeredRequests} Icon={Hourglass} tone="amber" hint="Offer pending response" />
@@ -207,41 +256,60 @@ export function AdminDashboard() {
             <StatCard label="Completed" value={data.stats.completedRequests} Icon={BadgeCheck} tone="green" hint="Visits finished" />
           </section>
 
-          <div className="tabs" role="tablist" aria-label="Request status filters">
-            {TABS.map((t) => (
-              <button 
-                key={t} 
-                className={tab === t ? "tab tab-active" : "tab"} 
-                onClick={() => setTab(t)}
-                role="tab"
-                aria-selected={tab === t}
-                aria-label={`${t.replace("_"," ").toUpperCase()}: ${(requests || []).filter(r => String(r.status).toLowerCase() === t).length} requests`}
-              >
-                {t.replace("_"," ").toUpperCase()}
-                <span className="tabCount" aria-hidden="true">
-                  {(requests || []).filter(r => String(r.status).toLowerCase() === t).length}
-                </span>
-              </button>
-            ))}
-          </div>
+          {/* ===== Tabs in a pill bar ===== */}
+          <section className="tabsCard" aria-label="Request status filters">
+            <div className="tabs" role="tablist">
+              {TABS.map((t) => (
+                <button 
+                  key={t} 
+                  className={tab === t ? "tab tab-active" : "tab"} 
+                  onClick={() => setTab(t)}
+                  role="tab"
+                  aria-selected={tab === t}
+                  aria-label={`${t.replace("_"," ").toUpperCase()}: ${(requests || []).filter(r => String(r.status).toLowerCase() === t).length} requests`}
+                >
+                  {t.replace("_"," ").toUpperCase()}
+                  <span className="tabCount" aria-hidden="true">
+                    {(requests || []).filter(r => String(r.status).toLowerCase() === t).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
 
+          {/* ===== Main grid ===== */}
           <div className="twoCol">
             <div className="mainCol">
-              <DispatchQueueTable 
-                requests={tabbed} 
-                onView={setSelectedRequest}
-                onRequeue={onRequeue}
-                onCancel={onCancel}
-                search={search}
-                onSearchChange={setSearch}
-              />
+              <div className="cardShell">
+                <div className="cardHeader">
+                  <div>
+                    <h2 className="cardTitle">Dispatch Queue</h2>
+                    <p className="cardSub">Filter, search, and take actions in real time.</p>
+                  </div>
+                </div>
+
+                <div className="cardBody">
+                  <DispatchQueueTable 
+                    requests={tabbed} 
+                    onView={setSelectedRequest}
+                    onOffer={onOffer}
+                    onRequeue={onRequeue}
+                    onCancel={onCancel}
+                    onSetUrgency={onSetUrgency}
+                    search={search}
+                    onSearchChange={setSearch}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="sideCol">
+
+            <aside className="sideCol" aria-label="Right sidebar">
               <div className="sideStack">
                 <ActivityFeed refreshKey={activityKey} />
                 <ProfessionalsPanel refreshKey={activityKey} />
+                <AuditPanel refreshKey={activityKey} />
               </div>
-            </div>
+            </aside>
           </div>
 
           <RequestDrawer
@@ -249,22 +317,28 @@ export function AdminDashboard() {
             onClose={() => setSelectedRequest(null)}
             onRefresh={loadDashboard}
           />
-
-          <CommandPalette
-            open={paletteOpen}
-            onClose={() => setPaletteOpen(false)}
-            activeRequest={selectedRequest}
-            onOpenRequest={(requestId: string) => {
-              const found = requests.find((r) => r.id === requestId);
-              if (found) {
-                setSelectedRequest(found);
-              }
-            }}
-            onRefresh={loadDashboard}
-            requests={requests}
-            professionals={professionals}
-          />
         </main>
+
+        {confirm.open && (
+          <ConfirmDialog
+            open={confirm.open}
+            title={confirm.title}
+            message={confirm.message}
+            tone={confirm.tone === 'primary' ? 'primary' : 'danger'}
+            confirmText="Yes"
+            cancelText="No"
+            onConfirm={() => confirm.onConfirm()}
+            onClose={() => setConfirm({ open: false })}
+          />
+        )}
+
+        {toast && (
+          <Toast
+            message={toast.msg}
+            tone={toast.tone || 'success'}
+            onClose={() => setToast(null)}
+          />
+        )}
       </AssistantActionsProvider>
     </DashboardLayout>
   );

@@ -64,12 +64,16 @@ export function requireRole(...roles: string[]) {
       res.status(403).json({ error: 'Insufficient permissions' });
       return;
     }
-    const normalizedRoles = roles.map((r) => r.toUpperCase());
-    const userRole = (req.user.role || '').toUpperCase();
+
+    // Normalize both sides to lowercase for consistent comparison
+    const normalizedRoles = roles.map((r) => String(r || '').toLowerCase());
+    const userRole = String(req.user.role || '').toLowerCase();
+
     if (!normalizedRoles.includes(userRole)) {
       res.status(403).json({ error: 'Insufficient permissions' });
       return;
     }
+
     next();
   };
 }

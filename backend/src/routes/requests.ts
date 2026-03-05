@@ -190,6 +190,60 @@ router.get(
  */
 router.get('/all', authMiddleware, requireRole(UserRole.ADMIN), async (req: AuthRequest, res: Response) => {
   try {
+    // Mock data for development
+    if (process.env.NODE_ENV === 'development') {
+      const mockRequests = [
+        {
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          clientId: 'client-1',
+          serviceType: 'nursing',
+          address: '123 Oak Street, Springfield',
+          scheduledDateTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+          urgency: 'high',
+          status: 'queued',
+          description: 'Post-operative care required',
+          assignedProfessionalId: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          offerExpiresAt: null,
+        },
+        {
+          id: '550e8400-e29b-41d4-a716-446655440001',
+          clientId: 'client-2',
+          serviceType: 'medical',
+          address: '456 Elm Avenue, Springfield',
+          scheduledDateTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+          urgency: 'medium',
+          status: 'offered',
+          description: 'Blood pressure monitoring',
+          assignedProfessionalId: null,
+          createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+          offerExpiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        },
+        {
+          id: '550e8400-e29b-41d4-a716-446655440002',
+          clientId: 'client-3',
+          serviceType: 'elderly_care',
+          address: '789 Pine Road, Springfield',
+          scheduledDateTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
+          urgency: 'low',
+          status: 'offered',
+          description: 'Companion care and meal prep',
+          assignedProfessionalId: null,
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+          offerExpiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        },
+      ];
+
+      res.json({
+        success: true,
+        data: mockRequests,
+      });
+      return;
+    }
+
     if (!dbPool) {
       return res.status(500).json({ error: 'Database pool not initialized' });
     }
