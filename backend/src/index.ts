@@ -103,6 +103,42 @@ app.get('/metrics', async (req: Request, res: Response) => {
 });
 
 // ============================================================================
+// TEMPORARY: SEED TEST USER ENDPOINT
+// ============================================================================
+// This endpoint is temporary for testing purposes only
+// TODO: Remove this endpoint after testing
+
+app.post('/seed-test-user', async (req: Request, res: Response) => {
+  try {
+    const bcrypt = require('bcrypt');
+    const email = 'onboarding@sochristventures.com';
+    const password = 'test123456';
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      `INSERT INTO users (id, name, email, password_hash, role, is_active, created_at, updated_at)
+       VALUES (gen_random_uuid(), 'Onboarding Admin', $1, $2, 'admin', true, now(), now())
+       ON CONFLICT (email) DO UPDATE SET password_hash = $2, name = 'Onboarding Admin', updated_at = now()
+       RETURNING id, email, role, is_active`,
+      [email, passwordHash]
+    );
+
+    res.json({
+      success: true,
+      message: 'Test user created/updated',
+      user: result.rows[0],
+      credentials: { email, password }
+    });
+  } catch (err) {
+    console.error('Error creating test user:', err);
+    res.status(500).json({
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to create test user'
+    });
+  }
+});
+
+// ============================================================================
 // SETUP POSTGRESQL ROUTES (BEFORE MOUNTING)
 // ============================================================================
 
