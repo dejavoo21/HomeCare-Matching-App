@@ -41,7 +41,10 @@ function getPoolConfig(): PoolConfig {
     connectionString: validDatabaseUrl,
   };
 
-  if (isDev) {
+  // Check if connecting to internal Railway network (no SSL needed)
+  if (validDatabaseUrl.includes('railway.internal')) {
+    config.ssl = false;
+  } else if (isDev) {
     // Local development: no SSL
     config.ssl = false;
   } else {
