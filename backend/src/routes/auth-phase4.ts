@@ -52,18 +52,19 @@ function setTokenCookies(
   isProduction: boolean
 ) {
   // Access token: short-lived, HttpOnly, Secure only on HTTPS
+  // For cross-origin requests, must use sameSite: 'none' with secure: true
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: 'strict',
+    secure: isProduction || true, // Always secure in production for cross-origin
+    sameSite: 'none', // Allow cross-origin cookie sending
     maxAge: 15 * 60 * 1000, // 15 minutes
   });
 
   // Refresh token: long-lived, HttpOnly, Secure only on HTTPS
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: 'strict',
+    secure: isProduction || true, // Always secure in production for cross-origin
+    sameSite: 'none', // Allow cross-origin cookie sending
     maxAge: COOKIE_MAX_AGE,
   });
 }
