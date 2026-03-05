@@ -144,6 +144,263 @@ function setupDashboardRoutes(router: Router, pool: Pool) {
   );
 
   /**
+   * POST /admin/seed-database
+   * Initialize database with schema and test data
+   * ADMIN ONLY - temporary endpoint for deployment
+   */
+  router.post(
+    '/seed-database',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (_req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        // Create all required tables if they don't exist
+        const migrationSQL = `
+          -- Care Requests Table
+          CREATE TABLE IF NOT EXISTS care_requests (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID NOT NULL REFERENCES users(id),
+            service_type VARCHAR(50) NOT NULL,
+            medication TEXT,
+            description TEXT NOT NULL,
+            address_text TEXT NOT NULL,
+            lat NUMERIC(10, 8),
+            lng NUMERIC(11, 8),
+            preferred_start TIMESTAMPTZ NOT NULL,
+            preferred_end TIMESTAMPTZ NOT NULL,
+            urgency VARCHAR(50) NOT NULL CHECK (urgency IN ('low', 'medium', 'high', 'critical')),
+            status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (
+              status IN ('pending', 'queued', 'offered', 'assigned', 'accepted', 'enroute', 'completed', 'cancelled')
+            ),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+          );
+
+          -- Visit Assignments Table
+          CREATE TABLE IF NOT EXISTS visit_assignments (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            request_id UUID NOT NULL REFERENCES care_requests(id) ON DELETE CASCADE,
+            professional_id UUID NOT NULL REFERENCES users(id),
+            offered_at TIMESTAMPTZ DEFAULT NOW(),
+            offer_expires_at TIMESTAMPTZ NOT NULL,
+            accepted_at TIMESTAMPTZ,
+            declined_at TIMESTAMPTZ,
+            decline_reason TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          );
+
+          -- Professional Profiles Table
+          CREATE TABLE IF NOT EXISTS professional_profiles (
+            user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            verified BOOLEAN DEFAULT false,
+            service_radius_km INTEGER DEFAULT 10,
+            base_lat NUMERIC(10, 8),
+            base_lng NUMERIC(11, 8),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+          );
+
+          CREATE INDEX IF NOT EXISTS idx_care_requests_client ON care_requests(client_id);
+          CREATE INDEX IF NOT EXISTS idx_care_requests_status ON care_requests(status);
+          CREATE INDEX IF NOT EXISTS idx_visit_assignments_request ON visit_assignments(request_id);
+          CREATE INDEX IF NOT EXISTS idx_visit_assignments_professional ON visit_assignments(professional_id);
+        `;
+
+        await pool.query(migrationSQL);
+
+        // Create test professionals if they don't exist
+        const nurseName = 'Nurse John Johnson';
+        const doctorName = 'Dr. Sarah Smith';
+        const clientName = 'Jane Doe';
+
+        // Check and create nurse
+        const nurseCheck = await pool.query(
+          `SELECT id FROM users WHERE email = $1`,
+          ['nurse.john@homecare.local']
+        );
+        
+        let nurseId: string;
+        if (nurseCheck.rows.length === 0) {
+          const bcrypt = require('bcrypt');
+          const hash = await bcrypt.hash('password123', 10);
+          const nurseResult = await pool.query(
+            `INSERT INTO users (name, email, password_hash, role, is_active) 
+             VALUES ($1, $2, $3, $4, $5) 
+             RETURNING id`,
+            [nurseName, 'nurse.john@homecare.local', hash, 'nurse', true]
+          );
+          nurseId = nurseResult.rows[0].id;
+          
+          // Create profile
+          await pool.query(
+            `INSERT INTO professional_profiles (user_id, verified, service_radius_km)
+             VALUES ($1, $2, $3)`,
+            [nurseId, true, 25]
+          );
+        } else {
+          nurseId = nurseCheck.rows[0].id;
+        }
+
+        // Check and create doctor
+        const doctorCheck = await pool.query(
+          `SELECT id FROM users WHERE email = $1`,
+          ['dr.smith@homecare.local']
+        );
+        
+        let doctorId: string;
+        if (doctorCheck.rows.length === 0) {
+          const bcrypt = require('bcrypt');
+          const hash = await bcrypt.hash('password123', 10);
+          const doctorResult = await pool.query(
+            `INSERT INTO users (name, email, password_hash, role, is_active) 
+             VALUES ($1, $2, $3, $4, $5) 
+             RETURNING id`,
+            [doctorName, 'dr.smith@homecare.local', hash, 'doctor', true]
+          );
+          doctorId = doctorResult.rows[0].id;
+          
+          // Create profile
+          await pool.query(
+            `INSERT INTO professional_profiles (user_id, verified, service_radius_km)
+             VALUES ($1, $2, $3)`,
+            [doctorId, true, 50]
+          );
+        } else {
+          doctorId = doctorCheck.rows[0].id;
+        }
+
+        // Check and create client
+        const clientCheck = await pool.query(
+          `SELECT id FROM users WHERE email = $1`,
+          ['client.jane@homecare.local']
+        );
+        
+        let clientId: string;
+        if (clientCheck.rows.length === 0) {
+          const bcrypt = require('bcrypt');
+          const hash = await bcrypt.hash('password123', 10);
+          const clientResult = await pool.query(
+            `INSERT INTO users (name, email, password_hash, role, is_active) 
+             VALUES ($1, $2, $3, $4, $5) 
+             RETURNING id`,
+            [clientName, 'client.jane@homecare.local', hash, 'client', true]
+          );
+          clientId = clientResult.rows[0].id;
+        } else {
+          clientId = clientCheck.rows[0].id;
+        }
+
+        // Create test care requests
+        const now = new Date();
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const day2 = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+        const day3 = new Date(now.getTime() + 72 * 60 * 60 * 1000);
+
+        // Request 1: Queued
+        const req1 = await pool.query(
+          `INSERT INTO care_requests 
+           (client_id, service_type, description, address_text, preferred_start, preferred_end, urgency, status) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+           RETURNING id`,
+          [
+            clientId,
+            'general_care',
+            'Morning care assistance needed',
+            '123 Main St, London',
+            tomorrow,
+            new Date(tomorrow.getTime() + 2 * 60 * 60 * 1000),
+            'medium',
+            'queued',
+          ]
+        );
+
+        // Request 2: Offered (nurse)
+        const req2 = await pool.query(
+          `INSERT INTO care_requests 
+           (client_id, service_type, description, address_text, preferred_start, preferred_end, urgency, status) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+           RETURNING id`,
+          [
+            clientId,
+            'nursing_care',
+            'Post-operative nursing support',
+            '456 Oak Ave, London',
+            day2,
+            new Date(day2.getTime() + 4 * 60 * 60 * 1000),
+            'high',
+            'offered',
+          ]
+        );
+
+        // Create offer for request 2
+        await pool.query(
+          `INSERT INTO visit_assignments 
+           (request_id, professional_id, offer_expires_at) 
+           VALUES ($1, $2, $3)`,
+          [
+            req2.rows[0].id,
+            nurseId,
+            new Date(now.getTime() + 2 * 60 * 60 * 1000),
+          ]
+        );
+
+        // Request 3: Offered (doctor)
+        const req3 = await pool.query(
+          `INSERT INTO care_requests 
+           (client_id, service_type, description, address_text, preferred_start, preferred_end, urgency, status) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+           RETURNING id`,
+          [
+            clientId,
+            'medical_consultation',
+            'General medical check-up',
+            '789 Pine Rd, London',
+            day3,
+            new Date(day3.getTime() + 1 * 60 * 60 * 1000),
+            'low',
+            'offered',
+          ]
+        );
+
+        // Create offer for request 3
+        await pool.query(
+          `INSERT INTO visit_assignments 
+           (request_id, professional_id, offer_expires_at) 
+           VALUES ($1, $2, $3)`,
+          [
+            req3.rows[0].id,
+            doctorId,
+            new Date(now.getTime() + 3 * 60 * 60 * 1000),
+          ]
+        );
+
+        res.json({
+          success: true,
+          message: 'Database seeded successfully',
+          data: {
+            tablesCreated: true,
+            professionals: {
+              nurse: { id: nurseId, name: nurseName },
+              doctor: { id: doctorId, name: doctorName },
+            },
+            client: { id: clientId, name: clientName },
+            careRequests: {
+              queued: 1,
+              offered: 2,
+            },
+          },
+        });
+      } catch (err) {
+        console.error('Seeding error:', err);
+        res.status(500).json({
+          error: 'Database seeding failed',
+          details: (err as any).message,
+        });
+      }
+    }
+  );
+
+  /**
    * Get all healthcare professionals (Postgres-based)
    * GET /admin/professionals
    */
