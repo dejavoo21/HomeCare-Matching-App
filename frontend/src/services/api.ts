@@ -2,7 +2,7 @@
 // API SERVICE - Frontend HTTP client
 // ============================================================================
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:6005';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://homecare-matching-app-production.up.railway.app';
 
 interface ApiOptions {
   headers?: Record<string, string>;
