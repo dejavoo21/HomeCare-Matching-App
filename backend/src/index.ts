@@ -115,6 +115,21 @@ app.post('/seed-test-user', async (req: Request, res: Response) => {
     const password = 'test123456';
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // First, ensure the users table exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'client', 'nurse', 'doctor')),
+        phone VARCHAR(20),
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
     const result = await pool.query(
       `INSERT INTO users (id, name, email, password_hash, role, is_active, created_at, updated_at)
        VALUES (gen_random_uuid(), 'Onboarding Admin', $1, $2, 'admin', true, now(), now())
