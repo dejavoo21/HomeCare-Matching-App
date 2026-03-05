@@ -9,7 +9,7 @@ COPY src ./src
 COPY public ./public
 COPY index.html ./
 
-RUN npm ci
+RUN npm install
 RUN npm run build
 
 # Runtime stage
