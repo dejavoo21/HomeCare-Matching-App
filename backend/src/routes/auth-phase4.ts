@@ -157,6 +157,9 @@ export function createAuthPhase4Router(pool: Pool) {
         success: true,
         data: {
           user: { id: user.id, name: user.name, email: user.email, role: user.role },
+          // Include tokens in response body as fallback for localStorage
+          accessToken,
+          refreshToken: refreshTokenRaw,
         },
       });
     } catch (err) {

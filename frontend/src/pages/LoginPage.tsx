@@ -59,6 +59,14 @@ export function LoginPage() {
           // Store user in localStorage for AuthContext to pick up
           localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
           
+          // Also store tokens if returned in response (fallback for HttpOnly cookies)
+          if (loginResponse.data?.accessToken) {
+            api.setToken(loginResponse.data.accessToken);
+          }
+          if (loginResponse.data?.refreshToken) {
+            api.setRefreshToken(loginResponse.data.refreshToken);
+          }
+          
           // Tokens are in HttpOnly cookies, browser will send them automatically
           navigate('/dashboard');
           return;
