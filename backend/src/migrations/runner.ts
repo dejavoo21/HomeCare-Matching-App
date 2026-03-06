@@ -19,25 +19,22 @@ interface Migration {
 }
 
 async function ensureMigrationsTable(): Promise<void> {
-  const checkTable = `
-    SELECT EXISTS (
-      SELECT FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name = 'schema_migrations'
-    );
-  `;
-
-  const result = await pool.query(checkTable);
-  const tableExists = result.rows[0].exists;
-
-  if (!tableExists) {
-    console.log('📝 Creating schema_migrations table...');
+  try {
+    // Always drop and recreate - ensures correct schema (VARCHAR not UUID)
+    console.log('🔄 Ensuring schema_migrations table with correct VARCHAR schema...');
+    await pool.query('DROP TABLE IF EXISTS schema_migrations CASCADE;');
+    
     await pool.query(`
       CREATE TABLE schema_migrations (
-        id TEXT PRIMARY KEY,
+        id VARCHAR(255) PRIMARY KEY,
         applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
+    
+    console.log('✅ schema_migrations table ready');
+  } catch (err) {
+    console.error('❌ Error ensuring migrations table:', err);
+    throw err;
   }
 }
 
