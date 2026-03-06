@@ -121,7 +121,7 @@ app.get('/metrics', async (req: Request, res: Response) => {
 
 // Serve frontend static files in production
 import path from 'path';
-const frontendDist = path.join(__dirname, '../../../frontend/dist');
+const frontendDist = path.join(__dirname, '../public');
 try {
   app.use(express.static(frontendDist));
   console.log(`📁 Serving frontend static files from: ${frontendDist}`);

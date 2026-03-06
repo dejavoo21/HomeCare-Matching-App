@@ -32,9 +32,10 @@ RUN npm install --omit=dev
 COPY --from=builder /app/backend/dist ./dist
 
 # Copy built frontend from builder stage (for serving as static files)
-COPY --from=builder /app/frontend/dist ../frontend/dist
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:8000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+COPY --from=builder /app/frontend/dist ./public
 
-# Start application
+# Expose port
+EXPOSE 8000
+
+# Health check
 CMD ["node", "dist/index.js"]
