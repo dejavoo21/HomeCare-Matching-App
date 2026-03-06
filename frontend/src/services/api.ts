@@ -480,6 +480,49 @@ class ApiClient {
   async getFhirTask(id: string) {
     return this.request('GET', `/fhir/Task/${id}`);
   }
+
+  // =========================================================================
+  // WEBHOOK INTEGRATION ENDPOINTS
+  // =========================================================================
+
+  async getWebhookSubscriptions() {
+    return this.request('GET', '/webhooks/admin/subscriptions');
+  }
+
+  async createWebhookSubscription(payload: {
+    name: string;
+    targetUrl: string;
+    secret?: string;
+    isActive?: boolean;
+    eventTypes?: string[];
+  }) {
+    return this.request('POST', '/webhooks/admin/subscriptions', payload);
+  }
+
+  async updateWebhookSubscription(
+    id: string,
+    payload: {
+      name?: string;
+      targetUrl?: string;
+      secret?: string;
+      isActive?: boolean;
+      eventTypes?: string[];
+    }
+  ) {
+    return this.request('PUT', `/webhooks/admin/subscriptions/${id}`, payload);
+  }
+
+  async getWebhookDeliveries(limit = 100) {
+    return this.request('GET', `/webhooks/admin/deliveries?limit=${limit}`);
+  }
+
+  async getWebhookDeadLetters(limit = 100) {
+    return this.request('GET', `/webhooks/admin/dead-letters?limit=${limit}`);
+  }
+
+  async replayWebhookDelivery(id: string) {
+    return this.request('POST', `/webhooks/admin/deliveries/${id}/replay`, {});
+  }
 }
 
 export const api = new ApiClient();

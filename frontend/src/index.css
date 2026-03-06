@@ -5548,3 +5548,46 @@ html {
 .fhirItem .small {
   font-size: 12px;
 }
+
+/* =========================================================================
+   WEBHOOK / INTEGRATION RELIABILITY STYLES
+   ========================================================================= */
+
+.actionsRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-small {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}

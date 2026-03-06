@@ -25,6 +25,7 @@ import { createAccessRequestRouter } from './routes/access-request';
 import { createAuditRouter } from './routes/audit';
 import { createMfaRouter } from './routes/mfa.routes';
 import { createAnalyticsRouter } from './routes/analytics.routes';
+import { createWebhookAdminRouter } from './routes/webhook-admin.routes';
 
 // Migrations
 import { runMigrations } from './migrations/runner';
@@ -34,7 +35,7 @@ import { availabilityRouter } from './routes/availability';
 import { matchingRouter } from './routes/matching';
 import { createRealtimeRoutes } from './routes/realtime.routes';
 import { startRealtimeRelay } from './realtime/eventRelay';
-import { startWebhookWorker } from './workers/webhook.worker';
+import { startWebhookWorker } from './integrations/webhook-worker';
 import { startOutboxWorker } from './workers/outbox.worker';
 import { startNotificationWorker } from './workers/notification.worker';
 
@@ -132,6 +133,7 @@ app.use('/access', createAccessRequestRouter(pool));
 app.use('/audit', createAuditRouter(pool));
 app.use('/mfa', createMfaRouter(pool));
 app.use('/analytics', createAnalyticsRouter(pool));
+app.use('/webhooks/admin', createWebhookAdminRouter(pool));
 app.use('/users', userRoutes);
 app.use('/requests', requestRoutes);
 app.use('/visits', visitRoutes);
@@ -153,7 +155,7 @@ app.use('/realtime', createRealtimeRoutes(pool));
 // startRealtimeRelay(pool);
 
 // Start webhook delivery worker (processes queued webhooks)
-// startWebhookWorker(pool);
+startWebhookWorker(pool);
 
 // Start outbox worker (processes transaction-safe events)
 // startOutboxWorker(pool);
