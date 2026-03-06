@@ -49,7 +49,12 @@ async function getAppliedMigrations(): Promise<Set<string>> {
 }
 
 function loadMigrations(): Migration[] {
-  const migrationsDir = __dirname;
+  // Find migrations directory relative to this file
+  // At runtime: __dirname is dist/migrations
+  // We need to look in src/migrations (source) since SQL files aren't copied to dist
+  const compiledPath = __dirname;
+  const srcPath = path.join(__dirname, '../../src/migrations');
+  const migrationsDir = fs.existsSync(srcPath) ? srcPath : compiledPath;
 
   if (!fs.existsSync(migrationsDir)) {
     console.log('📁 Migrations directory does not exist. Creating it...');
