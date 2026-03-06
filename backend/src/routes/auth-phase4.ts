@@ -320,5 +320,46 @@ export function createAuthPhase4Router(pool: Pool) {
     });
   });
 
+  /**
+   * POST /set-password (TEST ONLY - No auth required)
+   * Sets password for onboarding@sochristventures.com user
+   * DEV/TEST endpoint - should be removed in production
+   */
+  router.post('/set-password', async (req: Request, res: Response): Promise<void> => {
+    const { password } = req.body || {};
+    
+    if (!password) {
+      res.status(400).json({ error: 'Password required' });
+      return;
+    }
+
+    try {
+      // Hash the new password
+      const passwordHash = await bcrypt.hash(String(password), 10);
+
+      // Update the test user
+      const result = await pool.query(
+        `UPDATE users SET password_hash = $1 WHERE LOWER(email) = LOWER($2) RETURNING id, email, name`,
+        [passwordHash, 'onboarding@sochristventures.com']
+      );
+
+      if (result.rows.length === 0) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+
+      await logAudit(pool, null, 'TEST_PASSWORD_SET', 'user', result.rows[0].id, { email: result.rows[0].email });
+
+      res.json({
+        success: true,
+        message: 'Password updated for ' + result.rows[0].email,
+        user: result.rows[0],
+      });
+    } catch (err) {
+      console.error('Set password error:', err);
+      res.status(500).json({ error: 'Failed to set password' });
+    }
+  });
+
   return router;
 }

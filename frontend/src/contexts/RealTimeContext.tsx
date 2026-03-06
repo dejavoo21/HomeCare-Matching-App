@@ -53,7 +53,7 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
     esRef.current?.close();
     clearOfflineTimer();
 
-    const baseUrl = (import.meta as any).env.VITE_API_URL || "http://localhost:6005";
+    const baseUrl = (import.meta as any).env.VITE_API_URL || 'https://homecare-matching-app-production.up.railway.app';
 
     // NOTE: EventSource cannot send Authorization header reliably.
     // Keeping token query param is OK for now (Phase 5 we harden it).
