@@ -1,9 +1,10 @@
 // ============================================================================
 // API SERVICE - Frontend HTTP client
 // ============================================================================
-// Pure Phase 4: HttpOnly cookies + secure refresh flow
+// Phase 4: HttpOnly cookies + refresh flow + Railway-safe
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://homecare-matching-app-production.up.railway.app';
+const BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:6005';
 
 interface ApiOptions {
   headers?: Record<string, string>;
@@ -12,71 +13,79 @@ interface ApiOptions {
 
 class ApiClient {
   private isRefreshing = false;
-  private refreshSubscribers: Array<() => void> = [];
+  private refreshPromise: Promise<boolean> | null = null;
 
-  constructor() {
-    // Tokens now live in HttpOnly cookies, not managed by JS
-  }
-
-  /**
-   * Tokens are managed by the server in HttpOnly cookies.
-   * These methods are kept for backward compatibility with components
-   * that check for "active session" but don't read the actual token.
-   */
-  setToken(token: string): void {
+  // Session marker only (NOT the real token)
+  markSessionActive(): void {
     localStorage.setItem('user-session-active', 'true');
   }
 
+  clearSessionMarker(): void {
+    localStorage.removeItem('user-session-active');
+  }
+
+  hasSessionMarker(): boolean {
+    return localStorage.getItem('user-session-active') === 'true';
+  }
+
+  // Backward compatibility for existing code
+  setToken(_: string): void {
+    this.markSessionActive();
+  }
+
   getToken(): string | null {
-    // HttpOnly cookies cannot be read from JS—return null
-    // The browser automatically includes them in requests
+    // HttpOnly cookies are not readable by JS
     return null;
   }
 
   clearTokens(): void {
-    localStorage.removeItem('user-session-active');
+    this.clearSessionMarker();
   }
 
   private getHeaders(options?: ApiOptions): Record<string, string> {
     return {
       'Content-Type': 'application/json',
       ...(options?.headers || {}),
-      // DO NOT add Authorization header for Phase 4
-      // HttpOnly cookies are sent automatically by the browser
     };
   }
 
-  private notifyRefreshSubscribers(): void {
-    this.refreshSubscribers.forEach(cb => cb());
-    this.refreshSubscribers = [];
-  }
-
-  private addRefreshSubscriber(callback: () => void): void {
-    this.refreshSubscribers.push(callback);
-  }
-
   private async refreshAccessToken(): Promise<boolean> {
-    try {
-      const response = await fetch(`${BASE_URL}/auth/phase4/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Browser includes HttpOnly cookies automatically
-      });
+    if (this.refreshPromise) return this.refreshPromise;
 
-      if (response.ok) {
-        // New access token is now in an HttpOnly cookie, set by the server
-        this.notifyRefreshSubscribers();
+    this.isRefreshing = true;
+
+    this.refreshPromise = (async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/auth/phase4/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          this.clearSessionMarker();
+          return false;
+        }
+
+        const json = await response.json().catch(() => ({}));
+        if (!json?.success) {
+          this.clearSessionMarker();
+          return false;
+        }
+
+        this.markSessionActive();
         return true;
+      } catch (err) {
+        console.error('Token refresh failed:', err);
+        this.clearSessionMarker();
+        return false;
+      } finally {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
       }
+    })();
 
-      // Refresh failed—user is logged out
-      this.clearTokens();
-      return false;
-    } catch (err) {
-      console.error('Token refresh failed:', err);
-      this.clearTokens();
-      return false;
-    }
+    return this.refreshPromise;
   }
 
   async request<T>(
@@ -88,58 +97,39 @@ class ApiClient {
     const url = `${BASE_URL}${path}`;
     const shouldRetry = options?.retry !== false;
 
-    const response = await fetch(url, {
-      method,
-      headers: this.getHeaders(options),
-      body: body ? JSON.stringify(body) : undefined,
-      credentials: 'include', // Include HttpOnly cookies in every request
-    });
+    const doFetch = () =>
+      fetch(url, {
+        method,
+        headers: this.getHeaders(options),
+        body: body ? JSON.stringify(body) : undefined,
+        credentials: 'include',
+      });
 
-    // Handle 401 Unauthorized - try to refresh
+    let response = await doFetch();
+
+    // Try refresh once on 401
     if (response.status === 401 && shouldRetry) {
-      // Already refreshing? Queue this request
-      if (this.isRefreshing) {
-        return new Promise((resolve, reject) => {
-          this.addRefreshSubscriber(async () => {
-            try {
-              // Retry the request with the new token (in the cookie)
-              const retryResponse = await fetch(url, {
-                method,
-                headers: this.getHeaders(options),
-                body: body ? JSON.stringify(body) : undefined,
-                credentials: 'include',
-              });
-
-              if (!retryResponse.ok) {
-                throw new Error(`Retry failed: ${retryResponse.status}`);
-              }
-
-              const data = await retryResponse.json();
-              resolve(data);
-            } catch (err) {
-              reject(err);
-            }
-          });
-        });
-      }
-
-      // Not already refreshing—start refresh
-      this.isRefreshing = true;
       const refreshed = await this.refreshAccessToken();
-      this.isRefreshing = false;
 
       if (refreshed) {
-        // Retry the original request
-        return this.request(method, path, body, { ...options, retry: false });
+        response = await doFetch();
+      } else {
+        throw new Error('Session expired. Please log in again.');
       }
-
-      // Refresh failed—user must log in again
-      throw new Error('Session expired. Please log in again.');
     }
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `API request failed: ${response.status}`);
+      let errorMessage = `API request failed: ${response.status}`;
+      try {
+        const error = await response.json();
+        errorMessage = error.error || error.message || errorMessage;
+      } catch {}
+      throw new Error(errorMessage);
+    }
+
+    // Handle empty 204 responses safely
+    if (response.status === 204) {
+      return {} as T;
     }
 
     return response.json();

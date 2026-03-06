@@ -12,7 +12,7 @@ type RealTimeContextType = {
 const RealTimeContext = createContext<RealTimeContextType | undefined>(undefined);
 
 export function RealTimeProvider({ children }: { children: React.ReactNode }) {
-  const { token, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [state, setState] = useState<ConnectionState>("disconnected");
 
   const handlersRef = useRef<Map<string, Set<Handler>>>(new Map());
@@ -38,11 +38,11 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
     clearOfflineTimer();
     offlineTimerRef.current = window.setTimeout(() => {
       setState("disconnected");
-    }, 4000); // ✅ after 4s, call it offline
+    }, 4000);
   };
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated) {
       esRef.current?.close();
       esRef.current = null;
       clearOfflineTimer();
@@ -53,11 +53,11 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
     esRef.current?.close();
     clearOfflineTimer();
 
-    const baseUrl = (import.meta as any).env.VITE_API_URL || 'https://homecare-matching-app-production.up.railway.app';
+    const baseUrl = (import.meta as any).env.VITE_API_URL || 'http://localhost:6005';
 
-    // NOTE: EventSource cannot send Authorization header reliably.
-    // Keeping token query param is OK for now (Phase 5 we harden it).
-    const url = `${baseUrl}/realtime/stream?token=${encodeURIComponent(token)}`;
+    // ✅ Phase 4: Cookie-authenticated SSE endpoint
+    // Browser automatically includes HttpOnly cookies in the request
+    const url = `${baseUrl}/realtime/stream`;
 
     setState("reconnecting");
     armOfflineTimer();
@@ -103,7 +103,6 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
     };
 
     es.onerror = () => {
-      // EventSource retries automatically; we show reconnecting but degrade to offline if it doesn't recover
       setState("reconnecting");
       armOfflineTimer();
     };
@@ -113,7 +112,7 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
       listeners.forEach(({ type, fn }) => es.removeEventListener(type, fn));
       es.close();
     };
-  }, [token, isAuthenticated]);
+  }, [isAuthenticated]);
 
   const value = useMemo<RealTimeContextType>(() => ({ state, on }), [state]);
   return <RealTimeContext.Provider value={value}>{children}</RealTimeContext.Provider>;

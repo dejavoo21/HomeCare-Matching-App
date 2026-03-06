@@ -14,15 +14,21 @@ export function createRealtimeRoutes(pool: Pool): Router {
   /**
    * GET /realtime/stream
    * SSE endpoint for real-time updates
-   * Supports token in query param: ?token=JWT
-   * Or in Authorization header: Bearer JWT
+   * Phase 4: Authenticates from HttpOnly cookie (preferred)
+   * Fallback: query param (?token=JWT) or Authorization header (Bearer JWT)
    */
   router.get('/stream', (req: Request, res: Response) => {
     try {
-      let token = req.query.token as string | undefined;
+      // Phase 4: Try HttpOnly cookie first
+      let token = req.cookies?.accessToken as string | undefined;
 
+      // Fallback: Try query param (for backward compatibility)
       if (!token) {
-        // Try Authorization header
+        token = req.query.token as string | undefined;
+      }
+
+      // Fallback: Try Authorization header
+      if (!token) {
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
           token = authHeader.slice(7);

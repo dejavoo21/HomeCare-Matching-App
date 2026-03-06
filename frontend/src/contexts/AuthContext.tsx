@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { User, UserRole, AuthToken } from '../types/index';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { User, UserRole } from '../types/index';
 import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
+  token: string | null; // kept only for backward compatibility
   isLoading: boolean;
   isAuthenticated: boolean;
   register: (
@@ -15,30 +15,94 @@ interface AuthContextType {
     location: string
   ) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  setAuthData: (token: string, user: User) => void;
-  logout: () => void;
+  setAuthData: (_token: string, user: User) => void; // compatibility only
+  logout: () => Promise<void>;
+  refreshMe: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function normalizeUser(raw: any): User {
+  return {
+    id: raw.id || raw.userId,
+    userId: raw.userId || raw.id,
+    name: raw.name || raw.email || 'User',
+    email: raw.email,
+    role: raw.role,
+    location: raw.location || '',
+    isActive: raw.isActive ?? true,
+  } as User;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    // Initialize user from localStorage if available
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        return JSON.parse(storedUser);
-      } catch (e) {
-        console.error('Failed to parse stored user:', e);
-        return null;
-      }
+    if (!storedUser) return null;
+    try {
+      return JSON.parse(storedUser);
+    } catch {
+      return null;
     }
-    return null;
   });
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem('accessToken')
-  );
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  // token is no longer readable in cookie mode; keep null for compatibility
+  const token = null;
+
+  const persistUser = (nextUser: User | null) => {
+    setUser(nextUser);
+    if (nextUser) {
+      localStorage.setItem('user', JSON.stringify(nextUser));
+      localStorage.setItem('user-session-active', 'true');
+    } else {
+      localStorage.removeItem('user');
+      localStorage.removeItem('user-session-active');
+    }
+  };
+
+  const refreshMe = useCallback(async () => {
+    try {
+      const response = (await api.getMe()) as any;
+      const rawUser = response?.data?.user ?? response?.data;
+
+      if (rawUser) {
+        persistUser(normalizeUser(rawUser));
+      } else {
+        persistUser(null);
+      }
+    } catch {
+      persistUser(null);
+    }
+  }, []);
+
+  // On app load, restore session from cookie by asking backend
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const response = (await api.getMe()) as any;
+        const rawUser = response?.data?.user ?? response?.data;
+
+        if (!mounted) return;
+
+        if (rawUser) {
+          persistUser(normalizeUser(rawUser));
+        } else {
+          persistUser(null);
+        }
+      } catch {
+        if (mounted) persistUser(null);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const register = useCallback(
     async (
@@ -50,8 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ) => {
       setIsLoading(true);
       try {
-        const response = await api.register(name, email, password, role, location) as any;
-        setUser(response?.data);
+        await api.register(name, email, password, role, location);
       } finally {
         setIsLoading(false);
       }
@@ -62,43 +125,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = (await api.login(email, password)) as any;
-      const authToken: AuthToken = response?.data;
-      api.setToken(authToken.token);
-      setToken(authToken.token);
+      await api.login(email, password);
 
-      // Fetch user details
+      // Cookies are now set by backend; fetch current user
       const userResponse = (await api.getMe()) as any;
-      setUser(userResponse?.data);
+      const rawUser = userResponse?.data?.user ?? userResponse?.data;
+
+      if (!rawUser) {
+        throw new Error('Login succeeded but user profile could not be loaded');
+      }
+
+      persistUser(normalizeUser(rawUser));
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const logout = useCallback(() => {
-    api.clearTokens();
-    setToken(null);
-    setUser(null);
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await api.logout();
+    } finally {
+      persistUser(null);
+      setIsLoading(false);
+    }
   }, []);
 
-  const setAuthData = useCallback((token: string, user: User) => {
-    api.setToken(token);
-    setToken(token);
-    setUser(user);
-    localStorage.setItem('accessToken', token);
-    localStorage.setItem('user', JSON.stringify(user));
+  // Compatibility method only; no real token storage anymore
+  const setAuthData = useCallback((_token: string, nextUser: User) => {
+    persistUser(nextUser);
   }, []);
 
   const value: AuthContextType = {
     user,
     token,
     isLoading,
-    // User is authenticated if we have user data (token may be in HttpOnly cookies for Phase 4)
     isAuthenticated: !!user,
     register,
     login,
     setAuthData,
     logout,
+    refreshMe,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
