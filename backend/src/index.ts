@@ -178,18 +178,21 @@ startWebhookWorker(pool);
 // startNotificationWorker(pool);
 
 // ============================================================================
-// SPA FALLBACK - Serve frontend index.html for all non-API routes
+// SPA FALLBACK - Serve frontend index.html for non-API routes
 // ============================================================================
 
+// List of API route prefixes
+const API_ROUTES = ['/api', '/auth', '/access', '/audit', '/mfa', '/analytics',
+  '/webhooks', '/users', '/requests', '/visits', '/admin', '/assistant',
+  '/fhir', '/integrations', '/availability', '/matching', '/realtime', 
+  '/health', '/metrics'];
+
+const isApiRoute = (path: string) => API_ROUTES.some(route => path.startsWith(route));
+
+// SPA fallback: serve index.html for non-API routes
 app.get('*', (req: Request, res: Response) => {
-  // Don't redirect API calls (they should 404)
-  if (req.path.startsWith('/api') || req.path.startsWith('/auth') || req.path.startsWith('/access') || 
-      req.path.startsWith('/audit') || req.path.startsWith('/mfa') || req.path.startsWith('/analytics') ||
-      req.path.startsWith('/webhooks') || req.path.startsWith('/users') || req.path.startsWith('/requests') ||
-      req.path.startsWith('/visits') || req.path.startsWith('/admin') || req.path.startsWith('/assistant') ||
-      req.path.startsWith('/fhir') || req.path.startsWith('/integrations') || req.path.startsWith('/availability') ||
-      req.path.startsWith('/matching') || req.path.startsWith('/realtime') || req.path.startsWith('/health') ||
-      req.path.startsWith('/metrics')) {
+  if (isApiRoute(req.path)) {
+    // API route that wasn't caught by specific handlers
     return res.status(404).json({
       error: 'Not found',
       path: req.path,
@@ -199,19 +202,20 @@ app.get('*', (req: Request, res: Response) => {
   
   // Serve index.html for SPA routing
   const indexPath = path.join(frontendDist, 'index.html');
-  try {
-    res.sendFile(indexPath);
-  } catch (err) {
-    res.status(404).json({
-      error: 'Not found',
-      path: req.path,
-      method: req.method,
-    });
-  }
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      // If index.html not found, return 404
+      res.status(404).json({
+        error: 'Not found',
+        path: req.path,
+        method: req.method,
+      });
+    }
+  });
 });
 
 // ============================================================================
-// 404 HANDLER
+// 404 HANDLER (fallback for middleware chains)
 // ============================================================================
 
 app.use((req: Request, res: Response) => {
