@@ -1,10 +1,7 @@
 import { Router, Response, Request } from 'express';
 import { Pool } from 'pg';
-const otplib = require('otplib');
 import QRCode from 'qrcode';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
-
-const { authenticator } = otplib;
 
 async function logAudit(
   pool: Pool,
@@ -22,6 +19,23 @@ async function logAudit(
     );
   } catch (err) {
     console.error('Audit log error:', err);
+  }
+}
+
+// Cache for dynamically loaded otplib authenticator
+let authenticatorCache: any = null;
+
+async function getAuthenticator() {
+  if (authenticatorCache) {
+    return authenticatorCache;
+  }
+  try {
+    const otplib = await import('otplib');
+    authenticatorCache = (otplib as any).authenticator || (otplib.default as any).authenticator;
+    return authenticatorCache;
+  } catch (err) {
+    console.error('Failed to load otplib:', err);
+    throw err;
   }
 }
 
@@ -44,6 +58,7 @@ export function createMfaRouter(pool: Pool) {
     }
 
     try {
+      const authenticator = await getAuthenticator();
       const secret = authenticator.generateSecret();
       const label = `${issuer}:${email}`;
       const otpauth = authenticator.keyuri(email, issuer, secret);
@@ -96,6 +111,7 @@ export function createMfaRouter(pool: Pool) {
     }
 
     try {
+      const authenticator = await getAuthenticator();
       const row = await pool.query(
         `SELECT user_id, secret, enabled
          FROM user_mfa_totp
@@ -150,6 +166,7 @@ export function createMfaRouter(pool: Pool) {
     }
 
     try {
+      const authenticator = await getAuthenticator();
       const row = await pool.query(
         `SELECT secret, enabled
          FROM user_mfa_totp
