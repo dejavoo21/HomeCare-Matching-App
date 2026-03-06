@@ -371,6 +371,18 @@ class ApiClient {
     return this.request('GET', '/admin/activity');
   }
 
+  // =========================================================================
+  // ACCESS REQUEST ENDPOINTS
+  // =========================================================================
+
+  async getAccessRequests() {
+    return this.request('GET', '/access/admin/requests');
+  }
+
+  async decideAccessRequest(id: string, decision: 'approved' | 'rejected', notes?: string) {
+    return this.request('POST', `/access/admin/${id}/decide`, { decision, notes });
+  }
+
   async getAuditEvents(params?: {
     q?: string;
     severity?: string;

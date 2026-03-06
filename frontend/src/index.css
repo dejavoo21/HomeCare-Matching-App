@@ -4918,3 +4918,84 @@ html {
     opacity: 1;
   }
 }
+/* ============================================================================
+   ACCESS REQUEST STYLES
+   ============================================================================ */
+
+.accessList {
+  display: grid;
+  gap: 12px;
+}
+
+.accessItem {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.accessTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.accessTitle {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.accessMeta,
+.accessDates {
+  font-size: 12px;
+}
+
+.accessReason {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.pill-pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.pill-approved {
+  background: rgba(34, 197, 94, 0.12);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.pill-rejected {
+  background: rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.actionsRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-small {
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+}
+
+.btn-link:hover {
+  color: #1d4ed8;
+}

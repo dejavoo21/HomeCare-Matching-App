@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { RequestAccessModal } from '../components/RequestAccessModal';
 import '../index.css';
 
 export function LoginPage() {
@@ -14,6 +15,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [otpMessage, setOtpMessage] = useState('');
+  const [requestAccessOpen, setRequestAccessOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -253,7 +255,13 @@ export function LoginPage() {
 
           <div className="loginLinks">
             <a href="#forgot">Forgot password?</a>
-            <a href="#request">Request access</a>
+            <button
+              type="button"
+              className="btn btn-link"
+              onClick={() => setRequestAccessOpen(true)}
+            >
+              Request access
+            </button>
           </div>
 
           <div className="demoCredentials">
@@ -263,6 +271,11 @@ export function LoginPage() {
           </div>
         </div>
       </div>
+
+      <RequestAccessModal
+        open={requestAccessOpen}
+        onClose={() => setRequestAccessOpen(false)}
+      />
     </div>
   );
 }

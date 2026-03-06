@@ -8,6 +8,7 @@ import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
+import { AccessRequestsPanel } from '../components/AccessRequestsPanel';
 import { AuditPanel } from '../components/AuditPanel';
 import { Toast } from '../components/Toast';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -307,6 +308,7 @@ export function AdminDashboard() {
               <div className="sideStack">
                 <ActivityFeed refreshKey={activityKey} />
                 <ProfessionalsPanel refreshKey={activityKey} />
+                <AccessRequestsPanel refreshKey={activityKey} />
                 <AuditPanel refreshKey={activityKey} />
               </div>
             </aside>
