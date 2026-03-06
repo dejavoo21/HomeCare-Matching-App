@@ -437,6 +437,49 @@ class ApiClient {
   async getAnalyticsTimeseries(days = 7) {
     return this.request('GET', `/analytics/admin/timeseries?days=${days}`);
   }
+
+  // =========================================================================
+  // FHIR ENDPOINTS
+  // =========================================================================
+
+  async getFhirMetadata() {
+    return this.request('GET', '/fhir/metadata');
+  }
+
+  async searchFhirPatients(email?: string) {
+    const qs = email ? `?email=${encodeURIComponent(email)}` : '';
+    return this.request('GET', `/fhir/Patient${qs}`);
+  }
+
+  async getFhirPatient(id: string) {
+    return this.request('GET', `/fhir/Patient/${id}`);
+  }
+
+  async searchFhirPractitioners(role?: string) {
+    const qs = role ? `?role=${encodeURIComponent(role)}` : '';
+    return this.request('GET', `/fhir/Practitioner${qs}`);
+  }
+
+  async getFhirPractitioner(id: string) {
+    return this.request('GET', `/fhir/Practitioner/${id}`);
+  }
+
+  async searchFhirServiceRequests(status?: string) {
+    const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+    return this.request('GET', `/fhir/ServiceRequest${qs}`);
+  }
+
+  async getFhirServiceRequest(id: string) {
+    return this.request('GET', `/fhir/ServiceRequest/${id}`);
+  }
+
+  async searchFhirTasks() {
+    return this.request('GET', '/fhir/Task');
+  }
+
+  async getFhirTask(id: string) {
+    return this.request('GET', `/fhir/Task/${id}`);
+  }
 }
 
 export const api = new ApiClient();

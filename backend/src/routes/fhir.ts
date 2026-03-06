@@ -1,290 +1,483 @@
 // ============================================================================
-// FHIR-COMPATIBLE HOSPITAL ENDPOINTS
+// FHIR STARTER LAYER
 // ============================================================================
-// Maps FHIR resources to homecare dispatch system
-// Requires API key authentication for external integrations
+// Maps FHIR resources to homecare dispatch system for interoperability
+// Provides read access to:
+// - Patient (from users with role='client')
+// - Practitioner (from users with role='doctor' or 'nurse')
+// - ServiceRequest (from care_requests)
+// - Task (from visit_assignments)
 
-import { Router, Request, Response } from 'express';
-import type { Pool } from 'pg';
-import { apiKeyAuth } from '../middleware/apiKeyAuth';
-import { logAudit } from '../services/audit.service';
-import { validateFhirResource, createOperationOutcome } from '../services/fhirValidation';
-import { fhirEventsTotal, fhirValidationErrors } from '../monitoring/metrics';
+import { Router, Response } from 'express';
+import { Pool } from 'pg';
+import { authMiddleware, AuthRequest, requireRole } from '../middleware/auth';
+import { UserRole } from '../types/index';
+
+function buildBundle(entries: any[], type: string = 'searchset') {
+  return {
+    resourceType: 'Bundle',
+    type,
+    total: entries.length,
+    entry: entries.map((resource) => ({
+      resource,
+    })),
+  };
+}
+
+function mapUserToPatient(user: any) {
+  return {
+    resourceType: 'Patient',
+    id: String(user.id),
+    active: !!user.is_active,
+    name: [
+      {
+        text: user.name,
+      },
+    ],
+    telecom: [
+      ...(user.email ? [{ system: 'email', value: user.email, use: 'home' }] : []),
+      ...(user.phone ? [{ system: 'phone', value: user.phone, use: 'mobile' }] : []),
+    ],
+    meta: {
+      lastUpdated: user.updated_at || user.created_at,
+    },
+  };
+}
+
+function mapUserToPractitioner(user: any) {
+  return {
+    resourceType: 'Practitioner',
+    id: String(user.id),
+    active: !!user.is_active,
+    name: [
+      {
+        text: user.name,
+      },
+    ],
+    telecom: [
+      ...(user.email ? [{ system: 'email', value: user.email, use: 'work' }] : []),
+      ...(user.phone ? [{ system: 'phone', value: user.phone, use: 'mobile' }] : []),
+    ],
+    qualification: [
+      {
+        code: {
+          text: String(user.role || '').toLowerCase() === 'doctor' ? 'Doctor' : 'Nurse',
+        },
+      },
+    ],
+    meta: {
+      lastUpdated: user.updated_at || user.created_at,
+    },
+  };
+}
+
+function mapCareRequestToServiceRequest(row: any) {
+  return {
+    resourceType: 'ServiceRequest',
+    id: String(row.id),
+    status: mapRequestStatusToFhir(row.status),
+    intent: 'order',
+    priority: mapUrgencyToFhirPriority(row.urgency),
+    code: {
+      text: row.service_type || 'Care Service',
+    },
+    subject: row.client_id
+      ? {
+          reference: `Patient/${row.client_id}`,
+        }
+      : undefined,
+    requester: row.professional_id
+      ? {
+          reference: `Practitioner/${row.professional_id}`,
+        }
+      : undefined,
+    occurrenceDateTime: row.preferred_start || undefined,
+    authoredOn: row.created_at || undefined,
+    note: row.description
+      ? [
+          {
+            text: row.description,
+          },
+        ]
+      : [],
+    locationCode: row.address_text
+      ? [
+          {
+            text: row.address_text,
+          },
+        ]
+      : [],
+    meta: {
+      lastUpdated: row.updated_at || row.created_at,
+    },
+  };
+}
+
+function mapAssignmentToTask(row: any) {
+  const taskStatus =
+    row.accepted_at ? 'completed' :
+    row.declined_at ? 'failed' :
+    row.offer_expires_at ? 'in-progress' :
+    'requested';
+
+  return {
+    resourceType: 'Task',
+    id: String(row.id),
+    status: taskStatus,
+    intent: 'order',
+    code: {
+      text: 'Care Request Dispatch Offer',
+    },
+    for: row.request_id
+      ? {
+          reference: `ServiceRequest/${row.request_id}`,
+        }
+      : undefined,
+    owner: row.professional_id
+      ? {
+          reference: `Practitioner/${row.professional_id}`,
+        }
+      : undefined,
+    executionPeriod: row.offer_expires_at
+      ? {
+          end: row.offer_expires_at,
+        }
+      : undefined,
+    authoredOn: row.created_at || undefined,
+    meta: {
+      lastUpdated: row.updated_at || row.created_at,
+    },
+  };
+}
+
+function mapRequestStatusToFhir(status: string) {
+  const s = String(status || '').toLowerCase();
+  if (s === 'queued') return 'active';
+  if (s === 'offered') return 'active';
+  if (s === 'accepted') return 'active';
+  if (s === 'en_route') return 'active';
+  if (s === 'completed') return 'completed';
+  if (s === 'cancelled') return 'revoked';
+  return 'active';
+}
+
+function mapUrgencyToFhirPriority(urgency: string) {
+  const u = String(urgency || '').toLowerCase();
+  if (u === 'critical') return 'stat';
+  if (u === 'high') return 'urgent';
+  if (u === 'medium') return 'routine';
+  return 'routine';
+}
 
 export function createFhirRouter(pool: Pool) {
   const router = Router();
 
-  /**
-   * CREATE FHIR Patient
-   * POST /fhir/Patient
-   * Maps to: users table (role='client')
-   * Required: API key in Authorization header
-   */
-  router.post(
-    '/Patient',
-    apiKeyAuth(pool),
-    async (req: Request, res: Response): Promise<void> => {
-      const body = req.body || {};
-      const integrationId = (req as any).integrationId;
+  // ---------------------------------------------------------
+  // CapabilityStatement (metadata)
+  // ---------------------------------------------------------
+  router.get(
+    '/metadata',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE),
+    async (_req: AuthRequest, res: Response): Promise<void> => {
+      res.json({
+        resourceType: 'CapabilityStatement',
+        status: 'active',
+        date: new Date().toISOString(),
+        kind: 'instance',
+        format: ['json'],
+        fhirVersion: '4.0.1',
+        rest: [
+          {
+            mode: 'server',
+            resource: [
+              { type: 'Patient', interaction: [{ code: 'read' }, { code: 'search-type' }] },
+              { type: 'Practitioner', interaction: [{ code: 'read' }, { code: 'search-type' }] },
+              { type: 'ServiceRequest', interaction: [{ code: 'read' }, { code: 'search-type' }] },
+              { type: 'Task', interaction: [{ code: 'read' }, { code: 'search-type' }] },
+            ],
+          },
+        ],
+      });
+    }
+  );
 
+  // ---------------------------------------------------------
+  // Patient search & read
+  // ---------------------------------------------------------
+  router.get(
+    '/Patient',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE),
+    async (req: AuthRequest, res: Response): Promise<void> => {
       try {
-        // Validate FHIR Patient resource
-        const validation = validateFhirResource(body);
-        if (!validation.valid) {
-          fhirValidationErrors.inc({ resource_type: 'Patient' });
-          res.status(400).json(createOperationOutcome(validation.errors));
-          return;
+        const email = String(req.query.email || '').trim().toLowerCase();
+        const clauses = [`role = 'client'`];
+        const params: any[] = [];
+        let i = 1;
+
+        if (email) {
+          clauses.push(`LOWER(email) = $${i++}`);
+          params.push(email);
         }
 
-        // Extract name from FHIR format
-        const name = body.name?.[0]?.text || body.name?.[0]?.given?.[0] || 'Unknown Patient';
-
-        // Extract email from telecom
-        const telecom = body.telecom || [];
-        const email = telecom.find((t: any) => t.system === 'email')?.value;
-
-        // Extract location if provided
-        const location = body.address?.[0]?.text || 'Unknown';
-
-        // Insert patient as client user
         const result = await pool.query(
-          `INSERT INTO users (name, email, role, location, is_active)
-           VALUES ($1, $2, 'client', $3, true)
-           RETURNING id, name, email, role`,
-          [name, email, location]
+          `SELECT id, name, email, phone, is_active, created_at, updated_at
+           FROM users
+           WHERE ${clauses.join(' AND ')}
+           ORDER BY name`,
+          params
         );
 
-        const user = result.rows[0];
-
-        // Log audit event
-        await logAudit(pool, {
-          actorId: (req as any).userId,
-          actionType: 'FHIR_PATIENT_CREATE',
-          entityType: 'Patient',
-          entityId: user.id,
-          metadata: { name: user.name },
-        });
-
-        fhirEventsTotal.inc({ resource_type: 'Patient', operation: 'create', status: 'success' });
-
-        // Return FHIR-compliant response
-        res.status(201).json({
-          resourceType: 'Patient',
-          id: user.id,
-          name: [{ text: user.name }],
-          telecom: email ? [{ system: 'email', value: email }] : [],
-          active: true,
-        });
+        const resources = result.rows.map(mapUserToPatient);
+        res.json(buildBundle(resources));
       } catch (err) {
-        console.error('FHIR Patient creation error:', err);
-        res.status(500).json({
-          resourceType: 'OperationOutcome',
-          issue: [
-            {
-              severity: 'error',
-              code: 'exception',
-              diagnostics: 'Failed to create patient',
-            },
-          ],
-        });
+        console.error('FHIR Patient search error:', err);
+        res.status(500).json({ error: 'Failed to load Patient resources' });
       }
     }
   );
 
-  /**
-   * READ FHIR Patient
-   * GET /fhir/Patient/:id
-   */
   router.get(
     '/Patient/:id',
-    apiKeyAuth(pool),
-    async (req: Request, res: Response): Promise<void> => {
-      try {
-        const result = await pool.query('SELECT id, name, email, location FROM users WHERE id = $1 AND role = $2', [
-          req.params.id,
-          'client',
-        ]);
-
-        if (result.rows.length === 0) {
-          res.status(404).json({
-            resourceType: 'OperationOutcome',
-            issue: [{ severity: 'error', code: 'not-found', diagnostics: 'Patient not found' }],
-          });
-          return;
-        }
-
-        const user = result.rows[0];
-
-        res.json({
-          resourceType: 'Patient',
-          id: user.id,
-          name: [{ text: user.name }],
-          telecom: user.email ? [{ system: 'email', value: user.email }] : [],
-          address: [{ text: user.location }],
-          active: true,
-        });
-      } catch (err) {
-        console.error('FHIR Patient read error:', err);
-        res.status(500).json({
-          resourceType: 'OperationOutcome',
-          issue: [{ severity: 'error', code: 'exception', diagnostics: 'Failed to read patient' }],
-        });
-      }
-    }
-  );
-
-  /**
-   * CREATE FHIR ServiceRequest
-   * POST /fhir/ServiceRequest
-   * Maps to: care_requests table
-   * Subject ref: Patient/:id
-   */
-  router.post(
-    '/ServiceRequest',
-    apiKeyAuth(pool),
-    async (req: Request, res: Response): Promise<void> => {
-      const body = req.body || {};
-      const userId = (req as any).userId;
-
-      try {
-        // Validate FHIR ServiceRequest resource
-        const validation = validateFhirResource(body);
-        if (!validation.valid) {
-          fhirValidationErrors.inc({ resource_type: 'ServiceRequest' });
-          res.status(400).json(createOperationOutcome(validation.errors));
-          return;
-        }
-
-        // Extract client ID from Patient reference
-        const clientId = body.subject?.reference?.replace('Patient/', '');
-
-        if (!clientId) {
-          res.status(400).json({
-            resourceType: 'OperationOutcome',
-            issue: [{ severity: 'error', code: 'invalid', diagnostics: 'No valid subject (Patient) reference' }],
-          });
-          return;
-        }
-
-        // Extract service details
-        const description = body.code?.text || body.code?.coding?.[0]?.display || 'Service request';
-        const urgency = (body.priority || 'routine').toLowerCase();
-        const requiredDate = body.occurrence?.start || null;
-
-        // Verify patient exists
-        const patientResult = await pool.query('SELECT id FROM users WHERE id = $1 AND role = $2', [
-          clientId,
-          'client',
-        ]);
-
-        if (patientResult.rows.length === 0) {
-          res.status(400).json({
-            resourceType: 'OperationOutcome',
-            issue: [{ severity: 'error', code: 'invalid', diagnostics: 'Patient not found' }],
-          });
-          return;
-        }
-
-        // Create service request
-        const result = await pool.query(
-          `INSERT INTO care_requests (client_id, description, urgency, status, created_by, created_at)
-           VALUES ($1, $2, $3, 'queued', $4, NOW())
-           RETURNING id, client_id, description, urgency, status, created_at`,
-          [clientId, description, urgency, userId]
-        );
-
-        const request = result.rows[0];
-
-        // Log audit event
-        await logAudit(pool, {
-          actorId: userId,
-          actionType: 'FHIR_SERVICE_REQUEST_CREATE',
-          entityType: 'ServiceRequest',
-          entityId: request.id,
-          metadata: { clientId: request.client_id, description: request.description },
-        });
-
-        fhirEventsTotal.inc({ resource_type: 'ServiceRequest', operation: 'create', status: 'success' });
-
-        // Return FHIR-compliant response
-        res.status(201).json({
-          resourceType: 'ServiceRequest',
-          id: request.id,
-          subject: { reference: `Patient/${request.client_id}` },
-          code: { text: request.description },
-          priority: request.urgency.toUpperCase(),
-          status: 'draft',
-          occurrence: { start: requiredDate || new Date().toISOString() },
-          authoredOn: request.created_at,
-        });
-      } catch (err) {
-        console.error('FHIR ServiceRequest creation error:', err);
-        res.status(500).json({
-          resourceType: 'OperationOutcome',
-          issue: [{ severity: 'error', code: 'exception', diagnostics: 'Failed to create service request' }],
-        });
-      }
-    }
-  );
-
-  /**
-   * READ FHIR ServiceRequest
-   * GET /fhir/ServiceRequest/:id
-   */
-  router.get(
-    '/ServiceRequest/:id',
-    apiKeyAuth(pool),
-    async (req: Request, res: Response): Promise<void> => {
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE),
+    async (req: AuthRequest, res: Response): Promise<void> => {
       try {
         const result = await pool.query(
-          `SELECT id, client_id, description, urgency, status, created_at
-           FROM care_requests
-           WHERE id = $1`,
+          `SELECT id, name, email, phone, is_active, created_at, updated_at
+           FROM users
+           WHERE id = $1 AND role = 'client'
+           LIMIT 1`,
           [req.params.id]
         );
 
         if (result.rows.length === 0) {
-          res.status(404).json({
-            resourceType: 'OperationOutcome',
-            issue: [{ severity: 'error', code: 'not-found', diagnostics: 'ServiceRequest not found' }],
-          });
+          res.status(404).json({ error: 'Patient not found' });
           return;
         }
 
-        const request = result.rows[0];
-
-        res.json({
-          resourceType: 'ServiceRequest',
-          id: request.id,
-          subject: { reference: `Patient/${request.client_id}` },
-          code: { text: request.description },
-          priority: request.urgency.toUpperCase(),
-          status: request.status || 'draft',
-          authoredOn: request.created_at,
-        });
+        res.json(mapUserToPatient(result.rows[0]));
       } catch (err) {
-        console.error('FHIR ServiceRequest read error:', err);
-        res.status(500).json({
-          resourceType: 'OperationOutcome',
-          issue: [{ severity: 'error', code: 'exception', diagnostics: 'Failed to read service request' }],
-        });
+        console.error('FHIR Patient read error:', err);
+        res.status(500).json({ error: 'Failed to load Patient resource' });
       }
     }
   );
 
-  /**
-   * Health check endpoint
-   * GET /fhir/health
-   */
-  router.get('/health', async (_req: Request, res: Response): Promise<void> => {
-    res.json({
-      resourceType: 'CapabilityStatement',
-      status: 'active',
-      publisher: 'Homecare Matching System',
-      fhirVersion: '4.0.1',
-      kind: 'capability',
-    });
-  });
+  // ---------------------------------------------------------
+  // Practitioner search & read
+  // ---------------------------------------------------------
+  router.get(
+    '/Practitioner',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const role = String(req.query.role || '').trim().toLowerCase();
+        const clauses = [`role IN ('doctor', 'nurse')`];
+        const params: any[] = [];
+        let i = 1;
+
+        if (role) {
+          clauses.push(`LOWER(role) = $${i++}`);
+          params.push(role);
+        }
+
+        const result = await pool.query(
+          `SELECT id, name, email, phone, role, is_active, created_at, updated_at
+           FROM users
+           WHERE ${clauses.join(' AND ')}
+           ORDER BY name`,
+          params
+        );
+
+        res.json(buildBundle(result.rows.map(mapUserToPractitioner)));
+      } catch (err) {
+        console.error('FHIR Practitioner search error:', err);
+        res.status(500).json({ error: 'Failed to load Practitioner resources' });
+      }
+    }
+  );
+
+  router.get(
+    '/Practitioner/:id',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const result = await pool.query(
+          `SELECT id, name, email, phone, role, is_active, created_at, updated_at
+           FROM users
+           WHERE id = $1 AND role IN ('doctor', 'nurse')
+           LIMIT 1`,
+          [req.params.id]
+        );
+
+        if (result.rows.length === 0) {
+          res.status(404).json({ error: 'Practitioner not found' });
+          return;
+        }
+
+        res.json(mapUserToPractitioner(result.rows[0]));
+      } catch (err) {
+        console.error('FHIR Practitioner read error:', err);
+        res.status(500).json({ error: 'Failed to load Practitioner resource' });
+      }
+    }
+  );
+
+  // ---------------------------------------------------------
+  // ServiceRequest search & read
+  // ---------------------------------------------------------
+  router.get(
+    '/ServiceRequest',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const status = String(req.query.status || '').trim().toLowerCase();
+        const clauses: string[] = [];
+        const params: any[] = [];
+        let i = 1;
+
+        if (status) {
+          clauses.push(`LOWER(status::text) = $${i++}`);
+          params.push(status);
+        }
+
+        const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+
+        const result = await pool.query(
+          `SELECT
+             id,
+             client_id,
+             professional_id,
+             service_type,
+             address_text,
+             preferred_start,
+             urgency,
+             status,
+             description,
+             created_at,
+             updated_at
+           FROM care_requests
+           ${where}
+           ORDER BY created_at DESC`,
+          params
+        );
+
+        res.json(buildBundle(result.rows.map(mapCareRequestToServiceRequest)));
+      } catch (err) {
+        console.error('FHIR ServiceRequest search error:', err);
+        res.status(500).json({ error: 'Failed to load ServiceRequest resources' });
+      }
+    }
+  );
+
+  router.get(
+    '/ServiceRequest/:id',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const result = await pool.query(
+          `SELECT
+             id,
+             client_id,
+             professional_id,
+             service_type,
+             address_text,
+             preferred_start,
+             urgency,
+             status,
+             description,
+             created_at,
+             updated_at
+           FROM care_requests
+           WHERE id = $1
+           LIMIT 1`,
+          [req.params.id]
+        );
+
+        if (result.rows.length === 0) {
+          res.status(404).json({ error: 'ServiceRequest not found' });
+          return;
+        }
+
+        res.json(mapCareRequestToServiceRequest(result.rows[0]));
+      } catch (err) {
+        console.error('FHIR ServiceRequest read error:', err);
+        res.status(500).json({ error: 'Failed to load ServiceRequest resource' });
+      }
+    }
+  );
+
+  // ---------------------------------------------------------
+  // Task search & read
+  // ---------------------------------------------------------
+  router.get(
+    '/Task',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE),
+    async (_req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const result = await pool.query(
+          `SELECT
+             id,
+             request_id,
+             professional_id,
+             offer_expires_at,
+             accepted_at,
+             declined_at,
+             created_at,
+             now() as updated_at
+           FROM visit_assignments
+           ORDER BY created_at DESC`
+        );
+
+        res.json(buildBundle(result.rows.map(mapAssignmentToTask)));
+      } catch (err) {
+        console.error('FHIR Task search error:', err);
+        res.status(500).json({ error: 'Failed to load Task resources' });
+      }
+    }
+  );
+
+  router.get(
+    '/Task/:id',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      try {
+        const result = await pool.query(
+          `SELECT
+             id,
+             request_id,
+             professional_id,
+             offer_expires_at,
+             accepted_at,
+             declined_at,
+             created_at,
+             now() as updated_at
+           FROM visit_assignments
+           WHERE id = $1
+           LIMIT 1`,
+          [req.params.id]
+        );
+
+        if (result.rows.length === 0) {
+          res.status(404).json({ error: 'Task not found' });
+          return;
+        }
+
+        res.json(mapAssignmentToTask(result.rows[0]));
+      } catch (err) {
+        console.error('FHIR Task read error:', err);
+        res.status(500).json({ error: 'Failed to load Task resource' });
+      }
+    }
+  );
 
   return router;
 }
