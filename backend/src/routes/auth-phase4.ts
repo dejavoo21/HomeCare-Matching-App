@@ -10,7 +10,7 @@ import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt';
+import { signAccessToken, signRefreshToken, verifyRefreshToken, hashToken, compareTokenHash } from '../utils/jwt';
 import { authMiddleware, AuthRequest, requireRole } from '../middleware/auth';
 import { UserRole } from '../types/index';
 
@@ -35,14 +35,6 @@ async function logAudit(
   } catch (err) {
     console.error('Audit log error:', err);
   }
-}
-
-async function hashToken(raw: string): Promise<string> {
-  return bcrypt.hash(raw, 10);
-}
-
-async function compareToken(raw: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(raw, hash);
 }
 
 function setTokenCookies(
@@ -132,7 +124,7 @@ export function createAuthPhase4Router(pool: Pool) {
       const refreshTokenRaw = signRefreshToken({ userId: user.id, tokenId: tempTokenId });
 
       // Hash it before storing
-      const tokenHash = await hashToken(refreshTokenRaw);
+      const tokenHash = hashToken(refreshTokenRaw);
 
       // Create refresh token record with hash
       const tokenRow = await pool.query(
@@ -219,7 +211,7 @@ export function createAuthPhase4Router(pool: Pool) {
       }
 
       // Verify token hash matches
-      const tokenMatches = await compareToken(String(refreshTokenRaw), String(dbt.token_hash));
+      const tokenMatches = compareTokenHash(String(refreshTokenRaw), String(dbt.token_hash));
       if (!tokenMatches) {
         await logAudit(pool, userId, 'AUTH_REFRESH_INVALID', 'refresh_token', tokenId);
         res.status(401).json({ error: 'Refresh token invalid' });
@@ -255,7 +247,7 @@ export function createAuthPhase4Router(pool: Pool) {
       const newTokenId = newTokenRow.rows[0].id;
       const newAccessToken = signAccessToken({ userId, role: user.role, email: user.email });
       const newRefreshTokenRaw = signRefreshToken({ userId, tokenId: newTokenId });
-      const newTokenHash = await hashToken(newRefreshTokenRaw);
+      const newTokenHash = hashToken(newRefreshTokenRaw);
 
       await pool.query(`UPDATE refresh_tokens SET token_hash = $2 WHERE id = $1`, [
         newTokenId,
@@ -313,9 +305,11 @@ export function createAuthPhase4Router(pool: Pool) {
     res.json({
       success: true,
       data: {
-        userId: req.user?.userId,
-        email: req.user?.email,
-        role: req.user?.role,
+        user: {
+          userId: req.user?.userId,
+          email: req.user?.email,
+          role: req.user?.role,
+        },
       },
     });
   });

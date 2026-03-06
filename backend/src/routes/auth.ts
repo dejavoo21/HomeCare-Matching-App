@@ -466,10 +466,12 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response): Promi
     res.json({
       success: true,
       data: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        user: {
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
       },
     });
   } catch (err) {
