@@ -12,7 +12,6 @@ interface ApiOptions {
 }
 
 class ApiClient {
-  private isRefreshing = false;
   private refreshPromise: Promise<boolean> | null = null;
 
   // Session marker only (NOT the real token)
@@ -52,8 +51,6 @@ class ApiClient {
   private async refreshAccessToken(): Promise<boolean> {
     if (this.refreshPromise) return this.refreshPromise;
 
-    this.isRefreshing = true;
-
     this.refreshPromise = (async () => {
       try {
         const response = await fetch(`${BASE_URL}/auth/phase4/refresh`, {
@@ -80,7 +77,6 @@ class ApiClient {
         this.clearSessionMarker();
         return false;
       } finally {
-        this.isRefreshing = false;
         this.refreshPromise = null;
       }
     })();
@@ -522,6 +518,22 @@ class ApiClient {
 
   async replayWebhookDelivery(id: string) {
     return this.request('POST', `/webhooks/admin/deliveries/${id}/replay`, {});
+  }
+
+  // Missing method stubs for backward compatibility
+  setRefreshToken(_: string): void {
+    // HttpOnly cookies handle refresh token automatically
+    this.markSessionActive();
+  }
+
+  async getAllProfessionals() {
+    // Alias for getProfessionals
+    return this.getProfessionals();
+  }
+
+  async assistantQuery(query: string) {
+    // Assistant widget query method
+    return this.request('POST', '/assistant/query', { query });
   }
 }
 

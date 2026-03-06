@@ -25,13 +25,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 function normalizeUser(raw: any): User {
   return {
     id: raw.id || raw.userId,
-    userId: raw.userId || raw.id,
     name: raw.name || raw.email || 'User',
     email: raw.email,
     role: raw.role,
     location: raw.location || '',
     isActive: raw.isActive ?? true,
-  } as User;
+    createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
+    updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : new Date(),
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
