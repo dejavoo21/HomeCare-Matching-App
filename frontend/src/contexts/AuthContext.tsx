@@ -125,7 +125,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      await api.login(email, password);
+      const response = await api.login(email, password);
+
+      // Check if TOTP is required
+      if ((response as any)?.data?.requiresTotp) {
+        throw {
+          code: 'TOTP_REQUIRED',
+          userId: (response as any).data.userId,
+          email: (response as any).data.email,
+        };
+      }
 
       // Cookies are now set by backend; fetch current user
       const userResponse = (await api.getMe()) as any;

@@ -10,6 +10,7 @@ import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { authenticator } from 'otplib';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, hashToken, compareTokenHash } from '../utils/jwt';
 import { authMiddleware, AuthRequest, requireRole } from '../middleware/auth';
 import { UserRole } from '../types/index';
@@ -116,6 +117,31 @@ export function createAuthPhase4Router(pool: Pool) {
       if (!passwordMatch) {
         await logAudit(pool, null, 'AUTH_LOGIN_FAILED', 'user', user.id, { email, reason: 'invalid_password' });
         res.status(401).json({ error: 'Invalid credentials' });
+        return;
+      }
+
+      // Check if TOTP is enabled
+      const mfaRow = await pool.query(
+        `SELECT enabled
+         FROM user_mfa_totp
+         WHERE user_id = $1`,
+        [user.id]
+      );
+
+      const totpEnabled = mfaRow.rows.length > 0 && !!mfaRow.rows[0].enabled;
+
+      if (totpEnabled) {
+        await logAudit(pool, user.id, 'AUTH_LOGIN_MFA_REQUIRED', 'user', user.id, { email });
+
+        res.json({
+          success: true,
+          data: {
+            requiresTotp: true,
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+          },
+        });
         return;
       }
 
@@ -352,6 +378,104 @@ export function createAuthPhase4Router(pool: Pool) {
     } catch (err) {
       console.error('Set password error:', err);
       res.status(500).json({ error: 'Failed to set password' });
+    }
+  });
+
+  /**
+   * POST /auth/verify-totp-login
+   * Body: { userId, code }
+   * Completes login flow when TOTP is enabled
+   */
+  router.post('/verify-totp-login', async (req: Request, res: Response): Promise<void> => {
+    const { userId, code } = req.body || {};
+
+    if (!userId || !code) {
+      res.status(400).json({ error: 'userId and code are required' });
+      return;
+    }
+
+    try {
+      const userResult = await pool.query(
+        `SELECT id, name, email, role, is_active
+         FROM users
+         WHERE id = $1
+         LIMIT 1`,
+        [userId]
+      );
+
+      if (userResult.rows.length === 0) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+
+      const user = userResult.rows[0];
+
+      if (!user.is_active) {
+        res.status(403).json({ error: 'Account disabled' });
+        return;
+      }
+
+      const mfaRow = await pool.query(
+        `SELECT secret, enabled
+         FROM user_mfa_totp
+         WHERE user_id = $1`,
+        [userId]
+      );
+
+      if (mfaRow.rows.length === 0 || !mfaRow.rows[0].enabled) {
+        res.status(400).json({ error: 'TOTP is not enabled for this user' });
+        return;
+      }
+
+      const valid = authenticator.verify({
+        token: String(code).trim(),
+        secret: mfaRow.rows[0].secret,
+      });
+
+      if (!valid) {
+        await logAudit(pool, user.id, 'AUTH_LOGIN_MFA_FAILED', 'user', user.id);
+        res.status(401).json({ error: 'Invalid authentication code' });
+        return;
+      }
+
+      // Create refresh token
+      const tempTokenId = crypto.randomUUID();
+      const refreshTokenRaw = signRefreshToken({ userId: user.id, tokenId: tempTokenId });
+      const tokenHash = hashToken(refreshTokenRaw);
+
+      const insert = await pool.query(
+        `INSERT INTO refresh_tokens (user_id, token_hash, expires_at, user_agent, ip_address, created_at)
+         VALUES ($1, $2, now() + interval '30 days', $3, $4, now())
+         RETURNING id`,
+        [user.id, tokenHash, req.headers['user-agent'] || null, req.ip || null]
+      );
+
+      const dbTokenId = insert.rows[0].id;
+
+      const accessToken = signAccessToken({
+        userId: user.id,
+        role: user.role,
+        email: user.email,
+      });
+
+      setTokenCookies(res, accessToken, refreshTokenRaw, isProduction);
+
+      await logAudit(pool, user.id, 'AUTH_LOGIN_MFA_SUCCESS', 'user', user.id);
+
+      res.json({
+        success: true,
+        data: {
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        },
+      });
+    } catch (err) {
+      console.error('TOTP login verify error:', err);
+      res.status(500).json({ error: 'Failed to verify authentication code' });
     }
   });
 

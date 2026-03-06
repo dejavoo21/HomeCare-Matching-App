@@ -401,6 +401,30 @@ class ApiClient {
   async getAuditSummary() {
     return this.request('GET', '/audit/admin/summary');
   }
+
+  // =========================================================================
+  // MFA / TOTP ENDPOINTS
+  // =========================================================================
+
+  async getTotpStatus() {
+    return this.request('GET', '/mfa/totp/status');
+  }
+
+  async setupTotp() {
+    return this.request('POST', '/mfa/totp/setup', {});
+  }
+
+  async verifyEnableTotp(code: string) {
+    return this.request('POST', '/mfa/totp/verify-enable', { code });
+  }
+
+  async disableTotp(code: string) {
+    return this.request('POST', '/mfa/totp/disable', { code });
+  }
+
+  async verifyTotpLogin(userId: string, code: string) {
+    return this.request('POST', '/auth/phase4/verify-totp-login', { userId, code });
+  }
 }
 
 export const api = new ApiClient();
