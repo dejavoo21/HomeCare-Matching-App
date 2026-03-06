@@ -24,6 +24,7 @@ import { createAuthPhase4Router } from './routes/auth-phase4';
 import { createAccessRequestRouter } from './routes/access-request';
 import { createAuditRouter } from './routes/audit';
 import { createMfaRouter } from './routes/mfa.routes';
+import { createAnalyticsRouter } from './routes/analytics.routes';
 
 // Migrations
 import { runMigrations } from './migrations/runner';
@@ -130,6 +131,7 @@ app.use('/auth/phase4', createAuthPhase4Router(pool));
 app.use('/access', createAccessRequestRouter(pool));
 app.use('/audit', createAuditRouter(pool));
 app.use('/mfa', createMfaRouter(pool));
+app.use('/analytics', createAnalyticsRouter(pool));
 app.use('/users', userRoutes);
 app.use('/requests', requestRoutes);
 app.use('/visits', visitRoutes);

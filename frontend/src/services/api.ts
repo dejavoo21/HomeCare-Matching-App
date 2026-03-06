@@ -425,6 +425,18 @@ class ApiClient {
   async verifyTotpLogin(userId: string, code: string) {
     return this.request('POST', '/auth/phase4/verify-totp-login', { userId, code });
   }
+
+  // =========================================================================
+  // ANALYTICS ENDPOINTS
+  // =========================================================================
+
+  async getAnalyticsSummary() {
+    return this.request('GET', '/analytics/admin/summary');
+  }
+
+  async getAnalyticsTimeseries(days = 7) {
+    return this.request('GET', `/analytics/admin/timeseries?days=${days}`);
+  }
 }
 
 export const api = new ApiClient();
