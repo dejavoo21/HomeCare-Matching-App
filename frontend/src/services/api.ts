@@ -1,6 +1,7 @@
 // ============================================================================
 // API SERVICE - Frontend HTTP client
 // ============================================================================
+// Pure Phase 4: HttpOnly cookies + secure refresh flow
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://homecare-matching-app-production.up.railway.app';
 
@@ -11,106 +12,70 @@ interface ApiOptions {
 
 class ApiClient {
   private isRefreshing = false;
-  private refreshSubscribers: Array<(token: string) => void> = [];
+  private refreshSubscribers: Array<() => void> = [];
 
   constructor() {
-    // Token is now read directly from localStorage on each request
+    // Tokens now live in HttpOnly cookies, not managed by JS
   }
 
+  /**
+   * Tokens are managed by the server in HttpOnly cookies.
+   * These methods are kept for backward compatibility with components
+   * that check for "active session" but don't read the actual token.
+   */
   setToken(token: string): void {
-    localStorage.setItem('accessToken', token);
+    localStorage.setItem('user-session-active', 'true');
   }
 
   getToken(): string | null {
-    // Always read from localStorage to get the latest token
-    return localStorage.getItem('accessToken');
-  }
-
-  setRefreshToken(token: string): void {
-    localStorage.setItem('refreshToken', token);
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
+    // HttpOnly cookies cannot be read from JS—return null
+    // The browser automatically includes them in requests
+    return null;
   }
 
   clearTokens(): void {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user-session-active');
   }
 
   private getHeaders(options?: ApiOptions): Record<string, string> {
-    const headers: Record<string, string> = {
+    return {
       'Content-Type': 'application/json',
       ...(options?.headers || {}),
+      // DO NOT add Authorization header for Phase 4
+      // HttpOnly cookies are sent automatically by the browser
     };
-
-    // Always read fresh token from localStorage
-    const currentToken = localStorage.getItem('accessToken');
-    if (currentToken) {
-      headers['Authorization'] = `Bearer ${currentToken}`;
-    }
-
-    return headers;
   }
 
-  private onRefreshed(token: string): void {
-    this.refreshSubscribers.forEach(cb => cb(token));
+  private notifyRefreshSubscribers(): void {
+    this.refreshSubscribers.forEach(cb => cb());
     this.refreshSubscribers = [];
   }
 
-  private addRefreshSubscriber(callback: (token: string) => void): void {
+  private addRefreshSubscriber(callback: () => void): void {
     this.refreshSubscribers.push(callback);
   }
 
-  private async refreshAccessToken(): Promise<string | null> {
+  private async refreshAccessToken(): Promise<boolean> {
     try {
-      // Try Phase 4 endpoint first (HttpOnly cookies, no body needed)
       const response = await fetch(`${BASE_URL}/auth/phase4/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Include cookies
+        credentials: 'include', // Browser includes HttpOnly cookies automatically
       });
 
       if (response.ok) {
-        // Phase 4 succeeded - no need to set tokens manually (they're in HttpOnly cookies)
-        this.onRefreshed('refreshed');
-        return 'refreshed';
+        // New access token is now in an HttpOnly cookie, set by the server
+        this.notifyRefreshSubscribers();
+        return true;
       }
 
-      // Fallback: try legacy refresh with stored token
-      const refreshToken = this.getRefreshToken();
-      if (!refreshToken) {
-        this.clearTokens();
-        return null;
-      }
-
-      const legacyResponse = await fetch(`${BASE_URL}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (!legacyResponse.ok) {
-        this.clearTokens();
-        return null;
-      }
-
-      const data = await legacyResponse.json();
-      const newAccessToken = data.data?.accessToken;
-
-      if (newAccessToken) {
-        this.setToken(newAccessToken);
-        this.onRefreshed(newAccessToken);
-        return newAccessToken;
-      }
-
+      // Refresh failed—user is logged out
       this.clearTokens();
-      return null;
+      return false;
     } catch (err) {
       console.error('Token refresh failed:', err);
       this.clearTokens();
-      return null;
+      return false;
     }
   }
 
@@ -121,59 +86,65 @@ class ApiClient {
     options?: ApiOptions
   ): Promise<T> {
     const url = `${BASE_URL}${path}`;
-    const shouldRetry = options?.retry !== false; // Default to true
+    const shouldRetry = options?.retry !== false;
 
     const response = await fetch(url, {
       method,
       headers: this.getHeaders(options),
       body: body ? JSON.stringify(body) : undefined,
-      credentials: 'include', // Include cookies for HttpOnly token support
+      credentials: 'include', // Include HttpOnly cookies in every request
     });
 
-    // Handle 401 Unauthorized - try to refresh token
+    // Handle 401 Unauthorized - try to refresh
     if (response.status === 401 && shouldRetry) {
-      // If already refreshing, queue this request
+      // Already refreshing? Queue this request
       if (this.isRefreshing) {
         return new Promise((resolve, reject) => {
-          this.addRefreshSubscriber((token: string) => {
-            fetch(url, {
-              method,
-              headers: {
-                ...this.getHeaders(options),
-                'Authorization': `Bearer ${token}`,
-              },
-              body: body ? JSON.stringify(body) : undefined,
-            })
-              .then(res => {
-                if (!res.ok) throw new Error('Retry failed');
-                return res.json();
-              })
-              .then(resolve)
-              .catch(reject);
+          this.addRefreshSubscriber(async () => {
+            try {
+              // Retry the request with the new token (in the cookie)
+              const retryResponse = await fetch(url, {
+                method,
+                headers: this.getHeaders(options),
+                body: body ? JSON.stringify(body) : undefined,
+                credentials: 'include',
+              });
+
+              if (!retryResponse.ok) {
+                throw new Error(`Retry failed: ${retryResponse.status}`);
+              }
+
+              const data = await retryResponse.json();
+              resolve(data);
+            } catch (err) {
+              reject(err);
+            }
           });
         });
       }
 
+      // Not already refreshing—start refresh
       this.isRefreshing = true;
-      const newToken = await this.refreshAccessToken();
+      const refreshed = await this.refreshAccessToken();
       this.isRefreshing = false;
 
-      if (newToken) {
-        // Retry original request with new token
+      if (refreshed) {
+        // Retry the original request
         return this.request(method, path, body, { ...options, retry: false });
       }
 
-      // Refresh failed - clear auth and throw error
+      // Refresh failed—user must log in again
       throw new Error('Session expired. Please log in again.');
     }
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'API request failed');
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `API request failed: ${response.status}`);
     }
 
     return response.json();
   }
+
 
   // =========================================================================
   // AUTH ENDPOINTS
@@ -196,58 +167,43 @@ class ApiClient {
   }
 
   async login(email: string, password: string) {
-    try {
-      // Try Phase 4 login (secure, HttpOnly cookies)
-      const response = await fetch(`${BASE_URL}/auth/phase4/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include', // Include cookies
-      });
+    const response = await this.request<any>('POST', '/auth/phase4/login', {
+      email,
+      password,
+    });
 
-      if (response.ok) {
-        const data = await response.json();
-        // Tokens are now in HttpOnly cookies, no need to set them manually
-        return data;
-      }
-    } catch (err) {
-      console.error('Phase 4 login failed:', err);
+    // Mark session as active
+    if (response.success) {
+      this.setToken('active');
     }
 
-    // Fallback: demo-login for development
-    return this.request('POST', '/auth/demo-login', { email, password });
+    return response;
   }
 
   async logout() {
     try {
-      // Try Phase 4 logout (clears HttpOnly cookies)
-      await fetch(`${BASE_URL}/auth/phase4/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
+      await this.request('POST', '/auth/phase4/logout', {});
     } catch (err) {
       console.error('Logout error:', err);
+    } finally {
+      this.clearTokens();
     }
-    // Also clear localStorage for backward compatibility
-    this.clearTokens();
   }
 
-  async requestAccess(name: string, email: string, requestedRole: string, reason?: string) {
-    return this.request('POST', '/access/request', {
-      name,
-      email,
-      requestedRole,
-      reason,
-    });
-  }
-
-  async verifyOtp(userId: string, challengeId: string, code: string) {
-    return this.request('POST', '/auth/verify-otp', { userId, challengeId, code });
+  async getMe() {
+    return this.request('GET', '/auth/me');
   }
 
   async requestOtp(email: string) {
     return this.request('POST', '/auth/request-otp', { email });
+  }
+
+  async verifyOtp(userId: string, challengeId: string, code: string) {
+    return this.request('POST', '/auth/verify-otp', {
+      userId,
+      challengeId,
+      code,
+    });
   }
 
   async getUserRoles() {
@@ -258,8 +214,18 @@ class ApiClient {
     return this.request('POST', `/auth/users/${userId}/roles`, { roleCode });
   }
 
-  async getMe() {
-    return this.request('GET', '/auth/me');
+  async requestAccess(
+    name: string,
+    email: string,
+    requestedRole: string,
+    reason?: string
+  ) {
+    return this.request('POST', '/access/request', {
+      name,
+      email,
+      requestedRole,
+      reason,
+    });
   }
 
   // =========================================================================
@@ -386,10 +352,10 @@ class ApiClient {
     return this.request('PUT', `/admin/users/${userId}/reactivate`, {});
   }
 
-  // Phase 3: Premium Admin Features
-
   async offerToProfessional(requestId: string, professionalId: string) {
-    return this.request('POST', `/admin/requests/${requestId}/offer`, { professionalId });
+    return this.request('POST', `/admin/requests/${requestId}/offer`, {
+      professionalId,
+    });
   }
 
   async requeueRequest(requestId: string) {
@@ -401,7 +367,9 @@ class ApiClient {
   }
 
   async setUrgency(requestId: string, urgency: string) {
-    return this.request('POST', `/admin/requests/${requestId}/urgency`, { urgency });
+    return this.request('POST', `/admin/requests/${requestId}/urgency`, {
+      urgency,
+    });
   }
 
   async searchGlobal(query: string, limit = 10) {
@@ -413,27 +381,9 @@ class ApiClient {
     return this.request('GET', '/admin/activity');
   }
 
-  async getAuditEvents(params?: { q?: string; severity?: string; entityType?: string; limit?: number }) {
-    const qs = new URLSearchParams();
-    if (params?.q) qs.set('q', params.q);
-    if (params?.severity) qs.set('severity', params.severity);
-    if (params?.entityType) qs.set('entityType', params.entityType);
-    if (params?.limit) qs.set('limit', String(params.limit));
-    const suffix = qs.toString() ? `?${qs.toString()}` : '';
-    return this.request('GET', `/admin/audit${suffix}`);
-  }
-
-  async getAllProfessionals() {
-    return this.request('GET', '/users?role=nurse,doctor');
-  }
-
-  // =========================================================================
-  // ASSISTANT ENDPOINTS
-  // =========================================================================
-
-  async assistantQuery(message: string) {
-    return this.request('POST', '/assistant/query', { message });
-  }
-}
-
-export const api = new ApiClient();
+  async getAuditEvents(params?: {
+    q?: string;
+    severity?: string;
+    entityType?: string;
+    limit?: number;
+  }) {
