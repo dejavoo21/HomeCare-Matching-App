@@ -1,8 +1,10 @@
 import { Router, Response, Request } from 'express';
 import { Pool } from 'pg';
-import { authenticator } from 'otplib';
+const otplib = require('otplib');
 import QRCode from 'qrcode';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+
+const { authenticator } = otplib;
 
 async function logAudit(
   pool: Pool,

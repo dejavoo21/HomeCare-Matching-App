@@ -10,10 +10,12 @@ import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { authenticator } from 'otplib';
+const otplib = require('otplib');
 import { signAccessToken, signRefreshToken, verifyRefreshToken, hashToken, compareTokenHash } from '../utils/jwt';
 import { authMiddleware, AuthRequest, requireRole } from '../middleware/auth';
 import { UserRole } from '../types/index';
+
+const { authenticator } = otplib;
 
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
 const ACCESS_TOKEN_TTL = '15m';
