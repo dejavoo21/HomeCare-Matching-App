@@ -9,7 +9,7 @@ import { RequestDrawer } from '../components/RequestDrawer';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
 import { AccessRequestsPanel } from '../components/AccessRequestsPanel';
-import { AuditPanel } from '../components/AuditPanel';
+import { AuditDashboardPanel } from '../components/AuditDashboardPanel';
 import { Toast } from '../components/Toast';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { api } from '../services/api';
@@ -309,7 +309,7 @@ export function AdminDashboard() {
                 <ActivityFeed refreshKey={activityKey} />
                 <ProfessionalsPanel refreshKey={activityKey} />
                 <AccessRequestsPanel refreshKey={activityKey} />
-                <AuditPanel refreshKey={activityKey} />
+                <AuditDashboardPanel refreshKey={activityKey} />
               </div>
             </aside>
           </div>

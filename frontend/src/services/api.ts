@@ -385,7 +385,22 @@ class ApiClient {
 
   async getAuditEvents(params?: {
     q?: string;
+    action?: string;
     severity?: string;
-    entityType?: string;
     limit?: number;
   }) {
+    const qs = new URLSearchParams();
+    if (params?.q) qs.set('q', params.q);
+    if (params?.action) qs.set('action', params.action);
+    if (params?.severity) qs.set('severity', params.severity);
+    if (params?.limit) qs.set('limit', String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return this.request('GET', `/audit/admin${suffix}`);
+  }
+
+  async getAuditSummary() {
+    return this.request('GET', '/audit/admin/summary');
+  }
+}
+
+export const api = new ApiClient();
