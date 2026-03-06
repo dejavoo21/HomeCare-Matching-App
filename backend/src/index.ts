@@ -10,6 +10,8 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { Pool } from 'pg';
+import path from 'path';
+import fs from 'fs';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -120,13 +122,34 @@ app.get('/metrics', async (req: Request, res: Response) => {
 // ============================================================================
 
 // Serve frontend static files in production
-import path from 'path';
 const frontendDist = path.join(__dirname, '../public');
-try {
+const publicDirExists = fs.existsSync(frontendDist);
+
+if (publicDirExists) {
   app.use(express.static(frontendDist));
-  console.log(`📁 Serving frontend static files from: ${frontendDist}`);
-} catch (err) {
-  console.warn('⚠️ Frontend static files not available (expected in development)');
+  console.log(`✅ Serving frontend static files from: ${frontendDist}`);
+} else {
+  // Fallback: try alternative paths
+  const altPaths = [
+    '/public',
+    '/app/public',
+    path.join(__dirname, '../../frontend/dist'),
+    '/app/frontend/dist'
+  ];
+  
+  let foundPath = null;
+  for (const altPath of altPaths) {
+    if (fs.existsSync(altPath)) {
+      app.use(express.static(altPath));
+      foundPath = altPath;
+      console.log(`✅ Serving frontend static files from (fallback): ${altPath}`);
+      break;
+    }
+  }
+  
+  if (!foundPath) {
+    console.warn(`⚠️ Frontend static files directory not found. Tried: ${frontendDist}, ${altPaths.join(', ')}`);
+  }
 }
 
 // ============================================================================
