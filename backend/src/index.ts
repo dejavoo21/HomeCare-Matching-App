@@ -116,6 +116,20 @@ app.get('/metrics', async (req: Request, res: Response) => {
 });
 
 // ============================================================================
+// SERVE FRONTEND STATIC FILES
+// ============================================================================
+
+// Serve frontend static files in production
+import path from 'path';
+const frontendDist = path.join(__dirname, '../../../frontend/dist');
+try {
+  app.use(express.static(frontendDist));
+  console.log(`📁 Serving frontend static files from: ${frontendDist}`);
+} catch (err) {
+  console.warn('⚠️ Frontend static files not available (expected in development)');
+}
+
+// ============================================================================
 // SETUP POSTGRESQL ROUTES (BEFORE MOUNTING)
 // ============================================================================
 
@@ -162,6 +176,39 @@ startWebhookWorker(pool);
 
 // Start notification worker (processes email queue)
 // startNotificationWorker(pool);
+
+// ============================================================================
+// SPA FALLBACK - Serve frontend index.html for all non-API routes
+// ============================================================================
+
+app.get('*', (req: Request, res: Response) => {
+  // Don't redirect API calls (they should 404)
+  if (req.path.startsWith('/api') || req.path.startsWith('/auth') || req.path.startsWith('/access') || 
+      req.path.startsWith('/audit') || req.path.startsWith('/mfa') || req.path.startsWith('/analytics') ||
+      req.path.startsWith('/webhooks') || req.path.startsWith('/users') || req.path.startsWith('/requests') ||
+      req.path.startsWith('/visits') || req.path.startsWith('/admin') || req.path.startsWith('/assistant') ||
+      req.path.startsWith('/fhir') || req.path.startsWith('/integrations') || req.path.startsWith('/availability') ||
+      req.path.startsWith('/matching') || req.path.startsWith('/realtime') || req.path.startsWith('/health') ||
+      req.path.startsWith('/metrics')) {
+    return res.status(404).json({
+      error: 'Not found',
+      path: req.path,
+      method: req.method,
+    });
+  }
+  
+  // Serve index.html for SPA routing
+  const indexPath = path.join(frontendDist, 'index.html');
+  try {
+    res.sendFile(indexPath);
+  } catch (err) {
+    res.status(404).json({
+      error: 'Not found',
+      path: req.path,
+      method: req.method,
+    });
+  }
+});
 
 // ============================================================================
 // 404 HANDLER
