@@ -2,7 +2,7 @@
  * Real-time SSE routes
  */
 
-import express, { Router, Request, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import type { Pool } from 'pg';
 import { sseHub } from '../realtime/sseHub';
 import { eventBus } from '../realtime/eventBus';
@@ -14,25 +14,16 @@ export function createRealtimeRoutes(pool: Pool): Router {
   /**
    * GET /realtime/stream
    * SSE endpoint for real-time updates
-   * Phase 4: Authenticates from HttpOnly cookie (preferred)
-   * Fallback: query param (?token=JWT) or Authorization header (Bearer JWT)
    */
   router.get('/stream', (req: Request, res: Response) => {
     try {
-      // Phase 4: Try HttpOnly cookie first
       let token = req.cookies?.accessToken as string | undefined;
 
-      // Fallback: Try query param (for backward compatibility)
-      if (!token) {
-        token = req.query.token as string | undefined;
-      }
+      // fallback for older clients
+      if (!token) token = req.query.token as string | undefined;
 
-      // Fallback: Try Authorization header
-      if (!token) {
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-          token = authHeader.slice(7);
-        }
+      if (!token && req.headers.authorization?.startsWith('Bearer ')) {
+        token = req.headers.authorization.slice(7);
       }
 
       if (!token) {
@@ -40,42 +31,64 @@ export function createRealtimeRoutes(pool: Pool): Router {
         return;
       }
 
-      // Verify JWT token properly
       let decoded: { userId: string; role: string; email: string };
+
       try {
         decoded = verifyAccessToken(token);
-      } catch (error) {
+      } catch {
         res.status(401).json({ error: 'Invalid or expired token' });
         return;
       }
 
-      // Set SSE headers
+      // SSE headers
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
-      res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx buffering
-      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('X-Accel-Buffering', 'no');
 
-      // Register client with SSE hub (returns unique key for cleanup)
+      // IMPORTANT: must match frontend origin for cookies
+      res.setHeader(
+        'Access-Control-Allow-Origin',
+        process.env.FRONTEND_URL || 'http://localhost:5173'
+      );
+
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+      // flush headers immediately
+      res.flushHeaders?.();
+
+      // register client
       const clientKey = sseHub.registerClient(decoded.userId, decoded.role as any, res);
 
-      // Handle disconnect with proper cleanup
+      console.log(`[SSE] Connected ${decoded.userId}`);
+
+      // heartbeat to keep connection alive
+      const heartbeat = setInterval(() => {
+        try {
+          res.write(`event: HEARTBEAT\ndata: {}\n\n`);
+        } catch {
+          clearInterval(heartbeat);
+        }
+      }, 25000);
+
       req.on('close', () => {
+        clearInterval(heartbeat);
         sseHub.unregisterClient(clientKey);
+        console.log(`[SSE] Disconnected ${decoded.userId}`);
       });
 
-      // Handle errors
       req.on('error', () => {
-        console.log(`[SSE] Request error for ${decoded.userId}`);
+        clearInterval(heartbeat);
         sseHub.unregisterClient(clientKey);
         res.end();
       });
 
       res.on('error', () => {
-        console.log(`[SSE] Response error for ${decoded.userId}`);
+        clearInterval(heartbeat);
         sseHub.unregisterClient(clientKey);
         res.end();
       });
+
     } catch (error) {
       console.error('[SSE] Unexpected error:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -84,20 +97,24 @@ export function createRealtimeRoutes(pool: Pool): Router {
 
   /**
    * GET /realtime/stats
-   * Admin endpoint to check SSE hub status
+   * Admin debug endpoint
    */
   router.get('/stats', (req: Request, res: Response) => {
-    // Require admin or auth
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    let token: string | undefined;
+
+    if (req.cookies?.accessToken) {
+      token = req.cookies.accessToken;
+    } else if (req.headers.authorization?.startsWith('Bearer ')) {
+      token = req.headers.authorization.slice(7);
+    }
+
+    if (!token) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
     try {
-      const token = authHeader.slice(7);
-      const tokenStr = Buffer.from(token, 'base64').toString('utf-8');
-      const decoded = JSON.parse(tokenStr);
+      const decoded = verifyAccessToken(token);
 
       if (decoded.role !== 'admin') {
         res.status(403).json({ error: 'Forbidden' });
@@ -105,6 +122,7 @@ export function createRealtimeRoutes(pool: Pool): Router {
       }
 
       const stats = sseHub.getStats();
+
       res.json({
         success: true,
         data: {
@@ -112,7 +130,8 @@ export function createRealtimeRoutes(pool: Pool): Router {
           listenerCount: eventBus.getListenerCount(),
         },
       });
-    } catch (error) {
+
+    } catch {
       res.status(401).json({ error: 'Invalid token' });
     }
   });
