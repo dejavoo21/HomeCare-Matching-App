@@ -126,38 +126,18 @@ app.get('/metrics', async (req: Request, res: Response) => {
 
 // Serve frontend static files in production
 const frontendDist = path.join(__dirname, '../public');
-const publicDirExists = fs.existsSync(frontendDist);
 
-// Try to serve frontend static files
-const tryServeFrontend = () => {
-  const paths = [
-    frontendDist,
-    '/public',
-    '/app/public',
-    path.join(__dirname, '../../frontend/dist'),
-    '/app/frontend/dist'
-  ];
-  
-  for (const dir of paths) {
-    try {
-      if (fs.existsSync(dir)) {
-        const files = fs.readdirSync(dir);
-        if (files.length > 0) {
-          app.use(express.static(dir));
-          console.log(`✅ Frontend static files served from: ${dir} (${files.length} files)`);
-          return true;
-        }
-      }
-    } catch (err) {
-      // Continue to next path
-    }
+// Try to use express.static if directory exists
+try {
+  if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+    console.log(`✅ Frontend static: ${frontendDist}`);
+  } else {
+    console.warn(`⚠️ Frontend not found: ${frontendDist}`);
   }
-  
-  console.warn('⚠️ Frontend static files not found in any of the expected locations');
-  return false;
-};
-
-tryServeFrontend();
+} catch (err) {
+  console.warn(`⚠️ Static files error: ${(err as any).message}`);
+}
 
 // ============================================================================
 // SETUP POSTGRESQL ROUTES (BEFORE MOUNTING)
