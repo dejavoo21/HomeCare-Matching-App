@@ -125,18 +125,25 @@ app.get('/metrics', async (req: Request, res: Response) => {
 // ============================================================================
 
 // Serve frontend static files in production
+console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔍 __dirname:', __dirname);
+console.log('🔍 CWD:', process.cwd());
+
 const frontendDist = path.join(__dirname, '../public');
+console.log('🔍 Trying to serve frontend from:', frontendDist);
+console.log('🔍 Directory exists?', fs.existsSync(frontendDist));
 
 // Try to use express.static if directory exists
 try {
   if (fs.existsSync(frontendDist)) {
     app.use(express.static(frontendDist));
-    console.log(`✅ Frontend static: ${frontendDist}`);
+    console.log('✅ Frontend static middleware registered');
+    console.log('✅ Files in directory:', fs.readdirSync(frontendDist));
   } else {
-    console.warn(`⚠️ Frontend not found: ${frontendDist}`);
+    console.warn('⚠️ Frontend directory NOT found:', frontendDist);
   }
 } catch (err) {
-  console.warn(`⚠️ Static files error: ${(err as any).message}`);
+  console.error('❌ Static files error:', (err as any).message);
 }
 
 // ============================================================================
