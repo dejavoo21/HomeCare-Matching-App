@@ -57,7 +57,10 @@ const PORT = parseInt(process.env.PORT || '6005', 10);
 // Configure CORS for development and production
 app.use(
   cors({
-    origin: ['https://beneficial-solace-production-0743.up.railway.app', 'http://localhost:3000', 'http://localhost:5173'],
+    origin: (origin, callback) => {
+      // Allow all origins for now (production should be more restrictive)
+      callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -125,32 +128,36 @@ app.get('/metrics', async (req: Request, res: Response) => {
 const frontendDist = path.join(__dirname, '../public');
 const publicDirExists = fs.existsSync(frontendDist);
 
-if (publicDirExists) {
-  app.use(express.static(frontendDist));
-  console.log(`✅ Serving frontend static files from: ${frontendDist}`);
-} else {
-  // Fallback: try alternative paths
-  const altPaths = [
+// Try to serve frontend static files
+const tryServeFrontend = () => {
+  const paths = [
+    frontendDist,
     '/public',
     '/app/public',
     path.join(__dirname, '../../frontend/dist'),
     '/app/frontend/dist'
   ];
   
-  let foundPath = null;
-  for (const altPath of altPaths) {
-    if (fs.existsSync(altPath)) {
-      app.use(express.static(altPath));
-      foundPath = altPath;
-      console.log(`✅ Serving frontend static files from (fallback): ${altPath}`);
-      break;
+  for (const dir of paths) {
+    try {
+      if (fs.existsSync(dir)) {
+        const files = fs.readdirSync(dir);
+        if (files.length > 0) {
+          app.use(express.static(dir));
+          console.log(`✅ Frontend static files served from: ${dir} (${files.length} files)`);
+          return true;
+        }
+      }
+    } catch (err) {
+      // Continue to next path
     }
   }
   
-  if (!foundPath) {
-    console.warn(`⚠️ Frontend static files directory not found. Tried: ${frontendDist}, ${altPaths.join(', ')}`);
-  }
-}
+  console.warn('⚠️ Frontend static files not found in any of the expected locations');
+  return false;
+};
+
+tryServeFrontend();
 
 // ============================================================================
 // SETUP POSTGRESQL ROUTES (BEFORE MOUNTING)
@@ -192,7 +199,11 @@ app.use('/realtime', createRealtimeRoutes(pool));
 // startRealtimeRelay(pool);
 
 // Start webhook delivery worker (processes queued webhooks)
-startWebhookWorker(pool);
+try {
+  startWebhookWorker(pool);
+} catch (err) {
+  console.warn('⚠️ Webhook worker initialization failed (non-critical):', (err as any)?.message);
+}
 
 // Start outbox worker (processes transaction-safe events)
 // startOutboxWorker(pool);
