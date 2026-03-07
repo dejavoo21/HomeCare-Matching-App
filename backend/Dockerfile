@@ -15,7 +15,7 @@ RUN npm run build
 
 # Build frontend
 WORKDIR /app/frontend
-RUN npm install && npm run build
+RUN npm install && npm run build && ls -la dist/ && echo "Frontend build completed successfully" || echo "Frontend build FAILED"
 
 # Runtime stage
 FROM node:18-alpine
@@ -32,7 +32,10 @@ RUN npm install --omit=dev
 COPY --from=builder /app/backend/dist ./dist
 
 # Copy built frontend from builder stage (for serving as static files)
-COPY --from=builder /app/frontend/dist ./public
+COPY --from=builder /app/frontend/dist ./public || echo "WARNING: Frontend dist not found!"
+
+# List files for debugging
+RUN ls -la / && ls -la /app/ && ls -la /app/public/ 2>&1 || echo "Public directory not found"
 
 # Expose port
 EXPOSE 8000
