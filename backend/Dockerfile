@@ -32,10 +32,10 @@ RUN npm install --omit=dev
 COPY --from=builder /app/backend/dist ./dist
 
 # Copy built frontend from builder stage (for serving as static files)
-COPY --from=builder /app/frontend/dist ./public || echo "WARNING: Frontend dist not found!"
+COPY --from=builder /app/frontend/dist ./public
 
 # List files for debugging
-RUN ls -la / && ls -la /app/ && ls -la /app/public/ 2>&1 || echo "Public directory not found"
+RUN ls -la /app/public/ || echo "Public directory empty"
 
 # Expose port
 EXPOSE 8000
