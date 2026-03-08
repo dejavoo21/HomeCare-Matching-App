@@ -120,41 +120,52 @@ export function AdminDashboardPage() {
 
       <section className="opsMainGrid">
         <div className="opsPrimary">
-          <div className="summaryLinkCard">
-            <div className="summaryLinkCardTop">
-              <div>
-                <div className="summaryLinkEyebrow">Dispatch</div>
-                <h2 className="summaryLinkTitle">Queue Workbench</h2>
+          <div className="dashboardPrimaryStack">
+            <div className="summaryLinkCard">
+              <div className="summaryLinkCardTop">
+                <div>
+                  <div className="summaryLinkEyebrow">Dispatch</div>
+                  <h2 className="summaryLinkTitle">Queue Workbench</h2>
+                </div>
               </div>
+
+              <p className="summaryLinkText">
+                Open the live dispatch board to work queued requests, monitor expiring offers,
+                update urgency, and assign or requeue visits.
+              </p>
+
+              <div className="settingsOverviewGrid">
+                <div className="settingsOverviewCard">
+                  <div className="settingsOverviewLabel">Queued</div>
+                  <div className="settingsOverviewValue">{stats.queuedRequests}</div>
+                </div>
+                <div className="settingsOverviewCard">
+                  <div className="settingsOverviewLabel">Offered</div>
+                  <div className="settingsOverviewValue">{stats.offeredRequests}</div>
+                </div>
+                <div className="settingsOverviewCard">
+                  <div className="settingsOverviewLabel">En Route</div>
+                  <div className="settingsOverviewValue">{stats.enRouteRequests}</div>
+                </div>
+                <div className="settingsOverviewCard">
+                  <div className="settingsOverviewLabel">Completed</div>
+                  <div className="settingsOverviewValue">{stats.completedRequests}</div>
+                </div>
+              </div>
+
+              <Link to="/admin/dispatch" className="summaryLinkAction">
+                Open Dispatch Workbench →
+              </Link>
             </div>
 
-            <p className="summaryLinkText">
-              Open the live dispatch board to work queued requests, monitor expiring offers,
-              update urgency, and assign or requeue visits.
-            </p>
-
-            <div className="settingsOverviewGrid">
-              <div className="settingsOverviewCard">
-                <div className="settingsOverviewLabel">Queued</div>
-                <div className="settingsOverviewValue">{stats.queuedRequests}</div>
-              </div>
-              <div className="settingsOverviewCard">
-                <div className="settingsOverviewLabel">Offered</div>
-                <div className="settingsOverviewValue">{stats.offeredRequests}</div>
-              </div>
-              <div className="settingsOverviewCard">
-                <div className="settingsOverviewLabel">En Route</div>
-                <div className="settingsOverviewValue">{stats.enRouteRequests}</div>
-              </div>
-              <div className="settingsOverviewCard">
-                <div className="settingsOverviewLabel">Completed</div>
-                <div className="settingsOverviewValue">{stats.completedRequests}</div>
-              </div>
+            <div className="summaryStrip">
+              <IntegrationsSummaryCard />
+              <AuditSummaryCard />
+              <AnalyticsSummaryCard />
+              <AccessSummaryCard />
+              <ReliabilitySummaryCard />
+              <FhirSummaryCard />
             </div>
-
-            <Link to="/admin/dispatch" className="summaryLinkAction">
-              Open Dispatch Workbench →
-            </Link>
           </div>
         </div>
 
@@ -163,15 +174,6 @@ export function AdminDashboardPage() {
           <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
         </aside>
-      </section>
-
-      <section className="summaryStrip">
-        <IntegrationsSummaryCard />
-        <AuditSummaryCard />
-        <AnalyticsSummaryCard />
-        <AccessSummaryCard />
-        <ReliabilitySummaryCard />
-        <FhirSummaryCard />
       </section>
     </main>
   );

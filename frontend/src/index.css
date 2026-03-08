@@ -5076,6 +5076,11 @@ html {
   min-width: 0;
 }
 
+.dashboardPrimaryStack {
+  display: grid;
+  gap: 18px;
+}
+
 .opsSecondary,
 .pageGridTwo {
   display: grid;
