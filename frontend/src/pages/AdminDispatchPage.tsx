@@ -197,7 +197,7 @@ export function AdminDispatchPage() {
         </div>
 
         <aside className="opsSecondary">
-          <ProfessionalsPanel refreshKey={activityKey} />
+          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
           <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
         </aside>
