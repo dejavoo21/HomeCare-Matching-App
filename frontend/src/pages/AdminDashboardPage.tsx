@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
-import { DispatchPipeline } from '../components/DispatchPipeline';
 import { StatusTile } from '../components/StatusTile';
 import { AttentionPanel } from '../components/AttentionPanel';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
@@ -112,10 +111,6 @@ export function AdminDashboardPage() {
         <StatusTile label="Offers Pending" value={stats.offeredRequests} color="amber" />
         <StatusTile label="Active Visits" value={activeVisitsCount} color="blue" />
         <StatusTile label="Completed Today" value={stats.completedRequests} color="green" />
-      </section>
-
-      <section className="pipelineRow">
-        <DispatchPipeline />
       </section>
 
       <section className="opsMainGrid">
