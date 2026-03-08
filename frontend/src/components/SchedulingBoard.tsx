@@ -6,6 +6,7 @@ type Professional = {
   name: string;
   email: string;
   role: string;
+  is_active?: boolean;
 };
 
 type Visit = {
@@ -49,6 +50,18 @@ type DragPayload = {
 };
 
 type ViewMode = 'day' | 'week';
+
+type Client = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+type QuickCreateState = {
+  professionalId: string;
+  professionalName: string;
+  day: string;
+};
 
 function formatDay(date: Date) {
   return date.toLocaleDateString(undefined, {
@@ -170,6 +183,17 @@ export function SchedulingBoard() {
   const [dragging, setDragging] = useState<DragPayload | null>(null);
   const [dropBusy, setDropBusy] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [clients, setClients] = useState<Client[]>([]);
+  const [quickCreate, setQuickCreate] = useState<QuickCreateState | null>(null);
+  const [quickCreateBusy, setQuickCreateBusy] = useState(false);
+  const [quickCreateForm, setQuickCreateForm] = useState({
+    clientId: '',
+    serviceType: 'MEDICATION_ADMIN',
+    addressText: '',
+    description: '',
+    urgency: 'medium',
+    time: '09:00',
+  });
 
   const load = async () => {
     try {
@@ -190,6 +214,19 @@ export function SchedulingBoard() {
   useEffect(() => {
     load();
   }, [role, viewMode, weekStart]);
+
+  useEffect(() => {
+    async function loadClients() {
+      try {
+        const response = (await api.getClients()) as { data?: Client[] };
+        setClients(response?.data || []);
+      } catch (err) {
+        console.error('Failed to load scheduling clients:', err);
+      }
+    }
+
+    loadClients();
+  }, []);
 
   const weekDays = useMemo(() => {
     const count = viewMode === 'day' ? 1 : 7;
@@ -283,6 +320,66 @@ export function SchedulingBoard() {
     } finally {
       setDropBusy(null);
       setDragging(null);
+    }
+  };
+
+  const openQuickCreate = (professional: Professional, day: Date) => {
+    setQuickCreate({
+      professionalId: professional.id,
+      professionalName: professional.name,
+      day: day.toISOString(),
+    });
+    setQuickCreateForm((current) => ({
+      ...current,
+      time: current.time || '09:00',
+    }));
+    setMessage('');
+  };
+
+  const closeQuickCreate = () => {
+    setQuickCreate(null);
+    setQuickCreateBusy(false);
+    setQuickCreateForm({
+      clientId: '',
+      serviceType: 'MEDICATION_ADMIN',
+      addressText: '',
+      description: '',
+      urgency: 'medium',
+      time: '09:00',
+    });
+  };
+
+  const submitQuickCreate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!quickCreate) {
+      return;
+    }
+
+    try {
+      setQuickCreateBusy(true);
+      setMessage('');
+
+      const [hours, minutes] = quickCreateForm.time.split(':').map((value) => Number(value));
+      const scheduledDate = new Date(quickCreate.day);
+      scheduledDate.setHours(hours || 0, minutes || 0, 0, 0);
+
+      await api.createSchedule({
+        clientId: quickCreateForm.clientId,
+        professionalId: quickCreate.professionalId,
+        serviceType: quickCreateForm.serviceType,
+        addressText: quickCreateForm.addressText,
+        description: quickCreateForm.description || undefined,
+        urgency: quickCreateForm.urgency,
+        preferredStart: scheduledDate.toISOString(),
+      });
+
+      closeQuickCreate();
+      setMessage('Visit created successfully.');
+      await load();
+    } catch (err: any) {
+      console.error('Failed to create visit from board:', err);
+      setMessage(err?.message || 'Failed to create visit');
+      setQuickCreateBusy(false);
     }
   };
 
@@ -469,6 +566,14 @@ export function SchedulingBoard() {
                               onDropVisit(professional.id, day);
                             }}
                           >
+                            <button
+                              type="button"
+                              className="scheduleCreateButton"
+                              onClick={() => openQuickCreate(professional, day)}
+                            >
+                              + Create
+                            </button>
+
                             {dayVisits.length > 0 ? (
                               <div className="scheduleDayLoad">
                                 {dayVisits.length} visit{dayVisits.length === 1 ? '' : 's'}
@@ -524,6 +629,141 @@ export function SchedulingBoard() {
           </section>
         </>
       )}
+
+      {quickCreate ? (
+        <div className="scheduleQuickCreateOverlay" onClick={closeQuickCreate}>
+          <section
+            className="scheduleQuickCreateCard"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="scheduleQuickCreateHeader">
+              <div>
+                <h3 className="settingsCardTitle">Create Visit</h3>
+                <p className="settingsCardText">
+                  {quickCreate.professionalName} on {formatDay(new Date(quickCreate.day))}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="scheduleQuickCreateClose"
+                onClick={closeQuickCreate}
+              >
+                ×
+              </button>
+            </div>
+
+            <form className="recurringGrid" onSubmit={submitQuickCreate}>
+              <div className="formGroup">
+                <label className="formLabel">Client</label>
+                <select
+                  className="select"
+                  value={quickCreateForm.clientId}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      clientId: event.target.value,
+                    }))
+                  }
+                  required
+                >
+                  <option value="">Select client</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name} ({client.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="formGroup">
+                <label className="formLabel">Time</label>
+                <input
+                  className="input"
+                  type="time"
+                  value={quickCreateForm.time}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      time: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+
+              <div className="formGroup">
+                <label className="formLabel">Service Type</label>
+                <input
+                  className="input"
+                  value={quickCreateForm.serviceType}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      serviceType: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+
+              <div className="formGroup">
+                <label className="formLabel">Urgency</label>
+                <select
+                  className="select"
+                  value={quickCreateForm.urgency}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      urgency: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+
+              <div className="formGroup recurringGrid-full">
+                <label className="formLabel">Address</label>
+                <input
+                  className="input"
+                  value={quickCreateForm.addressText}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      addressText: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+
+              <div className="formGroup recurringGrid-full">
+                <label className="formLabel">Description</label>
+                <textarea
+                  className="input recurringTextarea"
+                  rows={3}
+                  value={quickCreateForm.description}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="recurringActions recurringGrid-full">
+                <button type="submit" className="btn btn-primary" disabled={quickCreateBusy}>
+                  {quickCreateBusy ? 'Creating...' : 'Create Visit'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

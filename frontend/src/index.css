@@ -8035,6 +8035,64 @@ html {
   color: #64748b;
 }
 
+.scheduleCreateButton {
+  align-self: flex-end;
+  min-height: 28px;
+  padding: 0 10px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.08);
+  color: #4338ca;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.scheduleCreateButton:hover {
+  background: rgba(99, 102, 241, 0.14);
+}
+
+.scheduleQuickCreateOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.scheduleQuickCreateCard {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+}
+
+.scheduleQuickCreateHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.scheduleQuickCreateClose {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .pageStack {
   display: grid;
   gap: 18px;

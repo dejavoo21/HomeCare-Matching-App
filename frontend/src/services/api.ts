@@ -598,6 +598,18 @@ class ApiClient {
     return this.request('GET', `/schedule/board?${qs.toString()}`);
   }
 
+  async createSchedule(payload: {
+    clientId: string;
+    professionalId?: string;
+    serviceType: string;
+    addressText: string;
+    description?: string;
+    urgency: string;
+    preferredStart: string;
+  }) {
+    return this.request('POST', '/schedule/create', payload);
+  }
+
   async assignSchedule(payload: {
     requestId: string;
     professionalId: string;

@@ -524,6 +524,132 @@ export function createScheduleRouter(pool: Pool) {
   );
 
   router.post(
+    '/create',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response) => {
+      const {
+        clientId,
+        professionalId,
+        serviceType,
+        addressText,
+        description,
+        urgency,
+        preferredStart,
+      } = req.body || {};
+
+      if (!clientId || !serviceType || !addressText || !urgency || !preferredStart) {
+        res.status(400).json({
+          error: 'clientId, serviceType, addressText, urgency and preferredStart are required',
+        });
+        return;
+      }
+
+      try {
+        const clientResult = await pool.query(
+          `SELECT id
+           FROM users
+           WHERE id = $1
+             AND UPPER(role) = 'CLIENT'
+           LIMIT 1`,
+          [clientId]
+        );
+
+        if (clientResult.rows.length === 0) {
+          res.status(404).json({ error: 'Client not found' });
+          return;
+        }
+
+        if (professionalId) {
+          const professionalResult = await pool.query(
+            `SELECT id, is_active
+             FROM users
+             WHERE id = $1
+               AND UPPER(role) IN ('NURSE', 'DOCTOR')
+             LIMIT 1`,
+            [professionalId]
+          );
+
+          if (professionalResult.rows.length === 0) {
+            res.status(404).json({ error: 'Professional not found' });
+            return;
+          }
+
+          if (!professionalResult.rows[0].is_active) {
+            res.status(400).json({ error: 'Professional is inactive' });
+            return;
+          }
+        }
+
+        const scheduled = new Date(preferredStart);
+        if (Number.isNaN(scheduled.getTime())) {
+          res.status(400).json({ error: 'Invalid preferredStart' });
+          return;
+        }
+
+        if (professionalId) {
+          const slotStart = new Date(scheduled.getTime() - 59 * 60 * 1000);
+          const slotEnd = new Date(scheduled.getTime() + 59 * 60 * 1000);
+
+          const overlapResult = await pool.query(
+            `SELECT id
+             FROM care_requests
+             WHERE professional_id = $1
+               AND preferred_start BETWEEN $2 AND $3
+               AND status IN ('offered', 'accepted', 'en_route')
+             LIMIT 1`,
+            [professionalId, slotStart.toISOString(), slotEnd.toISOString()]
+          );
+
+          if (overlapResult.rows.length > 0) {
+            res.status(409).json({ error: 'Professional already has a nearby scheduled visit' });
+            return;
+          }
+        }
+
+        const status = professionalId ? 'offered' : 'queued';
+        const created = await pool.query(
+          `INSERT INTO care_requests
+           (client_id, professional_id, service_type, address_text, preferred_start, urgency, status, description, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())
+           RETURNING *`,
+          [
+            clientId,
+            professionalId || null,
+            serviceType,
+            addressText,
+            scheduled.toISOString(),
+            urgency,
+            status,
+            description || null,
+          ]
+        );
+
+        await logAudit(
+          pool,
+          req.user?.userId || null,
+          'SCHEDULE_VISIT_CREATED',
+          'care_request',
+          created.rows[0].id,
+          {
+            clientId,
+            professionalId: professionalId || null,
+            preferredStart: scheduled.toISOString(),
+          }
+        );
+
+        res.json({
+          success: true,
+          data: created.rows[0],
+        });
+      } catch (err) {
+        console.error('Schedule create error:', err);
+        res.status(500).json({ error: 'Failed to create scheduled visit' });
+      }
+    }
+  );
+
+  router.post(
     '/assign',
     authMiddleware,
     requireRole(UserRole.ADMIN),
