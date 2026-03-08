@@ -7,8 +7,8 @@ export function AdminAccessPage() {
   const [refreshKey] = useState(1);
 
   return (
-    <div className="pageStack">
-      <div className="pageHeaderBlock">
+    <main className="pageStack" role="main" aria-label="Access management page">
+      <section className="pageHeaderBlock">
         <div className="pageHeaderRow">
           <div>
             <h1 className="pageTitle">Access Management</h1>
@@ -17,12 +17,12 @@ export function AdminAccessPage() {
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
       <section className="pageGridTwo">
         <AccessRequestsPanel refreshKey={refreshKey} />
         <TotpSettingsPanel />
       </section>
-    </div>
+    </main>
   );
 }

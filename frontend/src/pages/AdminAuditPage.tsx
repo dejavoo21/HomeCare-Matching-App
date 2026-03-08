@@ -2,8 +2,8 @@ import { AuditDashboardPanel } from '../components/AuditDashboardPanel';
 
 export function AdminAuditPage() {
   return (
-    <div className="pageStack">
-      <div className="pageHeaderBlock">
+    <main className="pageStack" role="main" aria-label="Audit and compliance page">
+      <section className="pageHeaderBlock">
         <div className="pageHeaderRow">
           <div>
             <h1 className="pageTitle">Audit & Compliance</h1>
@@ -12,9 +12,9 @@ export function AdminAuditPage() {
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
       <AuditDashboardPanel />
-    </div>
+    </main>
   );
 }

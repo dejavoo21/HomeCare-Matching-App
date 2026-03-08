@@ -3,8 +3,8 @@ import '../index.css';
 
 export function AdminFhirPage() {
   return (
-    <div className="pageStack">
-      <div className="pageHeaderBlock">
+    <main className="pageStack" role="main" aria-label="FHIR API page">
+      <section className="pageHeaderBlock">
         <div className="pageHeaderRow">
           <div>
             <h1 className="pageTitle">FHIR API</h1>
@@ -13,8 +13,8 @@ export function AdminFhirPage() {
             </p>
           </div>
         </div>
-      </div>
+      </section>
       <FhirIntegrationPanel />
-    </div>
+    </main>
   );
 }

@@ -3,8 +3,8 @@ import '../index.css';
 
 export function AdminReliabilityPage() {
   return (
-    <div className="pageStack">
-      <div className="pageHeaderBlock">
+    <main className="pageStack" role="main" aria-label="Integration reliability page">
+      <section className="pageHeaderBlock">
         <div className="pageHeaderRow">
           <div>
             <h1 className="pageTitle">Integration Reliability</h1>
@@ -13,8 +13,8 @@ export function AdminReliabilityPage() {
             </p>
           </div>
         </div>
-      </div>
+      </section>
       <IntegrationReliabilityPanel />
-    </div>
+    </main>
   );
 }

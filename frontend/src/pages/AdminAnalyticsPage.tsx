@@ -14,8 +14,8 @@ export function AdminAnalyticsPage() {
   }, [load]);
 
   return (
-    <div className="pageStack">
-      <div className="pageHeaderBlock">
+    <main className="pageStack" role="main" aria-label="Analytics page">
+      <section className="pageHeaderBlock">
         <div className="pageHeaderRow">
           <div>
             <h1 className="pageTitle">Analytics</h1>
@@ -23,9 +23,15 @@ export function AdminAnalyticsPage() {
               Review operational trends, dispatch performance, workload balance, and throughput.
             </p>
           </div>
+
+          <div className="pageActions">
+            <button className="btn btn-primary" onClick={load}>
+              Refresh Analytics
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
       <AnalyticsDashboardPanel refreshKey={refreshKey} />
-    </div>
+    </main>
   );
 }

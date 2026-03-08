@@ -3,8 +3,8 @@ import '../index.css';
 
 export function AdminConnectedSystemsPage() {
   return (
-    <div className="pageStack">
-      <div className="pageHeaderBlock">
+    <main className="pageStack" role="main" aria-label="Connected systems page">
+      <section className="pageHeaderBlock">
         <div className="pageHeaderRow">
           <div>
             <h1 className="pageTitle">Connected Systems</h1>
@@ -13,9 +13,9 @@ export function AdminConnectedSystemsPage() {
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
       <ConnectedSystemsPanel />
-    </div>
+    </main>
   );
 }
