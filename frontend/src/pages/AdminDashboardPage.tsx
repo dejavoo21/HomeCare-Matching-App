@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
-import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { DispatchPipeline } from '../components/DispatchPipeline';
 import { StatusTile } from '../components/StatusTile';
 import { AttentionPanel } from '../components/AttentionPanel';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
 import { ActivityFeed } from '../components/ActivityFeed';
-import { RequestDrawer } from '../components/RequestDrawer';
 import { IntegrationsSummaryCard } from '../components/IntegrationsSummaryCard';
 import { AuditSummaryCard } from '../components/AuditSummaryCard';
 import { AnalyticsSummaryCard } from '../components/AnalyticsSummaryCard';
@@ -16,11 +14,9 @@ import { AccessSummaryCard } from '../components/AccessSummaryCard';
 import { ReliabilitySummaryCard } from '../components/ReliabilitySummaryCard';
 import { FhirSummaryCard } from '../components/FhirSummaryCard';
 
-type CareRequest = {
-  id: string;
-  status: string;
-  urgency: string;
-  createdAt?: string;
+type AttentionRequest = {
+  urgency?: string;
+  status?: string;
   offerExpiresAt?: string | null;
 };
 
@@ -35,29 +31,21 @@ type DashboardData = {
   };
 };
 
-const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
-type TabFilter = typeof TABS[number];
-
 export function AdminDashboardPage() {
   const navigate = useNavigate();
   const { on } = useRealTime();
   const [data, setData] = useState<DashboardData | null>(null);
-  const [requests, setRequests] = useState<CareRequest[]>([]);
+  const [requests, setRequests] = useState<AttentionRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState<CareRequest | null>(null);
-  const [tab, setTab] = useState<TabFilter>('queued');
   const [activityKey, setActivityKey] = useState(0);
-  const [search, setSearch] = useState('');
 
   const loadDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
-
       const [dash, reqs] = await Promise.all([
         api.getAdminDashboard() as any,
         api.getAllRequests() as any,
       ]);
-
       setData(dash?.data || null);
       setRequests(reqs?.data || []);
       setActivityKey((k) => k + 1);
@@ -85,78 +73,6 @@ export function AdminDashboardPage() {
 
     return () => unsubs.forEach((u) => u());
   }, [on, loadDashboard]);
-
-  const tabCounts = useMemo(() => {
-    return TABS.reduce<Record<TabFilter, number>>((acc, currentTab) => {
-      acc[currentTab] = requests.filter(
-        (request) => String(request.status).toLowerCase() === currentTab
-      ).length;
-      return acc;
-    }, {
-      queued: 0,
-      offered: 0,
-      accepted: 0,
-      en_route: 0,
-      completed: 0,
-      cancelled: 0,
-    });
-  }, [requests]);
-
-  const tabbed = useMemo(() => {
-    return requests
-      .filter((request) => String(request.status).toLowerCase() === tab)
-      .sort((a, b) => {
-        if (tab === 'offered') {
-          const aExpires = a.offerExpiresAt ? new Date(a.offerExpiresAt).getTime() : Number.POSITIVE_INFINITY;
-          const bExpires = b.offerExpiresAt ? new Date(b.offerExpiresAt).getTime() : Number.POSITIVE_INFINITY;
-          return aExpires - bExpires;
-        }
-
-        const rank = (urgency: string) =>
-          ({ critical: 0, high: 1, medium: 2, low: 3 }[String(urgency).toLowerCase()] ?? 9);
-
-        const urgencyDiff = rank(a.urgency) - rank(b.urgency);
-        if (urgencyDiff !== 0) {
-          return urgencyDiff;
-        }
-
-        return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
-      });
-  }, [requests, tab]);
-
-  const onOffer = async (requestId: string) => {
-    const request = requests.find((item) => item.id === requestId);
-    if (request) {
-      setSelectedRequest(request);
-    }
-  };
-
-  const onRequeue = async (id: string) => {
-    try {
-      await api.requeueRequest(id);
-      await loadDashboard();
-    } catch (err) {
-      console.error('Failed to requeue request:', err);
-    }
-  };
-
-  const onCancel = async (id: string) => {
-    try {
-      await api.cancelRequest(id);
-      await loadDashboard();
-    } catch (err) {
-      console.error('Failed to cancel request:', err);
-    }
-  };
-
-  const onSetUrgency = async (id: string, urgency: string) => {
-    try {
-      await api.setUrgency(id, urgency);
-      await loadDashboard();
-    } catch (err) {
-      console.error('Failed to set urgency:', err);
-    }
-  };
 
   if (isLoading || !data) {
     return (
@@ -202,39 +118,48 @@ export function AdminDashboardPage() {
         <DispatchPipeline />
       </section>
 
-      <section className="dashboardSection">
-        <div className="tabs" role="tablist" aria-label="Request status filters">
-          {TABS.map((currentTab) => (
-            <button
-              key={currentTab}
-              className={tab === currentTab ? 'tab tab-active' : 'tab'}
-              onClick={() => setTab(currentTab)}
-              role="tab"
-              aria-selected={tab === currentTab}
-            >
-              {currentTab.replace('_', ' ').toUpperCase()}
-              <span className="tabCount">{tabCounts[currentTab]}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
       <section className="opsMainGrid">
         <div className="opsPrimary">
-          <DispatchQueueTable
-            requests={tabbed as any}
-            onView={setSelectedRequest as any}
-            onOffer={onOffer}
-            onRequeue={onRequeue}
-            onCancel={onCancel}
-            onSetUrgency={onSetUrgency}
-            search={search}
-            onSearchChange={setSearch}
-          />
+          <div className="summaryLinkCard">
+            <div className="summaryLinkCardTop">
+              <div>
+                <div className="summaryLinkEyebrow">Dispatch</div>
+                <h2 className="summaryLinkTitle">Queue Workbench</h2>
+              </div>
+            </div>
+
+            <p className="summaryLinkText">
+              Open the live dispatch board to work queued requests, monitor expiring offers,
+              update urgency, and assign or requeue visits.
+            </p>
+
+            <div className="settingsOverviewGrid">
+              <div className="settingsOverviewCard">
+                <div className="settingsOverviewLabel">Queued</div>
+                <div className="settingsOverviewValue">{stats.queuedRequests}</div>
+              </div>
+              <div className="settingsOverviewCard">
+                <div className="settingsOverviewLabel">Offered</div>
+                <div className="settingsOverviewValue">{stats.offeredRequests}</div>
+              </div>
+              <div className="settingsOverviewCard">
+                <div className="settingsOverviewLabel">En Route</div>
+                <div className="settingsOverviewValue">{stats.enRouteRequests}</div>
+              </div>
+              <div className="settingsOverviewCard">
+                <div className="settingsOverviewLabel">Completed</div>
+                <div className="settingsOverviewValue">{stats.completedRequests}</div>
+              </div>
+            </div>
+
+            <Link to="/admin/dispatch" className="summaryLinkAction">
+              Open Dispatch Workbench →
+            </Link>
+          </div>
         </div>
 
         <aside className="opsSecondary">
-          <ProfessionalsPanel refreshKey={activityKey} />
+          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
           <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
         </aside>
@@ -248,12 +173,6 @@ export function AdminDashboardPage() {
         <ReliabilitySummaryCard />
         <FhirSummaryCard />
       </section>
-
-      <RequestDrawer
-        request={selectedRequest as any}
-        onClose={() => setSelectedRequest(null)}
-        onRefresh={loadDashboard}
-      />
     </main>
   );
 }

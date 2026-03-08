@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../services/api";
 
 type Pro = {
@@ -8,6 +9,7 @@ type Pro = {
   role: "nurse" | "doctor" | string;
   location?: string;
   isActive?: boolean;
+  is_active?: boolean;
 };
 
 function initials(name?: string) {
@@ -17,7 +19,13 @@ function initials(name?: string) {
   return parts.map((p) => p[0]?.toUpperCase()).join("");
 }
 
-export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
+export function ProfessionalsPanel({
+  refreshKey,
+  summaryOnly = false,
+}: {
+  refreshKey?: number;
+  summaryOnly?: boolean;
+}) {
   const [pros, setPros] = useState<Pro[]>([]);
   const [q, setQ] = useState("");
   const [role, setRole] = useState<"all" | "nurse" | "doctor">("all");
@@ -71,6 +79,7 @@ export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
   const doctorCount = (pros || []).filter(
     (p) => String(p.role).toLowerCase() === "doctor" && (p.isActive ?? true)
   ).length;
+  const activeCount = (pros || []).filter((p) => (p.isActive ?? p.is_active ?? true) === true).length;
 
   return (
     <div className="sideCard">
@@ -86,6 +95,28 @@ export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
         </div>
       </div>
 
+      {summaryOnly ? (
+        <div className="rowGap">
+          <div className="settingsOverviewGrid">
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">Active</div>
+              <div className="settingsOverviewValue">{activeCount}</div>
+            </div>
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">Nurses</div>
+              <div className="settingsOverviewValue">{nurseCount}</div>
+            </div>
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">Doctors</div>
+              <div className="settingsOverviewValue">{doctorCount}</div>
+            </div>
+          </div>
+
+          <Link to="/admin/team" className="summaryLinkAction">
+            Open Team Roster →
+          </Link>
+        </div>
+      ) : (
       <div className="rowGap">
         <input
           className="input"
@@ -134,6 +165,7 @@ export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
           <div className="muted tiny">Showing 8 of {filtered.length}</div>
         )}
       </div>
+      )}
     </div>
   );
 }
