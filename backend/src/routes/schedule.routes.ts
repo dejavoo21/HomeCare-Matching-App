@@ -15,6 +15,40 @@ function endOfDay(date: Date) {
   return copy;
 }
 
+function mockAuthorizationStatus(row: any): 'ok' | 'low' | 'expired' {
+  const urgency = String(row.urgency || '').toLowerCase();
+  const status = String(row.status || '').toLowerCase();
+
+  if (status === 'queued' && (urgency === 'critical' || urgency === 'high')) {
+    return 'low';
+  }
+
+  if (status === 'cancelled') {
+    return 'expired';
+  }
+
+  const created = new Date(row.created_at).getTime();
+  const threeDays = 3 * 24 * 60 * 60 * 1000;
+  if (Date.now() - created > threeDays && status !== 'completed') {
+    return 'expired';
+  }
+
+  return 'ok';
+}
+
+function mockAuthorizationRemaining(row: any): number {
+  const status = mockAuthorizationStatus(row);
+  if (status === 'expired') {
+    return 0;
+  }
+
+  const urgency = String(row.urgency || '').toLowerCase();
+  if (urgency === 'critical') return 1;
+  if (urgency === 'high') return 2;
+  if (urgency === 'medium') return 4;
+  return 6;
+}
+
 async function logAudit(
   pool: Pool,
   actorUserId: string | null,
@@ -54,11 +88,8 @@ export function createScheduleRouter(pool: Pool) {
         const days = Math.min(parseInt(String(req.query.days || '7'), 10) || 7, 14);
         const role = String(req.query.role || 'all').toLowerCase();
 
-        const parsedStart = startRaw ? new Date(startRaw) : new Date();
-        const startDate = startOfDay(parsedStart);
-        const endDate = endOfDay(
-          new Date(startDate.getTime() + (days - 1) * 24 * 60 * 60 * 1000)
-        );
+        const startDate = startRaw ? startOfDay(new Date(startRaw)) : startOfDay(new Date());
+        const endDate = endOfDay(new Date(startDate.getTime() + (days - 1) * 24 * 60 * 60 * 1000));
 
         const professionalParams: unknown[] = [];
         let professionalWhere = `WHERE UPPER(role) IN ('NURSE', 'DOCTOR') AND is_active = true`;
@@ -103,6 +134,45 @@ export function createScheduleRouter(pool: Pool) {
           [startDate.toISOString(), endDate.toISOString()]
         );
 
+        const visits = visitsResult.rows.map((row: any) => ({
+          ...row,
+          authorizationStatus: mockAuthorizationStatus(row),
+          authorizationRemaining: mockAuthorizationRemaining(row),
+          hasConflict: false,
+          conflictType: null as string | null,
+        }));
+
+        const byProfessional = new Map<string, any[]>();
+        for (const visit of visits) {
+          if (!visit.professional_id) continue;
+          if (!byProfessional.has(visit.professional_id)) {
+            byProfessional.set(visit.professional_id, []);
+          }
+          byProfessional.get(visit.professional_id)!.push(visit);
+        }
+
+        for (const proVisits of byProfessional.values()) {
+          proVisits.sort(
+            (a, b) =>
+              new Date(a.preferred_start).getTime() - new Date(b.preferred_start).getTime()
+          );
+
+          for (let i = 0; i < proVisits.length - 1; i++) {
+            const current = proVisits[i];
+            const next = proVisits[i + 1];
+            const currentTime = new Date(current.preferred_start).getTime();
+            const nextTime = new Date(next.preferred_start).getTime();
+            const diffMinutes = Math.abs(nextTime - currentTime) / (1000 * 60);
+
+            if (diffMinutes < 60) {
+              current.hasConflict = true;
+              next.hasConflict = true;
+              current.conflictType = 'overlap';
+              next.conflictType = 'overlap';
+            }
+          }
+        }
+
         res.json({
           success: true,
           data: {
@@ -112,7 +182,7 @@ export function createScheduleRouter(pool: Pool) {
               days,
             },
             professionals: professionalsResult.rows,
-            visits: visitsResult.rows,
+            visits,
           },
         });
       } catch (err) {

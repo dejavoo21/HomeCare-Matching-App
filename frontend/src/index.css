@@ -7945,6 +7945,45 @@ html {
   background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
 }
 
+.visitFlags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 6px;
+}
+
+.visitFlag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  border: 1px solid transparent;
+}
+
+.visitFlag-warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.18);
+}
+
+.visitFlag-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.18);
+}
+
+.scheduleVisitCard:has(.visitFlag-danger) {
+  box-shadow: 0 10px 22px rgba(239, 68, 68, 0.08);
+}
+
+.scheduleVisitCard:has(.visitFlag-warn) {
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.08);
+}
+
 .scheduleVisitTop {
   display: flex;
   justify-content: space-between;

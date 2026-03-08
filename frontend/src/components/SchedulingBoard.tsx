@@ -21,6 +21,10 @@ type Visit = {
   client_name?: string;
   professional_name?: string;
   professional_role?: string;
+  authorizationStatus?: 'ok' | 'low' | 'expired';
+  authorizationRemaining?: number;
+  hasConflict?: boolean;
+  conflictType?: string | null;
 };
 
 type BoardResponse = {
@@ -82,6 +86,39 @@ function mergeDateWithOriginalTime(targetDay: Date, originalDateTime: string) {
     original.getMilliseconds()
   );
   return merged.toISOString();
+}
+
+function VisitFlags({ visit }: { visit: Visit }) {
+  const flags: Array<{ label: string; className: string }> = [];
+
+  if (visit.authorizationStatus === 'low') {
+    flags.push({
+      label: `AUTH LOW (${visit.authorizationRemaining ?? 0})`,
+      className: 'visitFlag visitFlag-warn',
+    });
+  }
+
+  if (visit.authorizationStatus === 'expired') {
+    flags.push({ label: 'AUTH EXPIRED', className: 'visitFlag visitFlag-danger' });
+  }
+
+  if (visit.hasConflict) {
+    flags.push({ label: 'CONFLICT', className: 'visitFlag visitFlag-danger' });
+  }
+
+  if (flags.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="visitFlags">
+      {flags.map((flag) => (
+        <span key={flag.label} className={flag.className}>
+          {flag.label}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export function SchedulingBoard() {
@@ -165,7 +202,7 @@ export function SchedulingBoard() {
   };
 
   const onDropVisit = async (professionalId: string, day: Date) => {
-    if (!dragging || professionalId === 'unassigned') {
+    if (!dragging) {
       return;
     }
 
@@ -226,7 +263,7 @@ export function SchedulingBoard() {
             <select
               className="select scheduleRoleSelect"
               value={role}
-              onChange={(e) => setRole(e.target.value as 'all' | 'nurse' | 'doctor')}
+              onChange={(event) => setRole(event.target.value as 'all' | 'nurse' | 'doctor')}
             >
               <option value="all">All professionals</option>
               <option value="nurse">Nurses only</option>
@@ -280,7 +317,7 @@ export function SchedulingBoard() {
                   >
                     <div className="scheduleVisitTop">
                       <span className="scheduleVisitTime">
-                        {formatDay(new Date(visit.preferred_start))} • {formatTime(visit.preferred_start)}
+                        {formatDay(new Date(visit.preferred_start))} - {formatTime(visit.preferred_start)}
                       </span>
                       <span className="scheduleVisitStatus">
                         {String(visit.status).replace('_', ' ')}
@@ -288,6 +325,7 @@ export function SchedulingBoard() {
                     </div>
 
                     <div className="scheduleVisitTitle">{visit.client_name || 'Client'}</div>
+                    <VisitFlags visit={visit} />
                     <div className="scheduleVisitMeta">{visit.service_type}</div>
 
                     {visit.address_text ? (
@@ -379,7 +417,7 @@ export function SchedulingBoard() {
                                     <div className="scheduleVisitTitle">
                                       {visit.client_name || 'Client'}
                                     </div>
-
+                                    <VisitFlags visit={visit} />
                                     <div className="scheduleVisitMeta">{visit.service_type}</div>
 
                                     {visit.address_text ? (
