@@ -35,6 +35,9 @@ CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_subscription
   ON webhook_deliveries(subscription_id);
 
 ALTER TABLE webhook_dead_letters
+  ADD COLUMN IF NOT EXISTS target_url text,
+  ADD COLUMN IF NOT EXISTS attempts int,
+  ADD COLUMN IF NOT EXISTS max_attempts int,
   ADD COLUMN IF NOT EXISTS delivery_id uuid,
   ADD COLUMN IF NOT EXISTS subscription_id uuid,
   ADD COLUMN IF NOT EXISTS last_http_status int,
