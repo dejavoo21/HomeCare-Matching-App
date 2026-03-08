@@ -614,6 +614,21 @@ class ApiClient {
     return this.request('POST', '/schedule/reassign', payload);
   }
 
+  async createRecurringSchedule(payload: {
+    clientId: string;
+    professionalId?: string;
+    serviceType: string;
+    addressText: string;
+    description?: string;
+    urgency: string;
+    startDateTime: string;
+    recurrenceType: 'daily' | 'every_x_days' | 'weekly';
+    intervalValue?: number;
+    occurrences: number;
+  }) {
+    return this.request('POST', '/schedule/recurring', payload);
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {

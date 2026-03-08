@@ -15,6 +15,12 @@ function endOfDay(date: Date) {
   return copy;
 }
 
+function addDays(date: Date, days: number) {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + days);
+  return copy;
+}
+
 function computeAuthorizationBadge(visit: any, authRows: any[]) {
   const matching = authRows.find(
     (authorization) =>
@@ -350,6 +356,169 @@ export function createScheduleRouter(pool: Pool) {
       } catch (err) {
         console.error('Schedule board error:', err);
         res.status(500).json({ error: 'Failed to load scheduling board' });
+      }
+    }
+  );
+
+  router.post(
+    '/recurring',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response) => {
+      const {
+        clientId,
+        professionalId,
+        serviceType,
+        addressText,
+        description,
+        urgency,
+        startDateTime,
+        recurrenceType,
+        intervalValue,
+        occurrences,
+      } = req.body || {};
+
+      if (
+        !clientId ||
+        !serviceType ||
+        !addressText ||
+        !urgency ||
+        !startDateTime ||
+        !recurrenceType ||
+        !occurrences
+      ) {
+        res.status(400).json({
+          error:
+            'clientId, serviceType, addressText, urgency, startDateTime, recurrenceType, and occurrences are required',
+        });
+        return;
+      }
+
+      const normalizedRecurrence = String(recurrenceType).toLowerCase();
+      const allowedRecurrence = ['daily', 'every_x_days', 'weekly'];
+
+      if (!allowedRecurrence.includes(normalizedRecurrence)) {
+        res.status(400).json({ error: 'Invalid recurrenceType' });
+        return;
+      }
+
+      const count = Math.min(Math.max(Number(occurrences || 1), 1), 30);
+      const everyXDays = Math.max(Number(intervalValue || 1), 1);
+
+      try {
+        const clientResult = await pool.query(
+          `SELECT id, name
+           FROM users
+           WHERE id = $1
+             AND UPPER(role) = 'CLIENT'
+           LIMIT 1`,
+          [clientId]
+        );
+
+        if (clientResult.rows.length === 0) {
+          res.status(404).json({ error: 'Client not found' });
+          return;
+        }
+
+        if (professionalId) {
+          const professionalResult = await pool.query(
+            `SELECT id, is_active
+             FROM users
+             WHERE id = $1
+               AND UPPER(role) IN ('NURSE', 'DOCTOR')
+             LIMIT 1`,
+            [professionalId]
+          );
+
+          if (professionalResult.rows.length === 0) {
+            res.status(404).json({ error: 'Professional not found' });
+            return;
+          }
+
+          if (!professionalResult.rows[0].is_active) {
+            res.status(400).json({ error: 'Professional is inactive' });
+            return;
+          }
+        }
+
+        const start = new Date(startDateTime);
+        if (Number.isNaN(start.getTime())) {
+          res.status(400).json({ error: 'Invalid startDateTime' });
+          return;
+        }
+
+        const createdRows: any[] = [];
+        const client = await pool.connect();
+
+        try {
+          await client.query('BEGIN');
+
+          for (let index = 0; index < count; index++) {
+            let scheduledDate = new Date(start);
+
+            if (normalizedRecurrence === 'daily') {
+              scheduledDate = addDays(start, index);
+            } else if (normalizedRecurrence === 'every_x_days') {
+              scheduledDate = addDays(start, index * everyXDays);
+            } else if (normalizedRecurrence === 'weekly') {
+              scheduledDate = addDays(start, index * 7);
+            }
+
+            const status = professionalId ? 'offered' : 'queued';
+
+            const inserted = await client.query(
+              `INSERT INTO care_requests
+               (client_id, professional_id, service_type, address_text, preferred_start, urgency, status, description, created_at, updated_at)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())
+               RETURNING *`,
+              [
+                clientId,
+                professionalId || null,
+                serviceType,
+                addressText,
+                scheduledDate.toISOString(),
+                urgency,
+                status,
+                description || null,
+              ]
+            );
+
+            createdRows.push(inserted.rows[0]);
+          }
+
+          await client.query('COMMIT');
+        } catch (err) {
+          await client.query('ROLLBACK');
+          throw err;
+        } finally {
+          client.release();
+        }
+
+        await logAudit(
+          pool,
+          req.user?.userId || null,
+          'SCHEDULE_RECURRING_CREATED',
+          'care_request',
+          undefined,
+          {
+            clientId,
+            professionalId: professionalId || null,
+            recurrenceType: normalizedRecurrence,
+            intervalValue: normalizedRecurrence === 'every_x_days' ? everyXDays : null,
+            occurrences: count,
+          }
+        );
+
+        res.json({
+          success: true,
+          data: {
+            createdCount: createdRows.length,
+            requests: createdRows,
+          },
+        });
+      } catch (err) {
+        console.error('Recurring schedule creation error:', err);
+        res.status(500).json({ error: 'Failed to create recurring schedule' });
       }
     }
   );

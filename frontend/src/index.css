@@ -8035,6 +8035,49 @@ html {
   color: #64748b;
 }
 
+.pageStack {
+  display: grid;
+  gap: 18px;
+}
+
+.recurringHeader {
+  margin-bottom: 16px;
+}
+
+.recurringGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.recurringGrid-full {
+  grid-column: 1 / -1;
+}
+
+.recurringTextarea {
+  resize: vertical;
+}
+
+.recurringActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.recurringMessage {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .recurringGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .scheduleVisitCard:has(.visitFlag-danger) {
   box-shadow: 0 10px 22px rgba(239, 68, 68, 0.08);
 }
