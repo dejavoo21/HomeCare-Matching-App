@@ -6,7 +6,6 @@ import { DispatchPipeline } from '../components/DispatchPipeline';
 import { StatusTile } from '../components/StatusTile';
 import { AttentionPanel } from '../components/AttentionPanel';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
-import { ActivityFeed } from '../components/ActivityFeed';
 import { RequestDrawer } from '../components/RequestDrawer';
 import type { CareRequest } from '../types/index';
 
@@ -199,7 +198,6 @@ export function AdminDispatchPage() {
         <aside className="opsSecondary">
           <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
           <AttentionPanel requests={requests} />
-          <ActivityFeed refreshKey={activityKey} />
         </aside>
       </section>
 
