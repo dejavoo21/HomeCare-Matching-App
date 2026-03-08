@@ -42,7 +42,7 @@ export function ActivityFeed({ refreshKey }: { refreshKey: number }) {
               </div>
               <div className="activityMeta muted">
                 {e.requestId && <>Request: <span className="mono">{String(e.requestId).slice(0, 8)}</span></>}
-                {e.professionalId && <> • Pro: <span className="mono">{String(e.professionalId).slice(0, 8)}</span></>}
+                {e.professionalId && <> | Pro: <span className="mono">{String(e.professionalId).slice(0, 8)}</span></>}
               </div>
             </div>
           ))

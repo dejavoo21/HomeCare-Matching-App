@@ -1,20 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ListChecks, Hourglass, Ambulance, BadgeCheck } from 'lucide-react';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { useRealTime } from '../contexts/RealTimeContext';
-import { AssistantActionsProvider } from '../contexts/AssistantActionsContext';
-import { StatCard } from '../components/StatCard';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
-import { AccessRequestsPanel } from '../components/AccessRequestsPanel';
-import { AuditDashboardPanel } from '../components/AuditDashboardPanel';
-import { Toast } from '../components/Toast';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 import { api } from '../services/api';
 import { CareRequest } from '../types/index';
-import type { AssistantAction } from '../types/assistant';
 import '../index.css';
 
 interface DashboardData {
@@ -38,34 +30,46 @@ interface DashboardData {
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
 type TabFilter = typeof TABS[number];
 
-type ConfirmState =
-  | { open: false }
-  | { open: true; title: string; message: string; onConfirm: () => Promise<void>; tone?: 'danger' | 'primary' };
-
 export function AdminDashboard() {
-  const { on } = useRealTime();
+  const { on, state } = useRealTime();
+
   const [data, setData] = useState<DashboardData | null>(null);
   const [requests, setRequests] = useState<CareRequest[]>([]);
+  const [connectedSystems, setConnectedSystems] = useState<any[]>([]);
+  const [webhookDeliveries, setWebhookDeliveries] = useState<any[]>([]);
+  const [accessRequests, setAccessRequests] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<CareRequest | null>(null);
   const [tab, setTab] = useState<TabFilter>('queued');
-  const [search, setSearch] = useState<string>('');
   const [activityKey, setActivityKey] = useState(0);
-  const [confirm, setConfirm] = useState<ConfirmState>({ open: false });
-  const [toast, setToast] = useState<{ msg: string; tone?: 'success' | 'error' | 'info' } | null>(null);
-
-  const showToast = useCallback((msg: string, tone: 'success' | 'error' | 'info' = 'success') => {
-    setToast({ msg, tone });
-  }, []);
+  const [search, setSearch] = useState('');
 
   const loadDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
-      const dash = await api.getAdminDashboard() as any;
-      setData(dash?.data);
 
-      const reqs = await api.getAllRequests() as any;
+      const [dash, reqs] = await Promise.all([
+        api.getAdminDashboard() as any,
+        api.getAllRequests() as any,
+      ]);
+
+      setData(dash?.data || null);
       setRequests(reqs?.data || []);
+
+      try {
+        const [systems, deliveries, access] = await Promise.all([
+          api.getConnectedSystems() as any,
+          api.getWebhookDeliveries(50) as any,
+          api.getAccessRequests() as any,
+        ]);
+        setConnectedSystems(systems?.data || []);
+        setWebhookDeliveries(deliveries?.data || []);
+        setAccessRequests(access?.data || []);
+      } catch {
+        setConnectedSystems([]);
+        setWebhookDeliveries([]);
+        setAccessRequests([]);
+      }
 
       setActivityKey((k) => k + 1);
     } catch (err) {
@@ -79,269 +83,289 @@ export function AdminDashboard() {
     loadDashboard();
   }, [loadDashboard]);
 
-  // Subscribe to real-time events
   useEffect(() => {
-    const u1 = on('REQUEST_CREATED', loadDashboard);
-    const u2 = on('OFFER_CREATED', loadDashboard);
-    const u3 = on('OFFER_EXPIRED', loadDashboard);
-    const u4 = on('OFFER_ACCEPTED', loadDashboard);
-    const u5 = on('OFFER_DECLINED', loadDashboard);
-    const u6 = on('REQUEST_STATUS_CHANGED', loadDashboard);
-    const u7 = on('VISIT_STATUS_CHANGED', loadDashboard);
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); };
+    const unsubs = [
+      on('REQUEST_CREATED', loadDashboard),
+      on('OFFER_CREATED', loadDashboard),
+      on('OFFER_EXPIRED', loadDashboard),
+      on('OFFER_ACCEPTED', loadDashboard),
+      on('OFFER_DECLINED', loadDashboard),
+      on('REQUEST_STATUS_CHANGED', loadDashboard),
+      on('VISIT_STATUS_CHANGED', loadDashboard),
+      on('ACCESS_REQUEST_APPROVED', loadDashboard),
+      on('ACCESS_REQUEST_REJECTED', loadDashboard),
+    ];
+
+    return () => unsubs.forEach((u) => u());
   }, [on, loadDashboard]);
 
-  // Handle Ctrl+K (or Cmder and sort requests based on active tab
+  const handleSearchSelect = async (item: any) => {
+    try {
+      if (item.kind === 'request') {
+        const found = (requests || []).find((r) => r.id === item.id);
+        if (found) {
+          setSelectedRequest(found);
+          return;
+        }
+        const resp = (await api.getRequestById(item.id)) as any;
+        if (resp?.data) setSelectedRequest(resp.data);
+      }
+    } catch (err) {
+      console.error('Search selection failed:', err);
+    }
+  };
+
+  const onOffer = async (requestId: string) => {
+    const found = (requests || []).find((r) => r.id === requestId);
+    if (found) setSelectedRequest(found);
+  };
+
+  const onRequeue = async (id: string) => {
+    try {
+      await api.requeueRequest(id);
+      await loadDashboard();
+    } catch (err) {
+      console.error('Requeue failed:', err);
+    }
+  };
+
+  const onCancel = async (id: string) => {
+    try {
+      await api.cancelRequest(id);
+      await loadDashboard();
+    } catch (err) {
+      console.error('Cancel failed:', err);
+    }
+  };
+
+  const onSetUrgency = async (id: string, urgency: string) => {
+    try {
+      await api.setUrgency(id, urgency);
+      await loadDashboard();
+    } catch (err) {
+      console.error('Set urgency failed:', err);
+    }
+  };
+
   const tabbed = useMemo(() => {
     return (requests || [])
       .filter((r) => String(r.status).toLowerCase() === tab)
       .sort((a, b) => {
-        // offered: soonest expiry first
         if (tab === 'offered') {
           const ae = a.offerExpiresAt ? new Date(a.offerExpiresAt).getTime() : Infinity;
           const be = b.offerExpiresAt ? new Date(b.offerExpiresAt).getTime() : Infinity;
           return ae - be;
         }
-        // queued: urgency high first, then oldest first
-        const urgRank = (u: any) => ({ critical: 0, high: 1, medium: 2, low: 3 }[String(u).toLowerCase()] ?? 9);
+        const urgRank = (u: any) =>
+          ({ critical: 0, high: 1, medium: 2, low: 3 }[String(u).toLowerCase()] ?? 9);
         const ur = urgRank(a.urgency) - urgRank(b.urgency);
         if (ur !== 0) return ur;
         return new Date(a.createdAt as any).getTime() - new Date(b.createdAt as any).getTime();
       });
   }, [requests, tab]);
 
-  // Execute assistant actions
-  const executeActions = useCallback((actions: AssistantAction[]) => {
-    for (const a of actions) {
-      if (a.type === 'SET_TAB') {
-        setTab(a.tab);
-      }
-      if (a.type === 'REFRESH_DASHBOARD') {
-        loadDashboard();
-      }
-      if (a.type === 'OPEN_REQUEST') {
-        const match = requests.find(
-          (r) => r.id.startsWith(a.requestId) || r.id === a.requestId
-        );
-        if (match) {
-          setSelectedRequest(match);
-        }
-      }
-      if (a.type === 'SET_SEARCH') {
-        setSearch(a.query);
-        setTab('queued');
-      }
-      if (a.type === 'NAVIGATE') {
-        // For now: ignored (no routing to integrations yet)
-      }
-    }
-  }, [loadDashboard, requests]);
+  const statusCounts = useMemo(() => {
+    const getCount = (...statuses: string[]) =>
+      (requests || []).filter((r) => statuses.includes(String(r.status).toLowerCase())).length;
 
-  const onRequeue = useCallback(async (requestId: string) => {
-    setConfirm({
-      open: true,
-      title: 'Requeue request?',
-      message: 'This will move the request back to QUEUED and expire any active offer.',
-      tone: 'primary',
-      onConfirm: async () => {
-        try {
-          await api.requeueRequest(requestId);
-          showToast('Requeued successfully ✅', 'success');
-          await loadDashboard();
-        } catch (e: any) {
-          showToast(e?.message || 'Failed to requeue', 'error');
-        }
-      },
-    });
-  }, [loadDashboard, showToast]);
-
-  const onCancel = useCallback(async (requestId: string) => {
-    setConfirm({
-      open: true,
-      title: 'Cancel request?',
-      message: 'This will mark the request as CANCELLED and stop dispatch.',
-      tone: 'danger',
-      onConfirm: async () => {
-        try {
-          await api.cancelRequest(requestId);
-          showToast('Cancelled successfully ✅', 'success');
-          await loadDashboard();
-        } catch (e: any) {
-          showToast(e?.message || 'Failed to cancel', 'error');
-        }
-      },
-    });
-  }, [loadDashboard, showToast]);
-
-  const onSetUrgency = useCallback(async (requestId: string, urgency: string) => {
-    try {
-      await api.setUrgency(requestId, urgency);
-      showToast(`Urgency → ${urgency.toUpperCase()}`, 'info');
-      await loadDashboard();
-    } catch (e: any) {
-      showToast(e?.message || 'Failed to set urgency', 'error');
-    }
-  }, [loadDashboard, showToast]);
-
-  const onOffer = useCallback(async (requestId: string) => {
-    // Find and select the request, which will open the drawer
-    const found = (requests || []).find((r) => r.id === requestId);
-    if (found) {
-      setSelectedRequest(found);
-    }
+    return {
+      queued: getCount('queued'),
+      offered: getCount('offered'),
+      accepted: getCount('accepted'),
+      enroute: getCount('en_route', 'enroute'),
+      completed: getCount('completed'),
+      cancelled: getCount('cancelled'),
+    };
   }, [requests]);
 
-  const handleSearchSelect = useCallback((item: any) => {
-    if (item?.kind === 'request') {
-      const found = (requests || []).find((r) => r.id === item.id);
-      if (found) {
-        setSelectedRequest(found);
-      }
-    }
-    // Later: implement user navigation etc.
-  }, [requests]);
+  const offersExpiringSoon = useMemo(
+    () =>
+      (requests || []).filter((r) => {
+        if (!r.offerExpiresAt || String(r.status).toLowerCase() !== 'offered') return false;
+        const diff = new Date(r.offerExpiresAt).getTime() - Date.now();
+        return diff > 0 && diff <= 5 * 60 * 1000;
+      }).length,
+    [requests]
+  );
+
+  const pendingAccessCount = useMemo(
+    () => (accessRequests || []).filter((x) => String(x.status).toLowerCase() === 'pending').length,
+    [accessRequests]
+  );
+
+  const failedSystems = useMemo(
+    () => (connectedSystems || []).filter((x) => String(x.status).toLowerCase() === 'failed').length,
+    [connectedSystems]
+  );
+
+  const failingDeliveries = useMemo(
+    () =>
+      (webhookDeliveries || []).filter((x) => {
+        const s = String(x.status).toLowerCase();
+        return s === 'failed' || s === 'dead';
+      }).length,
+    [webhookDeliveries]
+  );
 
   if (isLoading || !data) {
     return (
-      <DashboardLayout>
+      <DashboardLayout
+        stats={{
+          queuedRequests: 0,
+          offeredRequests: 0,
+          acceptedRequests: 0,
+          enRouteRequests: 0,
+        }}
+        isConnected={state === 'connected'}
+        onSearchSelect={handleSearchSelect}
+        searchScope="admin"
+      >
         <div className="page-center">Loading admin dashboard...</div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout 
+    <DashboardLayout
       stats={{
         queuedRequests: data.stats.queuedRequests,
         offeredRequests: data.stats.offeredRequests,
         acceptedRequests: data.stats.acceptedRequests,
         enRouteRequests: data.stats.enRouteRequests,
       }}
-      isConnected={true}
+      isConnected={state === 'connected'}
       onSearchSelect={handleSearchSelect}
       searchScope="admin"
-      paletteContextRequestId={selectedRequest?.id || null}
     >
-      <AssistantActionsProvider onActions={executeActions}>
-        <main className="dashboardPremium" role="main" aria-label="Admin dashboard">
-
-          {/* ===== Header Card ===== */}
-          <header className="headerCard">
-            <div className="headerLeft">
+      <main className="dashboardPremium" role="main" aria-label="Admin dashboard">
+        <section className="heroBlock">
+          <div className="heroContent">
+            <div>
               <h1 className="pageTitle">Admin Dashboard</h1>
-              <p className="subtitle">Dispatch and system overview</p>
+              <p className="subtitle">Dispatch, governance, analytics, and connected systems</p>
             </div>
 
-            <div className="headerRight">
-              <button
-                className="btn btn-ghost"
-                onClick={() => {
-                  const searchInput = document.querySelector('input[placeholder="Search requests, users, events..."]') as HTMLInputElement | null;
-                  if (searchInput) searchInput.focus();
-                }}
-                title="Open search (Ctrl+K)"
-              >
-                🔍 Search
-              </button>
-              <button className="btn btnSoft" onClick={loadDashboard}>
+            <div className="heroActions">
+              <button className="btn btn-primary" onClick={loadDashboard}>
                 Refresh
               </button>
             </div>
-          </header>
+          </div>
+        </section>
 
-          {/* ===== Stats ===== */}
-          <section className="stats-grid" aria-label="Dashboard statistics">
-            <StatCard label="Queued" value={data.stats.queuedRequests} Icon={ListChecks} tone="indigo" hint="Waiting for dispatch" />
-            <StatCard label="Offered" value={data.stats.offeredRequests} Icon={Hourglass} tone="amber" hint="Offer pending response" />
-            <StatCard label="Active" value={data.stats.acceptedRequests + data.stats.enRouteRequests} Icon={Ambulance} tone="blue" hint="Accepted + en route" />
-            <StatCard label="Completed" value={data.stats.completedRequests} Icon={BadgeCheck} tone="green" hint="Visits finished" />
-          </section>
+        <section className="opsTilesGrid" aria-label="Operational status">
+          <article className="opsTile">
+            <p className="opsTileLabel">Dispatch Queue</p>
+            <p className="opsTileValue">{statusCounts.queued}</p>
+            <p className="opsTileHint">Queued requests waiting dispatch</p>
+          </article>
+          <article className="opsTile">
+            <p className="opsTileLabel">Offers Pending</p>
+            <p className="opsTileValue">{statusCounts.offered}</p>
+            <p className="opsTileHint">Awaiting professional response</p>
+          </article>
+          <article className="opsTile">
+            <p className="opsTileLabel">Visits In Progress</p>
+            <p className="opsTileValue">{statusCounts.accepted + statusCounts.enroute}</p>
+            <p className="opsTileHint">Accepted + en route</p>
+          </article>
+          <article className="opsTile">
+            <p className="opsTileLabel">Completed Today</p>
+            <p className="opsTileValue">{statusCounts.completed}</p>
+            <p className="opsTileHint">Finished visits</p>
+          </article>
+        </section>
 
-          {/* ===== Tabs in a pill bar ===== */}
-          <section className="tabsCard" aria-label="Request status filters">
-            <div className="tabs" role="tablist">
-              {TABS.map((t) => (
-                <button 
-                  key={t} 
-                  className={tab === t ? "tab tab-active" : "tab"} 
-                  onClick={() => setTab(t)}
-                  role="tab"
-                  aria-selected={tab === t}
-                  aria-label={`${t.replace("_"," ").toUpperCase()}: ${(requests || []).filter(r => String(r.status).toLowerCase() === t).length} requests`}
-                >
-                  {t.replace("_"," ").toUpperCase()}
-                  <span className="tabCount" aria-hidden="true">
-                    {(requests || []).filter(r => String(r.status).toLowerCase() === t).length}
-                  </span>
-                </button>
-              ))}
+        <section className="dashboardGridTwo">
+          <article className="opsPanel">
+            <h2 className="opsPanelTitle">Dispatch Pipeline</h2>
+            <div className="pipelineRow">
+              <span className="pipelineNode">Queued <b>{statusCounts.queued}</b></span>
+              <span className="pipelineArrow">→</span>
+              <span className="pipelineNode">Offered <b>{statusCounts.offered}</b></span>
+              <span className="pipelineArrow">→</span>
+              <span className="pipelineNode">Accepted <b>{statusCounts.accepted}</b></span>
+              <span className="pipelineArrow">→</span>
+              <span className="pipelineNode">En Route <b>{statusCounts.enroute}</b></span>
+              <span className="pipelineArrow">→</span>
+              <span className="pipelineNode">Completed <b>{statusCounts.completed}</b></span>
             </div>
-          </section>
+          </article>
 
-          {/* ===== Main grid ===== */}
-          <div className="twoCol">
-            <div className="mainCol">
-              <div className="cardShell">
-                <div className="cardHeader">
-                  <div>
-                    <h2 className="cardTitle">Dispatch Queue</h2>
-                    <p className="cardSub">Filter, search, and take actions in real time.</p>
-                  </div>
-                </div>
+          <article className="opsPanel">
+            <h2 className="opsPanelTitle">System Health</h2>
+            <ul className="healthList">
+              <li className="healthOk">Dispatch Engine: Healthy</li>
+              <li className={state === 'connected' ? 'healthOk' : 'healthWarn'}>
+                Realtime Events: {state === 'connected' ? 'Connected' : 'Sync unavailable'}
+              </li>
+              <li className={failedSystems > 0 ? 'healthWarn' : 'healthOk'}>
+                Hospital Integrations: {failedSystems > 0 ? `${failedSystems} failing` : 'Healthy'}
+              </li>
+              <li className={failingDeliveries > 0 ? 'healthWarn' : 'healthOk'}>
+                Webhooks: {failingDeliveries > 0 ? `${failingDeliveries} retrying/failed` : 'Healthy'}
+              </li>
+            </ul>
+          </article>
+        </section>
 
-                <div className="cardBody">
-                  <DispatchQueueTable 
-                    requests={tabbed} 
-                    onView={setSelectedRequest}
-                    onOffer={onOffer}
-                    onRequeue={onRequeue}
-                    onCancel={onCancel}
-                    onSetUrgency={onSetUrgency}
-                    search={search}
-                    onSearchChange={setSearch}
-                  />
-                </div>
-              </div>
-            </div>
+        <section className="opsAttention">
+          <h2 className="opsPanelTitle">Attention Items</h2>
+          <ul className="attentionList">
+            <li>{offersExpiringSoon} offers expiring soon</li>
+            <li>{failedSystems} connected systems failing</li>
+            <li>{failingDeliveries} webhook deliveries failing/retrying</li>
+            <li>{pendingAccessCount} access requests pending review</li>
+          </ul>
+        </section>
 
-            <aside className="sideCol" aria-label="Right sidebar">
-              <div className="sideStack">
-                <ActivityFeed refreshKey={activityKey} />
-                <ProfessionalsPanel refreshKey={activityKey} />
-                <AccessRequestsPanel refreshKey={activityKey} />
-                <AuditDashboardPanel refreshKey={activityKey} />
-              </div>
-            </aside>
+        <section className="dashboardSection">
+          <div className="tabs" role="tablist" aria-label="Request status filters">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                className={tab === t ? 'tab tab-active' : 'tab'}
+                onClick={() => setTab(t)}
+                role="tab"
+                aria-selected={tab === t}
+              >
+                {t.replace('_', ' ').toUpperCase()}
+                <span className="tabCount">
+                  {(requests || []).filter((r) => String(r.status).toLowerCase() === t).length}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="dashboardSection twoCol">
+          <div className="mainCol">
+            <DispatchQueueTable
+              requests={tabbed}
+              onView={setSelectedRequest}
+              onOffer={onOffer}
+              onRequeue={onRequeue}
+              onCancel={onCancel}
+              onSetUrgency={onSetUrgency}
+              search={search}
+              onSearchChange={setSearch}
+            />
           </div>
 
-          <RequestDrawer
-            request={selectedRequest}
-            onClose={() => setSelectedRequest(null)}
-            onRefresh={loadDashboard}
-          />
-        </main>
+          <aside className="sideCol">
+            <div className="sideStack">
+              <ActivityFeed refreshKey={activityKey} />
+              <ProfessionalsPanel refreshKey={activityKey} />
+            </div>
+          </aside>
+        </section>
 
-        {confirm.open && (
-          <ConfirmDialog
-            open={confirm.open}
-            title={confirm.title}
-            message={confirm.message}
-            tone={confirm.tone === 'primary' ? 'primary' : 'danger'}
-            confirmText="Yes"
-            cancelText="No"
-            onConfirm={() => confirm.onConfirm()}
-            onClose={() => setConfirm({ open: false })}
-          />
-        )}
-
-        {toast && (
-          <Toast
-            message={toast.msg}
-            tone={toast.tone || 'success'}
-            onClose={() => setToast(null)}
-          />
-        )}
-      </AssistantActionsProvider>
+        <RequestDrawer
+          request={selectedRequest}
+          onClose={() => setSelectedRequest(null)}
+          onRefresh={loadDashboard}
+        />
+      </main>
     </DashboardLayout>
   );
 }

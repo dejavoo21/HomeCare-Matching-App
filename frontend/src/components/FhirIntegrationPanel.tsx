@@ -11,15 +11,15 @@ export function FhirIntegrationPanel() {
       setLoading(true);
 
       const [metaResp, srResp] = await Promise.all([
-        (api.getFhirMetadata() as any) || {},
-        (api.searchFhirServiceRequests() as any) || {},
+        api.getFhirMetadata() as any,
+        api.searchFhirServiceRequests() as any,
       ]);
 
-      setMetadata(metaResp?.data || metaResp || null);
-      
-      // Handle both wrapper and direct response formats
-      const entries = srResp?.data?.entry || srResp?.entry || srResp?.data?.data || [];
-      setServiceRequests(Array.isArray(entries) ? entries : []);
+      setMetadata(metaResp || null);
+
+      const bundle = srResp?.data || srResp;
+      const entries = Array.isArray(bundle?.entry) ? bundle.entry : [];
+      setServiceRequests(entries);
     } catch (err) {
       console.error('FHIR panel load error:', err);
       setMetadata(null);
@@ -33,6 +33,8 @@ export function FhirIntegrationPanel() {
     load();
   }, []);
 
+  const fhirVersion = metadata?.data?.fhirVersion || metadata?.fhirVersion || '4.0.1';
+
   return (
     <div className="cardShell">
       <div className="cardHeader">
@@ -44,12 +46,12 @@ export function FhirIntegrationPanel() {
 
       <div className="cardBody">
         {loading ? (
-          <div className="empty">Loading FHIR resources…</div>
+          <div className="empty">Loading FHIR resources...</div>
         ) : (
           <div className="rowGap">
             <div className="fhirSummary">
               <div className="fhirChip">
-                Version <b>{metadata?.fhirVersion || '4.0.1'}</b>
+                Version <b>{fhirVersion}</b>
               </div>
               <div className="fhirChip">
                 Resources <b>Patient / Practitioner / ServiceRequest / Task</b>
@@ -71,7 +73,7 @@ export function FhirIntegrationPanel() {
                           {resource.code?.text || 'ServiceRequest'}
                         </div>
                         <div className="muted">
-                          {resource.status} • {resource.priority}
+                          {resource.status} | {resource.priority}
                         </div>
                         <div className="mono small">{resource.id}</div>
                       </div>

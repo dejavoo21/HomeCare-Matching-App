@@ -1,17 +1,16 @@
-// ============================================================================
-// MAIN SERVER FILE
-// ============================================================================
-
-// Load environment variables first
 import * as dotenv from 'dotenv';
 dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { Pool } from 'pg';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
+
+import { validateEnv } from './config/env';
+import { logger } from './utils/logger';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -28,39 +27,41 @@ import { createAuditRouter } from './routes/audit';
 import { createMfaRouter } from './routes/mfa.routes';
 import { createAnalyticsRouter } from './routes/analytics.routes';
 import { createWebhookAdminRouter } from './routes/webhook-admin.routes';
+import { createConnectedSystemsRouter } from './routes/connected-systems.routes';
+import { createOpsRouter } from './routes/ops.routes';
 
 // Migrations
 import { runMigrations } from './migrations/runner';
 
-// Phase 2 Routes (require database pool)
+// Phase 2 Routes
 import { availabilityRouter } from './routes/availability';
 import { matchingRouter } from './routes/matching';
 import { createRealtimeRoutes } from './routes/realtime.routes';
-import { startRealtimeRelay } from './realtime/eventRelay';
 import { startWebhookWorker } from './integrations/webhook-worker';
-import { startOutboxWorker } from './workers/outbox.worker';
-import { startNotificationWorker } from './workers/notification.worker';
 
 // Monitoring
 import { httpRequestDurationMs, httpRequestsTotal, getMetrics, getMetricsContentType } from './monitoring/metrics';
 
 // Database
-import { pool, checkDbHealth } from './db';
+import { pool } from './db';
+
+validateEnv();
 
 const app: Express = express();
 const PORT = parseInt(process.env.PORT || '6005', 10);
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-// ============================================================================
-// MIDDLEWARE
-// ============================================================================
+app.set('trust proxy', 1);
 
-// Configure CORS for development and production
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
+
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow all origins for now (production should be more restrictive)
-      callback(null, true);
-    },
+    origin: frontendUrl,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -68,11 +69,11 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-// Metrics middleware: track request duration and count
+// Request logging middleware
 app.use((req: Request, res: Response, next: Function) => {
   const startTime = Date.now();
 
@@ -80,84 +81,63 @@ app.use((req: Request, res: Response, next: Function) => {
     const duration = Date.now() - startTime;
     httpRequestDurationMs.observe({ method: req.method, route: req.path, status: res.statusCode }, duration);
     httpRequestsTotal.inc({ method: req.method, route: req.path, status: res.statusCode });
+    logger.info('HTTP request', {
+      method: req.method,
+      path: req.originalUrl,
+      status: res.statusCode,
+      durationMs: duration,
+    });
   });
 
   next();
 });
 
-// ============================================================================
-// HEALTH CHECK
-// ============================================================================
-
-app.get('/health', async (req: Request, res: Response) => {
-  try {
-    const dbHealth = await checkDbHealth();
-    res.json({
-      status: 'ok',
-      database: dbHealth ? 'connected' : 'disconnected',
-      timestamp: new Date().toISOString(),
-    });
-  } catch (err) {
-    res.status(503).json({
-      status: 'degraded',
-      error: 'Database health check failed',
-      timestamp: new Date().toISOString(),
-    });
-  }
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
 });
 
-// ============================================================================
-// PROMETHEUS METRICS
-// ============================================================================
+app.use('/auth', authLimiter);
 
-app.get('/metrics', async (req: Request, res: Response) => {
+// Operational routes
+app.use('/', createOpsRouter(pool));
+
+app.get('/metrics', async (_req: Request, res: Response) => {
   try {
     res.set('Content-Type', getMetricsContentType());
     res.end(await getMetrics());
-  } catch (err) {
-    console.error('Metrics error:', err);
+  } catch (err: any) {
+    logger.error('Metrics error', { error: err?.message });
     res.status(500).json({ error: 'Failed to generate metrics' });
   }
 });
 
-// ============================================================================
-// SERVE FRONTEND STATIC FILES
-// ============================================================================
+// Frontend static (if bundled with backend image)
+const frontendDistCandidates = [
+  path.join(__dirname, '../public'),
+  path.join(process.cwd(), 'public'),
+];
+const frontendDist = frontendDistCandidates.find((dir) => fs.existsSync(dir));
+const shouldServeBundledFrontend = !process.env.FRONTEND_URL && !!frontendDist;
 
-// Serve frontend static files in production
-console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
-console.log('🔍 __dirname:', __dirname);
-console.log('🔍 CWD:', process.cwd());
-
-const frontendDist = path.join(__dirname, '../public');
-console.log('🔍 Trying to serve frontend from:', frontendDist);
-console.log('🔍 Directory exists?', fs.existsSync(frontendDist));
-
-// Try to use express.static if directory exists
-try {
-  if (fs.existsSync(frontendDist)) {
-    app.use(express.static(frontendDist));
-    console.log('✅ Frontend static middleware registered');
-    console.log('✅ Files in directory:', fs.readdirSync(frontendDist));
-  } else {
-    console.warn('⚠️ Frontend directory NOT found:', frontendDist);
-  }
-} catch (err) {
-  console.error('❌ Static files error:', (err as any).message);
+if (shouldServeBundledFrontend && frontendDist) {
+  app.use(express.static(frontendDist));
+  logger.info('Frontend static middleware enabled', { frontendDist });
+} else {
+  logger.warn('Bundled frontend static middleware disabled', {
+    frontendDistFound: !!frontendDist,
+    frontendUrlConfigured: !!process.env.FRONTEND_URL,
+  });
 }
 
-// ============================================================================
-// SETUP POSTGRESQL ROUTES (BEFORE MOUNTING)
-// ============================================================================
-
-// Setup PostgreSQL routes for requests and visits BEFORE mounting routers
+// Setup PostgreSQL-backed routes
 setupRequestsPostgres(pool);
 setupPostgresVisitRoutes(pool);
 
-// ============================================================================
-// API ROUTES (MVP - In-Memory)
-// ============================================================================
-
+// API routes
 app.use('/auth', authRoutes);
 app.use('/auth/phase4', createAuthPhase4Router(pool));
 app.use('/access', createAccessRequestRouter(pool));
@@ -165,6 +145,7 @@ app.use('/audit', createAuditRouter(pool));
 app.use('/mfa', createMfaRouter(pool));
 app.use('/analytics', createAnalyticsRouter(pool));
 app.use('/webhooks/admin', createWebhookAdminRouter(pool));
+app.use('/connected-systems', createConnectedSystemsRouter(pool));
 app.use('/users', userRoutes);
 app.use('/requests', requestRoutes);
 app.use('/visits', visitRoutes);
@@ -172,60 +153,65 @@ app.use('/admin', createAdminRouter(pool));
 app.use('/assistant', createAssistantRouter(pool));
 app.use('/fhir', createFhirRouter(pool));
 app.use('/integrations', createIntegrationsRouter(pool));
-
-// ============================================================================
-// API ROUTES (Phase 2 - PostgreSQL)
-// ============================================================================
-
 app.use('/availability', availabilityRouter(pool));
 app.use('/matching', matchingRouter(pool));
 app.use('/realtime', createRealtimeRoutes(pool));
 
-// Start realtime relay (worker writes to DB, API broadcasts to SSE)
-// TODO: Fix pool connection issues with workers
-// startRealtimeRelay(pool);
-
-// Start webhook delivery worker (processes queued webhooks)
 try {
   startWebhookWorker(pool);
-} catch (err) {
-  console.warn('⚠️ Webhook worker initialization failed (non-critical):', (err as any)?.message);
+} catch (err: any) {
+  logger.warn('Webhook worker initialization failed (non-critical)', { error: err?.message });
 }
 
-// Start outbox worker (processes transaction-safe events)
-// startOutboxWorker(pool);
+const API_ROUTES = [
+  '/api',
+  '/auth',
+  '/access',
+  '/audit',
+  '/mfa',
+  '/analytics',
+  '/webhooks',
+  '/connected-systems',
+  '/users',
+  '/requests',
+  '/visits',
+  '/admin',
+  '/assistant',
+  '/fhir',
+  '/integrations',
+  '/availability',
+  '/matching',
+  '/realtime',
+  '/health',
+  '/ready',
+  '/metrics',
+];
 
-// Start notification worker (processes email queue)
-// startNotificationWorker(pool);
+const isApiRoute = (routePath: string) => API_ROUTES.some((route) => routePath.startsWith(route));
 
-// ============================================================================
-// SPA FALLBACK - Serve frontend index.html for non-API routes
-// ============================================================================
-
-// List of API route prefixes
-const API_ROUTES = ['/api', '/auth', '/access', '/audit', '/mfa', '/analytics',
-  '/webhooks', '/users', '/requests', '/visits', '/admin', '/assistant',
-  '/fhir', '/integrations', '/availability', '/matching', '/realtime', 
-  '/health', '/metrics'];
-
-const isApiRoute = (path: string) => API_ROUTES.some(route => path.startsWith(route));
-
-// SPA fallback: serve index.html for non-API routes
 app.get('*', (req: Request, res: Response) => {
   if (isApiRoute(req.path)) {
-    // API route that wasn't caught by specific handlers
     return res.status(404).json({
       error: 'Not found',
       path: req.path,
       method: req.method,
     });
   }
-  
-  // Serve index.html for SPA routing
+
+  if (process.env.FRONTEND_URL) {
+    return res.redirect(302, process.env.FRONTEND_URL);
+  }
+
+  if (!frontendDist) {
+    return res.status(503).json({
+      error: 'Frontend bundle not available in this service',
+      hint: 'Deploy frontend separately or set FRONTEND_URL',
+    });
+  }
+
   const indexPath = path.join(frontendDist, 'index.html');
-  res.sendFile(indexPath, (err) => {
+  return res.sendFile(indexPath, (err) => {
     if (err) {
-      // If index.html not found, return 404
       res.status(404).json({
         error: 'Not found',
         path: req.path,
@@ -235,72 +221,58 @@ app.get('*', (req: Request, res: Response) => {
   });
 });
 
-// ============================================================================
-// 404 HANDLER (fallback for middleware chains)
-// ============================================================================
-
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    error: 'Not found',
-    path: req.path,
-    method: req.method,
-  });
+app.use((err: any, _req: Request, res: Response, _next: Function) => {
+  logger.error('Unhandled express error', { error: err?.message, stack: err?.stack });
+  res.status(500).json({ error: 'Internal server error' });
 });
 
-// ============================================================================
-// START SERVER
-// ============================================================================
+let server: any;
+
+async function shutdown(signal: string) {
+  logger.warn('Shutdown started', { signal });
+
+  try {
+    if (server) {
+      await new Promise<void>((resolve, reject) => {
+        server.close((err: any) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    }
+
+    await pool.end();
+    logger.info('Shutdown complete');
+    process.exit(0);
+  } catch (err: any) {
+    logger.error('Shutdown failed', { error: err?.message });
+    process.exit(1);
+  }
+}
 
 async function startServer() {
   try {
-    console.log('📦 Running database migrations...');
+    logger.info('Running database migrations');
     await runMigrations();
-    console.log('✅ Migrations completed');
-  } catch (err) {
-    console.error('❌ Migration failed:', err);
+    logger.info('Migrations completed');
+
+    await pool.query('SELECT 1');
+    logger.info('Database connected');
+
+    server = app.listen(PORT, '0.0.0.0', () => {
+      logger.info('Server started', {
+        port: PORT,
+        env: process.env.NODE_ENV || 'development',
+      });
+    });
+  } catch (err: any) {
+    logger.error('Startup failed', { error: err?.message, stack: err?.stack });
     process.exit(1);
   }
-
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Homecare Matching App server running on port ${PORT}`);
-    console.log(`   Health: http://localhost:${PORT}/health`);
-    console.log(`   Metrics: http://localhost:${PORT}/metrics`);
-    console.log(`   API: http://localhost:${PORT}/requests`);
-    console.log(`   Database: ${process.env.DATABASE_URL ? 'PostgreSQL' : 'In-Memory'}`);
-  });
-
-// ============================================================================
-// GRACEFUL SHUTDOWN
-// ============================================================================
-
-  process.on('SIGTERM', async () => {
-    console.log('SIGTERM received, cleaning up...');
-    server.close(async () => {
-      console.log('Server closed');
-      try {
-        await pool.end();
-        console.log('Database connections closed');
-      } catch (err) {
-        console.error('Error closing database connections:', err);
-      }
-      process.exit(0);
-    });
-  });
-
-  process.on('SIGINT', async () => {
-    console.log('\nSIGINT received, cleaning up...');
-    server.close(async () => {
-      console.log('Server closed');
-      try {
-        await pool.end();
-        console.log('Database connections closed');
-      } catch (err) {
-        console.error('Error closing database connections:', err);
-      }
-      process.exit(0);
-    });
-  });
 }
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 startServer();
 

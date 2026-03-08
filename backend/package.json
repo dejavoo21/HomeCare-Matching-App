@@ -11,6 +11,9 @@
     "lint": "eslint src/**/*.ts",
     "migrate": "ts-node src/migrations/runner.ts",
     "seed": "ts-node src/scripts/seed.ts",
+    "seed:integrations": "node apply-integration-seeds.js",
+    "seed:master": "node apply-master-seed.js",
+    "seed:volume": "node apply-mock-volume-seed.js",
     "worker": "ts-node-dev --respawn src/jobs/dispatch.worker.ts"
   },
   "dependencies": {
@@ -19,7 +22,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^8.3.0",
     "fhir": "^4.12.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^6.10.1",
     "otplib": "^13.3.0",

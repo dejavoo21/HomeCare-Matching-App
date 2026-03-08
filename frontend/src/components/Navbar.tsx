@@ -1,6 +1,4 @@
-// import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { RealtimeStatusIndicator } from './RealtimeStatusIndicator';
 import '../index.css';
 
 export function Navbar() {
@@ -9,19 +7,25 @@ export function Navbar() {
   if (!user) return null;
 
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <h1 className="navbar-title">🏥 Homecare Matching App</h1>
-        <div className="navbar-user">
-          <RealtimeStatusIndicator />
-          <span>
+    <header className="topbar">
+      <div className="topbarInner">
+        <div className="topbarLeft">
+          <div className="topbarBrandBlock">
+            <span className="topbarBrandMark" aria-hidden="true">HC</span>
+            <span className="topbarBrandText">Homecare Matching App</span>
+          </div>
+        </div>
+
+        <div className="topbarRight">
+          <div className="topbarUser">
             {user.name} ({user.role})
-          </span>
-          <button onClick={logout} className="btn-logout">
+          </div>
+
+          <button onClick={logout} className="btn btn-topbar" type="button">
             Logout
           </button>
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

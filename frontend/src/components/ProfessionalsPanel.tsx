@@ -14,7 +14,7 @@ function initials(name?: string) {
   const n = (name || "").trim();
   if (!n) return "U";
   const parts = n.split(/\s+/).slice(0, 2);
-  return parts.map(p => p[0]?.toUpperCase()).join("");
+  return parts.map((p) => p[0]?.toUpperCase()).join("");
 }
 
 export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
@@ -29,10 +29,9 @@ export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
     (async () => {
       try {
         setLoading(true);
-        const res: any = await api.getProfessionals(); // { success, data: [...] }
+        const res: any = await api.getProfessionals();
         const rows = res?.data || [];
 
-        // Normalize data: handle both isActive and is_active field names
         const normalized = rows.map((p: any) => ({
           ...p,
           isActive: p.isActive ?? p.is_active ?? true,
@@ -40,23 +39,25 @@ export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
 
         if (mounted) setPros(normalized);
       } catch (e: any) {
-        console.error("❌ Failed to load professionals:", e?.message || e);
+        console.error("Failed to load professionals:", e?.message || e);
         if (mounted) setPros([]);
       } finally {
         if (mounted) setLoading(false);
       }
     })();
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [refreshKey]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
     return (pros || [])
       .filter((p: any) => (p.isActive ?? p.is_active ?? true) === true)
-      .filter(p => ["nurse", "doctor"].includes(String(p.role).toLowerCase()))
-      .filter(p => (role === "all" ? true : String(p.role).toLowerCase() === role))
-      .filter(p => {
+      .filter((p) => ["nurse", "doctor"].includes(String(p.role).toLowerCase()))
+      .filter((p) => (role === "all" ? true : String(p.role).toLowerCase() === role))
+      .filter((p) => {
         if (!query) return true;
         const hay = [p.name, p.email, p.location, p.role].filter(Boolean).join(" ").toLowerCase();
         return hay.includes(query);
@@ -64,8 +65,12 @@ export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [pros, q, role]);
 
-  const nurseCount = (pros || []).filter(p => String(p.role).toLowerCase() === "nurse" && (p.isActive ?? true)).length;
-  const doctorCount = (pros || []).filter(p => String(p.role).toLowerCase() === "doctor" && (p.isActive ?? true)).length;
+  const nurseCount = (pros || []).filter(
+    (p) => String(p.role).toLowerCase() === "nurse" && (p.isActive ?? true)
+  ).length;
+  const doctorCount = (pros || []).filter(
+    (p) => String(p.role).toLowerCase() === "doctor" && (p.isActive ?? true)
+  ).length;
 
   return (
     <div className="sideCard">
@@ -84,7 +89,7 @@ export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
       <div className="rowGap">
         <input
           className="input"
-          placeholder="Search team…"
+          placeholder="Search team..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -111,12 +116,12 @@ export function ProfessionalsPanel({ refreshKey }: { refreshKey?: number }) {
             {filtered.map((p) => (
               <div key={p.id} className="proRow">
                 <div className="proAvatar">{initials(p.name)}</div>
-                
+
                 <div className="proMeta">
                   <div className="proName">{p.name}</div>
                   <div className="muted proSub">{p.email}</div>
                 </div>
-                
+
                 <span className={String(p.role).toLowerCase() === "doctor" ? "roleBadge roleDoctor" : "roleBadge roleNurse"}>
                   {String(p.role).toUpperCase()}
                 </span>

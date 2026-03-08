@@ -1,44 +1,25 @@
-# Build stage
+# Build stage (backend only; frontend can be a separate Railway service)
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy entire project
-COPY . .
-
-# Install dependencies for backend
-WORKDIR /app/backend
+COPY package*.json ./
 RUN npm install
 
-# Build backend
+COPY . .
 RUN npm run build
-
-# Build frontend
-WORKDIR /app/frontend
-RUN npm install && npm run build && ls -la dist/ && echo "Frontend build completed successfully" || echo "Frontend build FAILED"
 
 # Runtime stage
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY backend/package*.json ./
-
-# Install production dependencies only
+COPY package*.json ./
 RUN npm install --omit=dev
 
-# Copy built backend application from builder stage
-COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src/migrations ./src/migrations
 
-# Copy built frontend from builder stage (for serving as static files)
-COPY --from=builder /app/frontend/dist ./public
-
-# List files for debugging
-RUN ls -la /app/public/ || echo "Public directory empty"
-
-# Expose port
 EXPOSE 8000
 
-# Health check
 CMD ["node", "dist/index.js"]

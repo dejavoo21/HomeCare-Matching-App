@@ -12,13 +12,18 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     created_at timestamptz DEFAULT now()
 );
 
+-- Backfill legacy tables that may predate this migration
+ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS expires_at timestamptz;
+ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS revoked_at timestamptz;
+ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
+
 -- Index for fast lookups by user_id
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id
 ON refresh_tokens(user_id);
 
 -- Index for finding non-revoked, non-expired tokens
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_active
-ON refresh_tokens(user_id) WHERE revoked_at IS NULL AND expires_at > now();
+ON refresh_tokens(user_id) WHERE revoked_at IS NULL;
 
 -- Add column to track token rotation (optional: for security)
 ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS

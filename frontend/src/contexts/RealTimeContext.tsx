@@ -62,7 +62,7 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
     setState("reconnecting");
     armOfflineTimer();
 
-    const es = new EventSource(url);
+    const es = new EventSource(url, { withCredentials: true });
     esRef.current = es;
 
     const emit = (type: string, payload: any) => {

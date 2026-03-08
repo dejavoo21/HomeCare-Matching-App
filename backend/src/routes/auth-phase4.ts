@@ -291,7 +291,13 @@ export function createAuthPhase4Router(pool: Pool) {
       // Audit log
       await logAudit(pool, userId, 'AUTH_REFRESH', 'user', userId);
 
-      res.json({ success: true });
+      res.json({
+        success: true,
+        data: {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshTokenRaw,
+        },
+      });
     } catch (err) {
       console.error('Refresh error:', err);
       res.status(401).json({ error: 'Refresh failed' });

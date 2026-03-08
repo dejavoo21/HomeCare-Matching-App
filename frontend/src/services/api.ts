@@ -4,7 +4,12 @@
 // Phase 4: HttpOnly cookies + refresh flow + Railway-safe
 
 const BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:6005';
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD
+    ? 'https://homecare-matching-app-production.up.railway.app'
+    : 'http://localhost:6005');
+const ACCESS_TOKEN_KEY = 'access-token';
+const REFRESH_TOKEN_KEY = 'refresh-token';
 
 interface ApiOptions {
   headers?: Record<string, string>;
@@ -28,22 +33,28 @@ class ApiClient {
   }
 
   // Backward compatibility for existing code
-  setToken(_: string): void {
+  setToken(token: string): void {
+    if (token && token !== 'active') {
+      localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    }
     this.markSessionActive();
   }
 
   getToken(): string | null {
-    // HttpOnly cookies are not readable by JS
-    return null;
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
   }
 
   clearTokens(): void {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     this.clearSessionMarker();
   }
 
   private getHeaders(options?: ApiOptions): Record<string, string> {
+    const token = this.getToken();
     return {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options?.headers || {}),
     };
   }
@@ -53,9 +64,11 @@ class ApiClient {
 
     this.refreshPromise = (async () => {
       try {
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
         const response = await fetch(`${BASE_URL}/auth/phase4/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(refreshToken ? { refreshToken } : {}),
           credentials: 'include',
         });
 
@@ -70,6 +83,12 @@ class ApiClient {
           return false;
         }
 
+        if (json?.data?.accessToken) {
+          this.setToken(String(json.data.accessToken));
+        }
+        if (json?.data?.refreshToken) {
+          this.setRefreshToken(String(json.data.refreshToken));
+        }
         this.markSessionActive();
         return true;
       } catch (err) {
@@ -160,7 +179,14 @@ class ApiClient {
 
     // Mark session as active
     if (response.success) {
-      this.setToken('active');
+      if (response?.data?.accessToken) {
+        this.setToken(String(response.data.accessToken));
+      } else {
+        this.markSessionActive();
+      }
+      if (response?.data?.refreshToken) {
+        this.setRefreshToken(String(response.data.refreshToken));
+      }
     }
 
     return response;
@@ -520,9 +546,50 @@ class ApiClient {
     return this.request('POST', `/webhooks/admin/deliveries/${id}/replay`, {});
   }
 
+  // =========================================================================
+  // CONNECTED SYSTEMS ENDPOINTS
+  // =========================================================================
+
+  async getConnectedSystems() {
+    return this.request('GET', '/connected-systems');
+  }
+
+  async createConnectedSystem(payload: {
+    name: string;
+    systemType: 'hospital' | 'dispatch_agency' | 'webhook_partner';
+    baseUrl: string;
+    authType?: 'none' | 'api_key' | 'bearer';
+    authConfig?: Record<string, any>;
+    isActive?: boolean;
+    notes?: string;
+  }) {
+    return this.request('POST', '/connected-systems', payload);
+  }
+
+  async updateConnectedSystem(
+    id: string,
+    payload: {
+      name?: string;
+      systemType?: 'hospital' | 'dispatch_agency' | 'webhook_partner';
+      baseUrl?: string;
+      authType?: 'none' | 'api_key' | 'bearer';
+      authConfig?: Record<string, any>;
+      isActive?: boolean;
+      notes?: string;
+    }
+  ) {
+    return this.request('PUT', `/connected-systems/${id}`, payload);
+  }
+
+  async testConnectedSystem(id: string) {
+    return this.request('POST', `/connected-systems/${id}/test`, {});
+  }
+
   // Missing method stubs for backward compatibility
-  setRefreshToken(_: string): void {
-    // HttpOnly cookies handle refresh token automatically
+  setRefreshToken(token: string): void {
+    if (token && token !== 'active') {
+      localStorage.setItem(REFRESH_TOKEN_KEY, token);
+    }
     this.markSessionActive();
   }
 

@@ -11,13 +11,17 @@ type SearchItem = {
 
 export function CommandBar({
   stats,
-  isConnected,
+  isConnected: _isConnected,
   onSearchSelect,
+  onQuickFilterSelect,
+  activeQuickFilter = null,
   searchScope = 'admin',
 }: {
   stats?: any;
   isConnected?: boolean;
   onSearchSelect?: (item: SearchItem) => void;
+  onQuickFilterSelect?: (filter: 'queued' | 'offered') => void;
+  activeQuickFilter?: 'queued' | 'offered' | null;
   searchScope?: 'admin';
 }) {
   const [q, setQ] = useState('');
@@ -113,20 +117,10 @@ export function CommandBar({
     }
   };
 
-  const liveText = isConnected ? 'Live' : 'Offline';
-
   return (
     <div className="commandBarWrapper" ref={wrapRef}>
       <div className="commandBar">
         <div className="commandInner">
-          <div className="commandLeft">
-            <span
-              className={isConnected ? 'liveDot liveDot-on' : 'liveDot'}
-              aria-hidden="true"
-            />
-            <span className="muted">{liveText}</span>
-          </div>
-
           <div className="commandSearch">
             <input
               ref={inputRef}
@@ -181,12 +175,24 @@ export function CommandBar({
           <div className="commandRight">
             {stats ? (
               <>
-                <span className="pillSoft">
+                <button
+                  type="button"
+                  className={activeQuickFilter === 'queued' ? 'pillSoft pillSoft-btn pillSoft-active' : 'pillSoft pillSoft-btn'}
+                  onClick={() => onQuickFilterSelect?.('queued')}
+                  aria-pressed={activeQuickFilter === 'queued'}
+                  aria-label={`Filter queued requests (${stats.queuedRequests})`}
+                >
                   Queued <b>{stats.queuedRequests}</b>
-                </span>
-                <span className="pillSoft">
+                </button>
+                <button
+                  type="button"
+                  className={activeQuickFilter === 'offered' ? 'pillSoft pillSoft-btn pillSoft-active' : 'pillSoft pillSoft-btn'}
+                  onClick={() => onQuickFilterSelect?.('offered')}
+                  aria-pressed={activeQuickFilter === 'offered'}
+                  aria-label={`Filter offered requests (${stats.offeredRequests})`}
+                >
                   Offered <b>{stats.offeredRequests}</b>
-                </span>
+                </button>
               </>
             ) : null}
           </div>
