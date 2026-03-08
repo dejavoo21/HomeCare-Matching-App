@@ -92,6 +92,41 @@ export function AdminDispatchPage() {
     [requests]
   );
 
+  const dispatchMetrics = useMemo(() => {
+    const now = Date.now();
+
+    return {
+      queuedNow: counts.queued,
+      offersExpiring: requests.filter((request) => {
+        if (String(request.status).toLowerCase() !== 'offered' || !request.offerExpiresAt) {
+          return false;
+        }
+
+        const diff = new Date(request.offerExpiresAt).getTime() - now;
+        return diff > 0 && diff <= 30 * 60 * 1000;
+      }).length,
+      criticalAtRisk: requests.filter((request) => {
+        const urgency = String(request.urgency).toLowerCase();
+        const status = String(request.status).toLowerCase();
+        return urgency === 'critical' && ['queued', 'offered'].includes(status);
+      }).length,
+      assignedToday: requests.filter((request) => {
+        const status = String(request.status).toLowerCase();
+        if (!['accepted', 'en_route', 'completed'].includes(status) || !request.updatedAt) {
+          return false;
+        }
+
+        const updated = new Date(request.updatedAt);
+        const today = new Date();
+        return (
+          updated.getFullYear() === today.getFullYear() &&
+          updated.getMonth() === today.getMonth() &&
+          updated.getDate() === today.getDate()
+        );
+      }).length,
+    };
+  }, [counts.queued, requests]);
+
   const onOffer = async (requestId: string) => {
     const request = requests.find((item) => item.id === requestId);
     if (request) {
@@ -146,10 +181,10 @@ export function AdminDispatchPage() {
       </section>
 
       <section className="statusTilesRow" aria-label="Dispatch summary">
-        <StatusTile label="Queued Requests" value={counts.queued} color="indigo" />
-        <StatusTile label="Offers Pending" value={counts.offered} color="amber" />
-        <StatusTile label="Active Visits" value={counts.accepted + counts.en_route} color="blue" />
-        <StatusTile label="Completed Today" value={counts.completed} color="green" />
+        <StatusTile label="Queued Now" value={dispatchMetrics.queuedNow} color="indigo" />
+        <StatusTile label="Offers Expiring" value={dispatchMetrics.offersExpiring} color="amber" />
+        <StatusTile label="Critical At Risk" value={dispatchMetrics.criticalAtRisk} color="amber" />
+        <StatusTile label="Assigned Today" value={dispatchMetrics.assignedToday} color="blue" />
       </section>
 
       <section className="pipelineRow" aria-label="Dispatch pipeline">
