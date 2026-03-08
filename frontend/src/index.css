@@ -7780,6 +7780,53 @@ html {
   overflow: hidden;
 }
 
+.scheduleUnassignedCard {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.scheduleUnassignedHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.scheduleUnassignedTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.scheduleUnassignedSubtitle {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.scheduleUnassignedCount {
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.scheduleUnassignedList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
 .scheduleBoardGridScroll {
   overflow-x: auto;
 }
@@ -7842,6 +7889,11 @@ html {
   background: rgba(99, 102, 241, 0.06);
 }
 
+.scheduleBoardDayCell-droppable .scheduleEmptyCell {
+  color: #6366f1;
+  font-weight: 700;
+}
+
 .scheduleEmptyCell {
   color: #cbd5e1;
   font-size: 18px;
@@ -7887,6 +7939,10 @@ html {
 
 .scheduleVisitCard-low {
   border-left: 4px solid #10b981;
+}
+
+.scheduleVisitCard-unassigned {
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
 }
 
 .scheduleVisitTop {

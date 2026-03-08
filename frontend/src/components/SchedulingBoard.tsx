@@ -142,21 +142,12 @@ export function SchedulingBoard() {
     return map;
   }, [board]);
 
-  const professionals = useMemo(() => {
-    const rows = [...(board?.professionals || [])];
-    const hasUnassigned = (visitsByProfessional.get('unassigned') || []).length > 0;
-
-    if (hasUnassigned) {
-      rows.unshift({
-        id: 'unassigned',
-        name: 'Unassigned Queue',
-        email: '',
-        role: 'queue',
-      });
-    }
-
-    return rows;
-  }, [board, visitsByProfessional]);
+  const unassignedVisits = useMemo(() => {
+    return [...(visitsByProfessional.get('unassigned') || [])].sort(
+      (a, b) =>
+        new Date(a.preferred_start).getTime() - new Date(b.preferred_start).getTime()
+    );
+  }, [visitsByProfessional]);
 
   const onDragStart = (event: DragEvent<HTMLDivElement>, visit: Visit) => {
     event.dataTransfer.effectAllowed = 'move';
@@ -215,7 +206,7 @@ export function SchedulingBoard() {
           <div>
             <h1 className="pageTitle">Scheduling Board</h1>
             <p className="subtitle">
-              Weekly dispatch planning, assignment visibility, and care visit coverage.
+              Weekly dispatch planning, assignment visibility, and unassigned visit coverage.
             </p>
           </div>
 
@@ -260,110 +251,154 @@ export function SchedulingBoard() {
           <div className="empty">No scheduling data available.</div>
         </section>
       ) : (
-        <section className="scheduleBoardCard">
-          <div className="scheduleBoardGridScroll">
-            <div className="scheduleBoardHeaderRow">
-              <div className="scheduleBoardCorner">Professional</div>
-              {weekDays.map((day) => (
-                <div key={day.toISOString()} className="scheduleBoardDayHeader">
-                  {formatDay(day)}
-                </div>
-              ))}
+        <>
+          <section className="scheduleUnassignedCard">
+            <div className="scheduleUnassignedHeader">
+              <div>
+                <h3 className="scheduleUnassignedTitle">Unassigned Visits</h3>
+                <p className="scheduleUnassignedSubtitle">
+                  Drag these visits onto a professional&apos;s day column to assign them.
+                </p>
+              </div>
+
+              <div className="scheduleUnassignedCount">{unassignedVisits.length} pending</div>
             </div>
 
-            <div className="scheduleBoardGrid">
-              {professionals.map((professional) => {
-                const professionalVisits = visitsByProfessional.get(professional.id) || [];
-
-                return (
-                  <div key={professional.id} className="scheduleBoardRow">
-                    <div className="scheduleBoardProfessionalCell">
-                      <div className="scheduleProfessionalName">{professional.name}</div>
-                      <div className="scheduleProfessionalMeta">
-                        {String(professional.role).toUpperCase()}
-                      </div>
+            {unassignedVisits.length === 0 ? (
+              <div className="empty">No unassigned visits for this week.</div>
+            ) : (
+              <div className="scheduleUnassignedList">
+                {unassignedVisits.map((visit) => (
+                  <div
+                    key={visit.id}
+                    className={`scheduleVisitCard scheduleVisitCard-unassigned scheduleVisitCard-${String(
+                      visit.urgency || 'medium'
+                    ).toLowerCase()}`}
+                    draggable
+                    onDragStart={(event) => onDragStart(event, visit)}
+                    onDragEnd={onDragEnd}
+                  >
+                    <div className="scheduleVisitTop">
+                      <span className="scheduleVisitTime">
+                        {formatDay(new Date(visit.preferred_start))} • {formatTime(visit.preferred_start)}
+                      </span>
+                      <span className="scheduleVisitStatus">
+                        {String(visit.status).replace('_', ' ')}
+                      </span>
                     </div>
 
-                    {weekDays.map((day) => {
-                      const dayVisits = professionalVisits
-                        .filter((visit) => sameDay(visit.preferred_start, day))
-                        .sort(
-                          (a, b) =>
-                            new Date(a.preferred_start).getTime() -
-                            new Date(b.preferred_start).getTime()
-                        );
+                    <div className="scheduleVisitTitle">{visit.client_name || 'Client'}</div>
+                    <div className="scheduleVisitMeta">{visit.service_type}</div>
 
-                      const dropKey = `${professional.id}-${day.toISOString()}`;
-                      const isDroppable = professional.id !== 'unassigned';
-                      const isBusy = dropBusy === dropKey;
-
-                      return (
-                        <div
-                          key={`${professional.id}-${day.toISOString()}`}
-                          className={
-                            dragging && isDroppable
-                              ? 'scheduleBoardDayCell scheduleBoardDayCell-droppable'
-                              : 'scheduleBoardDayCell'
-                          }
-                          onDragOver={(event) => {
-                            if (!isDroppable) return;
-                            event.preventDefault();
-                          }}
-                          onDrop={(event) => {
-                            if (!isDroppable) return;
-                            event.preventDefault();
-                            onDropVisit(professional.id, day);
-                          }}
-                        >
-                          {dayVisits.length === 0 ? (
-                            <div className="scheduleEmptyCell">{isBusy ? 'Updating...' : '-'}</div>
-                          ) : (
-                            <div className="scheduleVisitList">
-                              {dayVisits.map((visit) => (
-                                <div
-                                  key={visit.id}
-                                  className={`scheduleVisitCard scheduleVisitCard-${String(
-                                    visit.urgency || 'medium'
-                                  ).toLowerCase()}`}
-                                  draggable
-                                  onDragStart={(event) => onDragStart(event, visit)}
-                                  onDragEnd={onDragEnd}
-                                >
-                                  <div className="scheduleVisitTop">
-                                    <span className="scheduleVisitTime">
-                                      {formatTime(visit.preferred_start)}
-                                    </span>
-                                    <span className="scheduleVisitStatus">
-                                      {String(visit.status).replace('_', ' ')}
-                                    </span>
-                                  </div>
-
-                                  <div className="scheduleVisitTitle">
-                                    {visit.client_name || 'Client'}
-                                  </div>
-
-                                  <div className="scheduleVisitMeta">
-                                    {visit.service_type}
-                                  </div>
-
-                                  {visit.address_text ? (
-                                    <div className="scheduleVisitMeta">
-                                      {visit.address_text}
-                                    </div>
-                                  ) : null}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {visit.address_text ? (
+                      <div className="scheduleVisitMeta">{visit.address_text}</div>
+                    ) : null}
                   </div>
-                );
-              })}
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="scheduleBoardCard">
+            <div className="scheduleBoardGridScroll">
+              <div className="scheduleBoardHeaderRow">
+                <div className="scheduleBoardCorner">Professional</div>
+                {weekDays.map((day) => (
+                  <div key={day.toISOString()} className="scheduleBoardDayHeader">
+                    {formatDay(day)}
+                  </div>
+                ))}
+              </div>
+
+              <div className="scheduleBoardGrid">
+                {(board.professionals || []).map((professional) => {
+                  const professionalVisits = visitsByProfessional.get(professional.id) || [];
+
+                  return (
+                    <div key={professional.id} className="scheduleBoardRow">
+                      <div className="scheduleBoardProfessionalCell">
+                        <div className="scheduleProfessionalName">{professional.name}</div>
+                        <div className="scheduleProfessionalMeta">
+                          {String(professional.role).toUpperCase()}
+                        </div>
+                      </div>
+
+                      {weekDays.map((day) => {
+                        const dayVisits = professionalVisits
+                          .filter((visit) => sameDay(visit.preferred_start, day))
+                          .sort(
+                            (a, b) =>
+                              new Date(a.preferred_start).getTime() -
+                              new Date(b.preferred_start).getTime()
+                          );
+
+                        const dropKey = `${professional.id}-${day.toISOString()}`;
+                        const isBusy = dropBusy === dropKey;
+
+                        return (
+                          <div
+                            key={`${professional.id}-${day.toISOString()}`}
+                            className={
+                              dragging
+                                ? 'scheduleBoardDayCell scheduleBoardDayCell-droppable'
+                                : 'scheduleBoardDayCell'
+                            }
+                            onDragOver={(event) => {
+                              event.preventDefault();
+                            }}
+                            onDrop={(event) => {
+                              event.preventDefault();
+                              onDropVisit(professional.id, day);
+                            }}
+                          >
+                            {dayVisits.length === 0 ? (
+                              <div className="scheduleEmptyCell">
+                                {isBusy ? 'Updating...' : 'Drop here'}
+                              </div>
+                            ) : (
+                              <div className="scheduleVisitList">
+                                {dayVisits.map((visit) => (
+                                  <div
+                                    key={visit.id}
+                                    className={`scheduleVisitCard scheduleVisitCard-${String(
+                                      visit.urgency || 'medium'
+                                    ).toLowerCase()}`}
+                                    draggable
+                                    onDragStart={(event) => onDragStart(event, visit)}
+                                    onDragEnd={onDragEnd}
+                                  >
+                                    <div className="scheduleVisitTop">
+                                      <span className="scheduleVisitTime">
+                                        {formatTime(visit.preferred_start)}
+                                      </span>
+                                      <span className="scheduleVisitStatus">
+                                        {String(visit.status).replace('_', ' ')}
+                                      </span>
+                                    </div>
+
+                                    <div className="scheduleVisitTitle">
+                                      {visit.client_name || 'Client'}
+                                    </div>
+
+                                    <div className="scheduleVisitMeta">{visit.service_type}</div>
+
+                                    {visit.address_text ? (
+                                      <div className="scheduleVisitMeta">{visit.address_text}</div>
+                                    ) : null}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </>
       )}
     </main>
   );
