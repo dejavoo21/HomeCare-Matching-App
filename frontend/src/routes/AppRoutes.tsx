@@ -6,8 +6,8 @@ import { AdminShell } from '../layouts/AdminShell';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ClientDashboard } from '../pages/ClientDashboard';
-import { ProfessionalDashboard } from '../pages/ProfessionalDashboard';
 import { CreateRequestPage } from '../pages/CreateRequestPage';
+import { ClinicianVisitsPage } from '../pages/ClinicianVisitsPage';
 
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { AdminDispatchPage } from '../pages/AdminDispatchPage';
@@ -51,7 +51,7 @@ function DashboardRouter() {
       return <ClientDashboard />;
     case UserRole.NURSE:
     case UserRole.DOCTOR:
-      return <ProfessionalDashboard />;
+      return <Navigate to="/clinician/visits" replace />;
     case UserRole.ADMIN:
       return <Navigate to="/admin/dashboard" replace />;
     default:
@@ -100,6 +100,16 @@ export function AppRoutes() {
           <ProtectedRoute
             element={<CreateRequestPage />}
             allowedRoles={[UserRole.CLIENT]}
+          />
+        }
+      />
+
+      <Route
+        path="/clinician/visits"
+        element={
+          <ProtectedRoute
+            element={<ClinicianVisitsPage />}
+            allowedRoles={[UserRole.NURSE, UserRole.DOCTOR, UserRole.ADMIN]}
           />
         }
       />

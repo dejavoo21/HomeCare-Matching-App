@@ -663,6 +663,11 @@ class ApiClient {
     return this.request('GET', `/evv/request/${requestId}`);
   }
 
+  async getMyClinicianVisits(professionalId?: string) {
+    const qs = professionalId ? `?professionalId=${encodeURIComponent(professionalId)}` : '';
+    return this.request('GET', `/clinician/my-visits${qs}`);
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {
