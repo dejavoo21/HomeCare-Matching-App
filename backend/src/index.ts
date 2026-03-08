@@ -11,6 +11,7 @@ import fs from 'fs';
 
 import { validateEnv } from './config/env';
 import { logger } from './utils/logger';
+import { getAllowedOrigins, isAllowedOrigin } from './utils/cors';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -50,7 +51,7 @@ validateEnv();
 
 const app: Express = express();
 const PORT = parseInt(process.env.PORT || '6005', 10);
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+const allowedOrigins = getAllowedOrigins();
 
 app.set('trust proxy', 1);
 
@@ -62,7 +63,14 @@ app.use(
 
 app.use(
   cors({
-    origin: frontendUrl,
+    origin(origin, callback) {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin not allowed by CORS: ${origin || 'unknown'}`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -266,6 +274,7 @@ async function startServer() {
       logger.info('Server started', {
         port: PORT,
         env: process.env.NODE_ENV || 'development',
+        allowedOrigins,
       });
     });
   } catch (err: any) {

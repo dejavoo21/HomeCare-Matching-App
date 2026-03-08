@@ -7,6 +7,7 @@ import type { Pool } from 'pg';
 import { sseHub } from '../realtime/sseHub';
 import { eventBus } from '../realtime/eventBus';
 import { verifyAccessToken } from '../utils/jwt';
+import { isAllowedOrigin, resolveCorsOrigin } from '../utils/cors';
 
 export function createRealtimeRoutes(pool: Pool): Router {
   const router = Router();
@@ -47,10 +48,10 @@ export function createRealtimeRoutes(pool: Pool): Router {
       res.setHeader('X-Accel-Buffering', 'no');
 
       // IMPORTANT: must match frontend origin for cookies
-      res.setHeader(
-        'Access-Control-Allow-Origin',
-        process.env.FRONTEND_URL || 'http://localhost:5173'
-      );
+      const requestOrigin = req.headers.origin;
+      if (isAllowedOrigin(requestOrigin)) {
+        res.setHeader('Access-Control-Allow-Origin', resolveCorsOrigin(requestOrigin));
+      }
 
       res.setHeader('Access-Control-Allow-Credentials', 'true');
 
