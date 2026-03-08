@@ -244,7 +244,7 @@ export function createScheduleRouter(pool: Pool) {
 
       try {
         const existing = await pool.query(
-          `SELECT id, professional_id, preferred_start
+          `SELECT id, professional_id, preferred_start, status
            FROM care_requests
            WHERE id = $1
            LIMIT 1`,
@@ -253,6 +253,28 @@ export function createScheduleRouter(pool: Pool) {
 
         if (existing.rows.length === 0) {
           res.status(404).json({ error: 'Request not found' });
+          return;
+        }
+
+        const requestRow = existing.rows[0];
+        const oldProfessionalId = requestRow.professional_id;
+
+        const professionalResult = await pool.query(
+          `SELECT id, name, role, is_active
+           FROM users
+           WHERE id = $1
+             AND UPPER(role) IN ('NURSE', 'DOCTOR')
+           LIMIT 1`,
+          [professionalId]
+        );
+
+        if (professionalResult.rows.length === 0) {
+          res.status(404).json({ error: 'Professional not found' });
+          return;
+        }
+
+        if (!professionalResult.rows[0].is_active) {
+          res.status(400).json({ error: 'Professional is inactive' });
           return;
         }
 
@@ -277,8 +299,6 @@ export function createScheduleRouter(pool: Pool) {
             .json({ error: 'Professional already has a nearby scheduled visit' });
           return;
         }
-
-        const oldProfessionalId = existing.rows[0].professional_id;
 
         const updated = await pool.query(
           `UPDATE care_requests

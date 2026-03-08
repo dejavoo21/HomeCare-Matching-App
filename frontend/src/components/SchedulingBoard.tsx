@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type DragEvent } from 'react';
 import { api } from '../services/api';
 
 type Professional = {
@@ -31,6 +31,12 @@ type BoardResponse = {
   };
   professionals: Professional[];
   visits: Visit[];
+};
+
+type DragPayload = {
+  requestId: string;
+  fromProfessionalId: string | null;
+  originalStart: string;
 };
 
 function formatDay(date: Date) {
@@ -66,11 +72,26 @@ function mondayOf(date: Date) {
   return d;
 }
 
+function mergeDateWithOriginalTime(targetDay: Date, originalDateTime: string) {
+  const original = new Date(originalDateTime);
+  const merged = new Date(targetDay);
+  merged.setHours(
+    original.getHours(),
+    original.getMinutes(),
+    original.getSeconds(),
+    original.getMilliseconds()
+  );
+  return merged.toISOString();
+}
+
 export function SchedulingBoard() {
   const [board, setBoard] = useState<BoardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<'all' | 'nurse' | 'doctor'>('all');
   const [weekStart, setWeekStart] = useState<Date>(() => mondayOf(new Date()));
+  const [dragging, setDragging] = useState<DragPayload | null>(null);
+  const [dropBusy, setDropBusy] = useState<string | null>(null);
+  const [message, setMessage] = useState('');
 
   const load = async () => {
     try {
@@ -78,9 +99,10 @@ export function SchedulingBoard() {
       const start = weekStart.toISOString().slice(0, 10);
       const response = (await api.getScheduleBoard(start, 7, role)) as any;
       setBoard(response?.data || null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load scheduling board:', err);
       setBoard(null);
+      setMessage(err?.message || 'Failed to load scheduling board');
     } finally {
       setLoading(false);
     }
@@ -136,6 +158,56 @@ export function SchedulingBoard() {
     return rows;
   }, [board, visitsByProfessional]);
 
+  const onDragStart = (event: DragEvent<HTMLDivElement>, visit: Visit) => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', visit.id);
+    setDragging({
+      requestId: visit.id,
+      fromProfessionalId: visit.professional_id || null,
+      originalStart: visit.preferred_start,
+    });
+    setMessage('');
+  };
+
+  const onDragEnd = () => {
+    setDragging(null);
+  };
+
+  const onDropVisit = async (professionalId: string, day: Date) => {
+    if (!dragging || professionalId === 'unassigned') {
+      return;
+    }
+
+    const preferredStart = mergeDateWithOriginalTime(day, dragging.originalStart);
+    if (
+      dragging.fromProfessionalId === professionalId &&
+      new Date(dragging.originalStart).toISOString() === preferredStart
+    ) {
+      setDragging(null);
+      return;
+    }
+
+    const dropKey = `${professionalId}-${day.toISOString()}`;
+
+    try {
+      setDropBusy(dropKey);
+      setMessage('');
+      await api.reassignSchedule({
+        requestId: dragging.requestId,
+        professionalId,
+        preferredStart,
+      });
+      setMessage('Visit rescheduled successfully.');
+      await load();
+    } catch (err: any) {
+      console.error('Failed to reschedule visit:', err);
+      setMessage(err?.message || 'Failed to reschedule visit');
+    } finally {
+      setDropBusy(null);
+      setDragging(null);
+    }
+  };
+
   return (
     <main className="scheduleBoardWrap" role="main" aria-label="Scheduling board">
       <section className="pageHeaderBlock">
@@ -172,6 +244,12 @@ export function SchedulingBoard() {
           </div>
         </div>
       </section>
+
+      {message ? (
+        <section className="scheduleMessage" role="status" aria-live="polite">
+          {message}
+        </section>
+      ) : null}
 
       {loading ? (
         <section className="pageCard">
@@ -215,13 +293,30 @@ export function SchedulingBoard() {
                             new Date(b.preferred_start).getTime()
                         );
 
+                      const dropKey = `${professional.id}-${day.toISOString()}`;
+                      const isDroppable = professional.id !== 'unassigned';
+                      const isBusy = dropBusy === dropKey;
+
                       return (
                         <div
                           key={`${professional.id}-${day.toISOString()}`}
-                          className="scheduleBoardDayCell"
+                          className={
+                            dragging && isDroppable
+                              ? 'scheduleBoardDayCell scheduleBoardDayCell-droppable'
+                              : 'scheduleBoardDayCell'
+                          }
+                          onDragOver={(event) => {
+                            if (!isDroppable) return;
+                            event.preventDefault();
+                          }}
+                          onDrop={(event) => {
+                            if (!isDroppable) return;
+                            event.preventDefault();
+                            onDropVisit(professional.id, day);
+                          }}
                         >
                           {dayVisits.length === 0 ? (
-                            <div className="scheduleEmptyCell">-</div>
+                            <div className="scheduleEmptyCell">{isBusy ? 'Updating...' : '-'}</div>
                           ) : (
                             <div className="scheduleVisitList">
                               {dayVisits.map((visit) => (
@@ -230,6 +325,9 @@ export function SchedulingBoard() {
                                   className={`scheduleVisitCard scheduleVisitCard-${String(
                                     visit.urgency || 'medium'
                                   ).toLowerCase()}`}
+                                  draggable
+                                  onDragStart={(event) => onDragStart(event, visit)}
+                                  onDragEnd={onDragEnd}
                                 >
                                   <div className="scheduleVisitTop">
                                     <span className="scheduleVisitTime">

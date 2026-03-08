@@ -7829,6 +7829,14 @@ html {
   border-right: 1px solid rgba(15, 23, 42, 0.06);
 }
 
+.scheduleBoardDayCell-droppable {
+  background: rgba(99, 102, 241, 0.03);
+}
+
+.scheduleBoardDayCell-droppable:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
 .scheduleEmptyCell {
   color: #cbd5e1;
   font-size: 18px;
@@ -7847,6 +7855,17 @@ html {
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: #fff;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+  cursor: grab;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.scheduleVisitCard:active {
+  cursor: grabbing;
+}
+
+.scheduleVisitCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
 .scheduleVisitCard-critical {
@@ -7895,6 +7914,15 @@ html {
   font-size: 12px;
   color: #64748b;
   line-height: 1.4;
+}
+
+.scheduleMessage {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 600;
 }
 
 @media (max-width: 1100px) {
