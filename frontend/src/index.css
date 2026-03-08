@@ -8014,6 +8014,27 @@ html {
   border-color: rgba(59, 130, 246, 0.18);
 }
 
+.scheduleDayLoad {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #475569;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.scheduleProfessionalLoadMeta {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
+
 .scheduleVisitCard:has(.visitFlag-danger) {
   box-shadow: 0 10px 22px rgba(239, 68, 68, 0.08);
 }

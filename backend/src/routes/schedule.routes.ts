@@ -107,6 +107,60 @@ function computeConflictBadge(visit: any, allVisits: any[]) {
   };
 }
 
+function computeWorkloadBadge(visit: any, allVisits: any[]) {
+  if (!visit.professional_id) {
+    return {
+      dailyVisitCount: 0,
+      workloadStatus: 'none' as const,
+      workloadLabel: '',
+    };
+  }
+
+  const visitDate = new Date(visit.preferred_start);
+
+  const sameDayVisits = allVisits.filter((other) => {
+    if (String(other.professional_id || '') !== String(visit.professional_id || '')) {
+      return false;
+    }
+
+    const status = String(other.status || '').toLowerCase();
+    if (!['offered', 'accepted', 'en_route', 'completed'].includes(status)) {
+      return false;
+    }
+
+    const otherDate = new Date(other.preferred_start);
+    return (
+      otherDate.getFullYear() === visitDate.getFullYear() &&
+      otherDate.getMonth() === visitDate.getMonth() &&
+      otherDate.getDate() === visitDate.getDate()
+    );
+  });
+
+  const count = sameDayVisits.length;
+
+  if (count >= 6) {
+    return {
+      dailyVisitCount: count,
+      workloadStatus: 'overloaded' as const,
+      workloadLabel: `Overloaded · ${count} visits`,
+    };
+  }
+
+  if (count >= 4) {
+    return {
+      dailyVisitCount: count,
+      workloadStatus: 'busy' as const,
+      workloadLabel: `Busy day · ${count} visits`,
+    };
+  }
+
+  return {
+    dailyVisitCount: count,
+    workloadStatus: 'normal' as const,
+    workloadLabel: count > 0 ? `${count} visits today` : '',
+  };
+}
+
 function visitDayKey(isoDate: string): string {
   const date = new Date(isoDate);
   return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
@@ -217,6 +271,7 @@ export function createScheduleRouter(pool: Pool) {
           ...visit,
           ...computeAuthorizationBadge(visit, authRows),
           ...computeConflictBadge(visit, rawVisits),
+          ...computeWorkloadBadge(visit, rawVisits),
           hasOvertimeRisk: false,
           overtimeRiskLevel: null as 'warn' | 'danger' | null,
         }));
@@ -270,6 +325,13 @@ export function createScheduleRouter(pool: Pool) {
           for (const visit of proDayVisits) {
             visit.hasOvertimeRisk = true;
             visit.overtimeRiskLevel = riskLevel;
+            if (riskLevel === 'danger') {
+              visit.workloadStatus = 'overloaded';
+              visit.workloadLabel = `Overloaded · ${count} visits`;
+            } else if (visit.workloadStatus === 'normal') {
+              visit.workloadStatus = 'busy';
+              visit.workloadLabel = `Busy day · ${count} visits`;
+            }
           }
         }
 

@@ -25,6 +25,9 @@ type Visit = {
   authorizationLabel?: string;
   hasConflict?: boolean;
   conflictLabel?: string;
+  dailyVisitCount?: number;
+  workloadStatus?: 'none' | 'normal' | 'busy' | 'overloaded';
+  workloadLabel?: string;
   hasOvertimeRisk?: boolean;
   overtimeRiskLevel?: 'warn' | 'danger' | null;
 };
@@ -117,6 +120,19 @@ function VisitFlags({ visit }: { visit: Visit }) {
     flags.push({
       label: visit.conflictLabel || 'Schedule conflict',
       className: 'visitFlag visitFlag-info',
+    });
+  }
+
+  if (
+    visit.workloadLabel &&
+    ['busy', 'overloaded'].includes(String(visit.workloadStatus || ''))
+  ) {
+    flags.push({
+      label: visit.workloadLabel,
+      className:
+        visit.workloadStatus === 'overloaded'
+          ? 'visitFlag visitFlag-danger'
+          : 'visitFlag visitFlag-warn',
     });
   }
 
@@ -420,6 +436,9 @@ export function SchedulingBoard() {
                         <div className="scheduleProfessionalMeta">
                           {String(professional.role).toUpperCase()}
                         </div>
+                        <div className="scheduleProfessionalLoadMeta">
+                          {professionalVisits.length} visits this {viewMode === 'day' ? 'day' : 'week'}
+                        </div>
                       </div>
 
                       {weekDays.map((day) => {
@@ -450,6 +469,12 @@ export function SchedulingBoard() {
                               onDropVisit(professional.id, day);
                             }}
                           >
+                            {dayVisits.length > 0 ? (
+                              <div className="scheduleDayLoad">
+                                {dayVisits.length} visit{dayVisits.length === 1 ? '' : 's'}
+                              </div>
+                            ) : null}
+
                             {dayVisits.length === 0 ? (
                               <div className="scheduleEmptyCell">
                                 {isBusy ? 'Updating...' : 'Drop here'}
