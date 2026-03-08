@@ -7757,6 +7757,32 @@ html {
   flex-wrap: wrap;
 }
 
+.scheduleViewToggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 999px;
+  background: #eef2ff;
+  border: 1px solid rgba(99, 102, 241, 0.14);
+}
+
+.scheduleViewToggleButton {
+  min-height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #4338ca;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scheduleViewToggleButton-active {
+  background: #4338ca;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(67, 56, 202, 0.24);
+}
+
 .scheduleRangePill {
   min-height: 42px;
   padding: 0 16px;

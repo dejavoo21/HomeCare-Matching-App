@@ -43,6 +43,8 @@ type DragPayload = {
   originalStart: string;
 };
 
+type ViewMode = 'day' | 'week';
+
 function formatDay(date: Date) {
   return date.toLocaleDateString(undefined, {
     weekday: 'short',
@@ -126,6 +128,7 @@ export function SchedulingBoard() {
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<'all' | 'nurse' | 'doctor'>('all');
   const [weekStart, setWeekStart] = useState<Date>(() => mondayOf(new Date()));
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [dragging, setDragging] = useState<DragPayload | null>(null);
   const [dropBusy, setDropBusy] = useState<string | null>(null);
   const [message, setMessage] = useState('');
@@ -134,7 +137,8 @@ export function SchedulingBoard() {
     try {
       setLoading(true);
       const start = weekStart.toISOString().slice(0, 10);
-      const response = (await api.getScheduleBoard(start, 7, role)) as any;
+      const days = viewMode === 'day' ? 1 : 7;
+      const response = (await api.getScheduleBoard(start, days, role)) as any;
       setBoard(response?.data || null);
     } catch (err: any) {
       console.error('Failed to load scheduling board:', err);
@@ -147,26 +151,34 @@ export function SchedulingBoard() {
 
   useEffect(() => {
     load();
-  }, [role, weekStart]);
+  }, [role, viewMode, weekStart]);
 
   const weekDays = useMemo(() => {
-    return Array.from({ length: 7 }).map((_, index) => {
+    const count = viewMode === 'day' ? 1 : 7;
+    return Array.from({ length: count }).map((_, index) => {
       const date = new Date(weekStart);
       date.setDate(date.getDate() + index);
       return date;
     });
-  }, [weekStart]);
+  }, [viewMode, weekStart]);
 
-  const previousWeek = () => {
+  const moveBackward = () => {
     const date = new Date(weekStart);
-    date.setDate(date.getDate() - 7);
+    date.setDate(date.getDate() - (viewMode === 'day' ? 1 : 7));
     setWeekStart(date);
   };
 
-  const nextWeek = () => {
+  const moveForward = () => {
     const date = new Date(weekStart);
-    date.setDate(date.getDate() + 7);
+    date.setDate(date.getDate() + (viewMode === 'day' ? 1 : 7));
     setWeekStart(date);
+  };
+
+  const handleViewModeChange = (nextMode: ViewMode) => {
+    setViewMode(nextMode);
+    if (nextMode === 'week') {
+      setWeekStart((current) => mondayOf(current));
+    }
   };
 
   const visitsByProfessional = useMemo(() => {
@@ -236,6 +248,14 @@ export function SchedulingBoard() {
     }
   };
 
+  const rangeLabel =
+    viewMode === 'day'
+      ? formatDay(weekDays[0])
+      : `${formatDay(weekDays[0])} - ${formatDay(weekDays[weekDays.length - 1])}`;
+
+  const boardColumns = `220px repeat(${weekDays.length}, minmax(${viewMode === 'day' ? 280 : 180}px, 1fr))`;
+  const boardMinWidth = viewMode === 'day' ? '500px' : '1480px';
+
   return (
     <main className="scheduleBoardWrap" role="main" aria-label="Scheduling board">
       <section className="pageHeaderBlock">
@@ -248,15 +268,34 @@ export function SchedulingBoard() {
           </div>
 
           <div className="scheduleBoardControls">
-            <button className="btn" onClick={previousWeek}>
+            <div className="scheduleViewToggle" role="tablist" aria-label="Scheduling view mode">
+              <button
+                type="button"
+                className={viewMode === 'day' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
+                onClick={() => handleViewModeChange('day')}
+                role="tab"
+                aria-selected={viewMode === 'day'}
+              >
+                Day
+              </button>
+              <button
+                type="button"
+                className={viewMode === 'week' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
+                onClick={() => handleViewModeChange('week')}
+                role="tab"
+                aria-selected={viewMode === 'week'}
+              >
+                Week
+              </button>
+            </div>
+
+            <button className="btn" onClick={moveBackward}>
               &larr; Previous
             </button>
 
-            <div className="scheduleRangePill">
-              {formatDay(weekDays[0])} - {formatDay(weekDays[6])}
-            </div>
+            <div className="scheduleRangePill">{rangeLabel}</div>
 
-            <button className="btn" onClick={nextWeek}>
+            <button className="btn" onClick={moveForward}>
               Next &rarr;
             </button>
 
@@ -339,7 +378,7 @@ export function SchedulingBoard() {
 
           <section className="scheduleBoardCard">
             <div className="scheduleBoardGridScroll">
-              <div className="scheduleBoardHeaderRow">
+              <div className="scheduleBoardHeaderRow" style={{ gridTemplateColumns: boardColumns, minWidth: boardMinWidth }}>
                 <div className="scheduleBoardCorner">Professional</div>
                 {weekDays.map((day) => (
                   <div key={day.toISOString()} className="scheduleBoardDayHeader">
@@ -348,12 +387,12 @@ export function SchedulingBoard() {
                 ))}
               </div>
 
-              <div className="scheduleBoardGrid">
+              <div className="scheduleBoardGrid" style={{ minWidth: boardMinWidth }}>
                 {(board.professionals || []).map((professional) => {
                   const professionalVisits = visitsByProfessional.get(professional.id) || [];
 
                   return (
-                    <div key={professional.id} className="scheduleBoardRow">
+                    <div key={professional.id} className="scheduleBoardRow" style={{ gridTemplateColumns: boardColumns }}>
                       <div className="scheduleBoardProfessionalCell">
                         <div className="scheduleProfessionalName">{professional.name}</div>
                         <div className="scheduleProfessionalMeta">
