@@ -25,6 +25,8 @@ type Visit = {
   authorizationRemaining?: number;
   hasConflict?: boolean;
   conflictType?: string | null;
+  hasOvertimeRisk?: boolean;
+  overtimeRiskLevel?: 'warn' | 'danger' | null;
 };
 
 type BoardResponse = {
@@ -106,6 +108,16 @@ function VisitFlags({ visit }: { visit: Visit }) {
 
   if (visit.hasConflict) {
     flags.push({ label: 'CONFLICT', className: 'visitFlag visitFlag-danger' });
+  }
+
+  if (visit.hasOvertimeRisk) {
+    flags.push({
+      label: 'OVERTIME RISK',
+      className:
+        visit.overtimeRiskLevel === 'danger'
+          ? 'visitFlag visitFlag-danger'
+          : 'visitFlag visitFlag-warn',
+    });
   }
 
   if (flags.length === 0) {

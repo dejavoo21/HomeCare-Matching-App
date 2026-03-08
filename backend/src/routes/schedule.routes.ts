@@ -49,6 +49,11 @@ function mockAuthorizationRemaining(row: any): number {
   return 6;
 }
 
+function visitDayKey(isoDate: string): string {
+  const date = new Date(isoDate);
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
 async function logAudit(
   pool: Pool,
   actorUserId: string | null,
@@ -140,6 +145,8 @@ export function createScheduleRouter(pool: Pool) {
           authorizationRemaining: mockAuthorizationRemaining(row),
           hasConflict: false,
           conflictType: null as string | null,
+          hasOvertimeRisk: false,
+          overtimeRiskLevel: null as 'warn' | 'danger' | null,
         }));
 
         const byProfessional = new Map<string, any[]>();
@@ -170,6 +177,27 @@ export function createScheduleRouter(pool: Pool) {
               current.conflictType = 'overlap';
               next.conflictType = 'overlap';
             }
+          }
+        }
+
+        const byProfessionalDay = new Map<string, any[]>();
+        for (const visit of visits) {
+          if (!visit.professional_id) continue;
+          const key = `${visit.professional_id}:${visitDayKey(visit.preferred_start)}`;
+          if (!byProfessionalDay.has(key)) {
+            byProfessionalDay.set(key, []);
+          }
+          byProfessionalDay.get(key)!.push(visit);
+        }
+
+        for (const proDayVisits of byProfessionalDay.values()) {
+          const count = proDayVisits.length;
+          const riskLevel = count >= 7 ? 'danger' : count >= 5 ? 'warn' : null;
+          if (!riskLevel) continue;
+
+          for (const visit of proDayVisits) {
+            visit.hasOvertimeRisk = true;
+            visit.overtimeRiskLevel = riskLevel;
           }
         }
 
