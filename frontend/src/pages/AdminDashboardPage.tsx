@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, Sparkles } from 'lucide-react';
+import { Activity, ArrowUpRight, ShieldCheck, Sparkles, TimerReset } from 'lucide-react';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
@@ -212,7 +212,7 @@ export function AdminDashboardPage() {
 
           <div className="opsHeroHeader">
             <div>
-              <h1 className="opsHeroTitle">Dispatch command center</h1>
+              <h1 className="opsHeroTitle">Operations command deck</h1>
               <p className="opsHeroText">
                 {stats.queuedRequests} queued, {stats.offeredRequests} pending responses, and {activeVisitsCount} active visits moving through the care pipeline.
               </p>
@@ -304,50 +304,93 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="dashboardSection">
-        <div className="tabs" role="tablist" aria-label="Request status filters">
-          {TABS.map((currentTab) => (
-            <button
-              key={currentTab}
-              className={tab === currentTab ? 'tab tab-active' : 'tab'}
-              onClick={() => setTab(currentTab)}
-              role="tab"
-              aria-selected={tab === currentTab}
-            >
-              {currentTab.replace('_', ' ').toUpperCase()}
-              <span className="tabCount">{tabCounts[currentTab]}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="opsMainGrid">
-        <div className="opsPrimary">
-          <DispatchQueueTable
-            requests={tabbed as any}
-            onView={setSelectedRequest as any}
-            onOffer={onOffer}
-            onRequeue={onRequeue}
-            onCancel={onCancel}
-            onSetUrgency={onSetUrgency}
-            search={search}
-            onSearchChange={setSearch}
-          />
-        </div>
-
-        <aside className="opsSecondary">
-          <ActivityFeed refreshKey={activityKey} />
-
-          <div className="attentionCard">
-            <h3 className="attentionTitle">Attention Needed</h3>
-            <div className="attentionList">
-              <div>{offersExpiringSoon} offers expiring in 5 min</div>
-              <div>{criticalQueueCount} critical requests waiting in queue</div>
-              <div>{activeVisitsCount} active visits in progress</div>
-              <div>{data.stats.cancelledRequests} cancelled requests today</div>
-            </div>
+      <section className="opsWorkspace">
+        <section className="dashboardSection opsTabsShell">
+          <div className="tabs" role="tablist" aria-label="Request status filters">
+            {TABS.map((currentTab) => (
+              <button
+                key={currentTab}
+                className={tab === currentTab ? 'tab tab-active' : 'tab'}
+                onClick={() => setTab(currentTab)}
+                role="tab"
+                aria-selected={tab === currentTab}
+              >
+                {currentTab.replace('_', ' ').toUpperCase()}
+                <span className="tabCount">{tabCounts[currentTab]}</span>
+              </button>
+            ))}
           </div>
-        </aside>
+        </section>
+
+        <section className="opsMainGrid">
+          <div className="opsPrimary">
+            <DispatchQueueTable
+              requests={tabbed as any}
+              onView={setSelectedRequest as any}
+              onOffer={onOffer}
+              onRequeue={onRequeue}
+              onCancel={onCancel}
+              onSetUrgency={onSetUrgency}
+              search={search}
+              onSearchChange={setSearch}
+            />
+          </div>
+
+          <aside className="opsSecondary">
+            <ActivityFeed refreshKey={activityKey} />
+
+            <div className="attentionCard">
+              <h3 className="attentionTitle">Attention Needed</h3>
+              <div className="attentionList">
+                <div>{offersExpiringSoon} offers expiring in 5 min</div>
+                <div>{criticalQueueCount} critical requests waiting in queue</div>
+                <div>{activeVisitsCount} active visits in progress</div>
+                <div>{data.stats.cancelledRequests} cancelled requests today</div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section className="opsHighlights" aria-label="Operations highlights">
+          <article className="opsHighlightCard opsHighlightCard-rose">
+            <div className="opsHighlightIcon">
+              <TimerReset size={18} aria-hidden="true" />
+            </div>
+            <div className="opsHighlightBody">
+              <div className="opsHighlightEyebrow">Queue pressure</div>
+              <h3 className="opsHighlightTitle">{stats.queuedRequests} requests need action</h3>
+              <p className="opsHighlightText">
+                {criticalQueueCount} are marked critical and should be dispatched ahead of the general queue.
+              </p>
+            </div>
+          </article>
+
+          <article className="opsHighlightCard opsHighlightCard-blue">
+            <div className="opsHighlightIcon">
+              <Activity size={18} aria-hidden="true" />
+            </div>
+            <div className="opsHighlightBody">
+              <div className="opsHighlightEyebrow">Visit motion</div>
+              <h3 className="opsHighlightTitle">{activeVisitsCount} visits are in motion</h3>
+              <p className="opsHighlightText">
+                {stats.acceptedRequests} accepted and {stats.enRouteRequests} en route across the current operating window.
+              </p>
+            </div>
+          </article>
+
+          <article className="opsHighlightCard opsHighlightCard-emerald">
+            <div className="opsHighlightIcon">
+              <ShieldCheck size={18} aria-hidden="true" />
+            </div>
+            <div className="opsHighlightBody">
+              <div className="opsHighlightEyebrow">System posture</div>
+              <h3 className="opsHighlightTitle">{stats.completedRequests} visits completed today</h3>
+              <p className="opsHighlightText">
+                {offersExpiringSoon} offers close soon, with reliability and access controls available from the linked admin pages below.
+              </p>
+            </div>
+          </article>
+        </section>
       </section>
 
       <section className="summaryStrip">
