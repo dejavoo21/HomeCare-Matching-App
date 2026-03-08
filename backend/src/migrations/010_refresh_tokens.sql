@@ -29,7 +29,11 @@ ON refresh_tokens(user_id) WHERE revoked_at IS NULL;
 ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS
     rotated_from_id uuid REFERENCES refresh_tokens(id) ON DELETE SET NULL;
 
+ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS
+    replaced_by uuid REFERENCES refresh_tokens(id) ON DELETE SET NULL;
+
 COMMENT ON TABLE refresh_tokens IS 'Stores hashed refresh tokens for JWT rotation and revocation';
 COMMENT ON COLUMN refresh_tokens.token_hash IS 'SHA-256 hash of the actual JWT token (never store raw JWTs)';
 COMMENT ON COLUMN refresh_tokens.revoked_at IS 'Timestamp when token was explicitly revoked (logout/password change)';
 COMMENT ON COLUMN refresh_tokens.rotated_from_id IS 'References previous refresh token if this is a rotation';
+COMMENT ON COLUMN refresh_tokens.replaced_by IS 'References the replacement refresh token created during token rotation';
