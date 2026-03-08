@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, ArrowUpRight, ShieldCheck, Sparkles, TimerReset } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
+import { DispatchPipeline } from '../components/DispatchPipeline';
+import { StatusTile } from '../components/StatusTile';
+import { AttentionPanel } from '../components/AttentionPanel';
+import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { IntegrationsSummaryCard } from '../components/IntegrationsSummaryCard';
@@ -35,6 +39,7 @@ const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancell
 type TabFilter = typeof TABS[number];
 
 export function AdminDashboardPage() {
+  const navigate = useNavigate();
   const { on } = useRealTime();
   const [data, setData] = useState<DashboardData | null>(null);
   const [requests, setRequests] = useState<CareRequest[]>([]);
@@ -119,25 +124,6 @@ export function AdminDashboardPage() {
       });
   }, [requests, tab]);
 
-  const offersExpiringSoon = useMemo(() => {
-    return requests.filter((request) => {
-      if (!request.offerExpiresAt || String(request.status).toLowerCase() !== 'offered') {
-        return false;
-      }
-
-      const diffMs = new Date(request.offerExpiresAt).getTime() - Date.now();
-      return diffMs > 0 && diffMs <= 5 * 60 * 1000;
-    }).length;
-  }, [requests]);
-
-  const criticalQueueCount = useMemo(() => {
-    return requests.filter(
-      (request) =>
-        String(request.status).toLowerCase() === 'queued' &&
-        String(request.urgency).toLowerCase() === 'critical'
-    ).length;
-  }, [requests]);
-
   const onOffer = async (requestId: string) => {
     const request = requests.find((item) => item.id === requestId);
     if (request) {
@@ -185,212 +171,73 @@ export function AdminDashboardPage() {
 
   const stats = data.stats;
   const activeVisitsCount = stats.acceptedRequests + stats.enRouteRequests;
-  const totalTracked =
-    stats.queuedRequests +
-    stats.offeredRequests +
-    stats.acceptedRequests +
-    stats.enRouteRequests +
-    stats.completedRequests +
-    stats.cancelledRequests;
-
-  const safeShare = (value: number) => {
-    if (totalTracked <= 0) {
-      return 0;
-    }
-
-    return Math.max(8, Math.round((value / totalTracked) * 100));
-  };
 
   return (
     <main className="opsDashboard" role="main" aria-label="Operations dashboard">
-      <section className="opsHero" aria-label="Operations overview">
-        <div className="opsHeroMain">
-          <div className="opsHeroEyebrow">
-            <Sparkles size={14} aria-hidden="true" />
-            <span>Operations overview</span>
+      <section className="pageHeaderBlock">
+        <div className="pageHeaderRow">
+          <div>
+            <h1 className="pageTitle">Operations Command Center</h1>
+            <p className="subtitle">
+              Real-time overview of home care operations, dispatch, and system activity.
+            </p>
           </div>
 
-          <div className="opsHeroHeader">
-            <div>
-              <h1 className="opsHeroTitle">Operations command deck</h1>
-              <p className="opsHeroText">
-                {stats.queuedRequests} queued, {stats.offeredRequests} pending responses, and {activeVisitsCount} active visits moving through the care pipeline.
-              </p>
-            </div>
-
-            <div className="opsHeroPrimaryMetric">
-              <div className="opsHeroPrimaryValue">{stats.queuedRequests}</div>
-              <div className="opsHeroPrimaryLabel">Needs dispatch now</div>
-            </div>
-          </div>
-
-          <div className="opsHeroFlow" aria-label="Dispatch flow summary">
-            <div className="opsHeroFlowStep">
-              <span className="opsHeroFlowValue">{stats.queuedRequests}</span>
-              <span className="opsHeroFlowLabel">Queued</span>
-            </div>
-            <div className="opsHeroFlowArrow">-&gt;</div>
-            <div className="opsHeroFlowStep">
-              <span className="opsHeroFlowValue">{stats.offeredRequests}</span>
-              <span className="opsHeroFlowLabel">Offered</span>
-            </div>
-            <div className="opsHeroFlowArrow">-&gt;</div>
-            <div className="opsHeroFlowStep">
-              <span className="opsHeroFlowValue">{stats.acceptedRequests}</span>
-              <span className="opsHeroFlowLabel">Accepted</span>
-            </div>
-            <div className="opsHeroFlowArrow">-&gt;</div>
-            <div className="opsHeroFlowStep">
-              <span className="opsHeroFlowValue">{stats.enRouteRequests}</span>
-              <span className="opsHeroFlowLabel">En Route</span>
-            </div>
-            <div className="opsHeroFlowArrow">-&gt;</div>
-            <div className="opsHeroFlowStep">
-              <span className="opsHeroFlowValue">{stats.completedRequests}</span>
-              <span className="opsHeroFlowLabel">Completed</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="opsSignalRail" aria-label="Operational signals">
-          <div className="opsSignalItem">
-            <div className="opsSignalMeta">
-              <span className="opsSignalLabel">Dispatch queue</span>
-              <span className="opsSignalValue">{stats.queuedRequests}</span>
-            </div>
-            <div className="opsSignalBar">
-              <span className="opsSignalFill opsSignalFill-indigo" style={{ width: `${safeShare(stats.queuedRequests)}%` }} />
-            </div>
-          </div>
-
-          <div className="opsSignalItem">
-            <div className="opsSignalMeta">
-              <span className="opsSignalLabel">Offers awaiting response</span>
-              <span className="opsSignalValue">{stats.offeredRequests}</span>
-            </div>
-            <div className="opsSignalBar">
-              <span className="opsSignalFill opsSignalFill-amber" style={{ width: `${safeShare(stats.offeredRequests)}%` }} />
-            </div>
-          </div>
-
-          <div className="opsSignalItem">
-            <div className="opsSignalMeta">
-              <span className="opsSignalLabel">Visits in motion</span>
-              <span className="opsSignalValue">{activeVisitsCount}</span>
-            </div>
-            <div className="opsSignalBar">
-              <span className="opsSignalFill opsSignalFill-blue" style={{ width: `${safeShare(activeVisitsCount)}%` }} />
-            </div>
-          </div>
-
-          <div className="opsSignalItem">
-            <div className="opsSignalMeta">
-              <span className="opsSignalLabel">Completed today</span>
-              <span className="opsSignalValue">{stats.completedRequests}</span>
-            </div>
-            <div className="opsSignalBar">
-              <span className="opsSignalFill opsSignalFill-green" style={{ width: `${safeShare(stats.completedRequests)}%` }} />
-            </div>
-          </div>
-
-          <div className="opsHeroFootnote">
-            <span>{offersExpiringSoon} expiring offers</span>
-            <span>{criticalQueueCount} critical queue items</span>
-            <span>{stats.cancelledRequests} cancelled today</span>
-            <span className="opsHeroLink">
-              Review dispatch flow <ArrowUpRight size={14} aria-hidden="true" />
-            </span>
+          <div className="pageActions">
+            <button className="btn btn-primary" onClick={() => navigate('/admin/dispatch')}>
+              Open Dispatch Board
+            </button>
           </div>
         </div>
       </section>
 
-      <section className="opsWorkspace">
-        <section className="dashboardSection opsTabsShell">
-          <div className="tabs" role="tablist" aria-label="Request status filters">
-            {TABS.map((currentTab) => (
-              <button
-                key={currentTab}
-                className={tab === currentTab ? 'tab tab-active' : 'tab'}
-                onClick={() => setTab(currentTab)}
-                role="tab"
-                aria-selected={tab === currentTab}
-              >
-                {currentTab.replace('_', ' ').toUpperCase()}
-                <span className="tabCount">{tabCounts[currentTab]}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+      <section className="statusTilesRow" aria-label="Operations summary">
+        <StatusTile label="Queued Requests" value={stats.queuedRequests} color="indigo" />
+        <StatusTile label="Offers Pending" value={stats.offeredRequests} color="amber" />
+        <StatusTile label="Active Visits" value={activeVisitsCount} color="blue" />
+        <StatusTile label="Completed Today" value={stats.completedRequests} color="green" />
+      </section>
 
-        <section className="opsMainGrid">
-          <div className="opsPrimary">
-            <DispatchQueueTable
-              requests={tabbed as any}
-              onView={setSelectedRequest as any}
-              onOffer={onOffer}
-              onRequeue={onRequeue}
-              onCancel={onCancel}
-              onSetUrgency={onSetUrgency}
-              search={search}
-              onSearchChange={setSearch}
-            />
-          </div>
+      <section className="pipelineRow">
+        <DispatchPipeline />
+      </section>
 
-          <aside className="opsSecondary">
-            <ActivityFeed refreshKey={activityKey} />
+      <section className="dashboardSection">
+        <div className="tabs" role="tablist" aria-label="Request status filters">
+          {TABS.map((currentTab) => (
+            <button
+              key={currentTab}
+              className={tab === currentTab ? 'tab tab-active' : 'tab'}
+              onClick={() => setTab(currentTab)}
+              role="tab"
+              aria-selected={tab === currentTab}
+            >
+              {currentTab.replace('_', ' ').toUpperCase()}
+              <span className="tabCount">{tabCounts[currentTab]}</span>
+            </button>
+          ))}
+        </div>
+      </section>
 
-            <div className="attentionCard">
-              <h3 className="attentionTitle">Attention Needed</h3>
-              <div className="attentionList">
-                <div>{offersExpiringSoon} offers expiring in 5 min</div>
-                <div>{criticalQueueCount} critical requests waiting in queue</div>
-                <div>{activeVisitsCount} active visits in progress</div>
-                <div>{data.stats.cancelledRequests} cancelled requests today</div>
-              </div>
-            </div>
-          </aside>
-        </section>
+      <section className="opsMainGrid">
+        <div className="opsPrimary">
+          <DispatchQueueTable
+            requests={tabbed as any}
+            onView={setSelectedRequest as any}
+            onOffer={onOffer}
+            onRequeue={onRequeue}
+            onCancel={onCancel}
+            onSetUrgency={onSetUrgency}
+            search={search}
+            onSearchChange={setSearch}
+          />
+        </div>
 
-        <section className="opsHighlights" aria-label="Operations highlights">
-          <article className="opsHighlightCard opsHighlightCard-rose">
-            <div className="opsHighlightIcon">
-              <TimerReset size={18} aria-hidden="true" />
-            </div>
-            <div className="opsHighlightBody">
-              <div className="opsHighlightEyebrow">Queue pressure</div>
-              <h3 className="opsHighlightTitle">{stats.queuedRequests} requests need action</h3>
-              <p className="opsHighlightText">
-                {criticalQueueCount} are marked critical and should be dispatched ahead of the general queue.
-              </p>
-            </div>
-          </article>
-
-          <article className="opsHighlightCard opsHighlightCard-blue">
-            <div className="opsHighlightIcon">
-              <Activity size={18} aria-hidden="true" />
-            </div>
-            <div className="opsHighlightBody">
-              <div className="opsHighlightEyebrow">Visit motion</div>
-              <h3 className="opsHighlightTitle">{activeVisitsCount} visits are in motion</h3>
-              <p className="opsHighlightText">
-                {stats.acceptedRequests} accepted and {stats.enRouteRequests} en route across the current operating window.
-              </p>
-            </div>
-          </article>
-
-          <article className="opsHighlightCard opsHighlightCard-emerald">
-            <div className="opsHighlightIcon">
-              <ShieldCheck size={18} aria-hidden="true" />
-            </div>
-            <div className="opsHighlightBody">
-              <div className="opsHighlightEyebrow">System posture</div>
-              <h3 className="opsHighlightTitle">{stats.completedRequests} visits completed today</h3>
-              <p className="opsHighlightText">
-                {offersExpiringSoon} offers close soon, with reliability and access controls available from the linked admin pages below.
-              </p>
-            </div>
-          </article>
-        </section>
+        <aside className="opsSecondary">
+          <AttentionPanel requests={requests} />
+          <ProfessionalsPanel refreshKey={activityKey} />
+          <ActivityFeed refreshKey={activityKey} />
+        </aside>
       </section>
 
       <section className="summaryStrip">

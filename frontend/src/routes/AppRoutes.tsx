@@ -11,6 +11,7 @@ import { CreateRequestPage } from '../pages/CreateRequestPage';
 
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { AdminDispatchPage } from '../pages/AdminDispatchPage';
+import { AdminSchedulingPage } from '../pages/AdminSchedulingPage';
 import { AdminTeamPage } from '../pages/AdminTeamPage';
 import { AdminAccessPage } from '../pages/AdminAccessPage';
 import { AdminAuditPage } from '../pages/AdminAuditPage';
@@ -81,6 +82,7 @@ export function AppRoutes() {
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboardPage />} />
         <Route path="dispatch" element={<AdminDispatchPage />} />
+        <Route path="scheduling" element={<AdminSchedulingPage />} />
         <Route path="team" element={<AdminTeamPage />} />
         <Route path="access" element={<AdminAccessPage />} />
         <Route path="access-requests" element={<Navigate to="/admin/access" replace />} />

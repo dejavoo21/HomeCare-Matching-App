@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
   ClipboardList,
+  CalendarDays,
   Users,
   ShieldCheck,
   FileSearch,
@@ -62,6 +63,11 @@ export function AdminShell() {
                 to="/admin/dispatch"
                 icon={<ClipboardList size={18} />}
                 label="Dispatch"
+              />
+              <AdminNavItem
+                to="/admin/scheduling"
+                icon={<CalendarDays size={18} />}
+                label="Scheduling"
               />
               <AdminNavItem
                 to="/admin/team"

@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
+import { DispatchPipeline } from '../components/DispatchPipeline';
+import { StatusTile } from '../components/StatusTile';
+import { AttentionPanel } from '../components/AttentionPanel';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { RequestDrawer } from '../components/RequestDrawer';
@@ -90,21 +93,6 @@ export function AdminDispatchPage() {
     [requests]
   );
 
-  const expiringOffers = useMemo(() => {
-    return requests.filter((request) => {
-      if (!request.offerExpiresAt) {
-        return false;
-      }
-
-      const timeLeft = new Date(request.offerExpiresAt).getTime() - Date.now();
-      return timeLeft > 0 && timeLeft <= 5 * 60 * 1000;
-    }).length;
-  }, [requests]);
-
-  const failingItems = 4;
-  const retryingItems = 2;
-  const pendingAccess = 3;
-
   const onOffer = async (requestId: string) => {
     const request = requests.find((item) => item.id === requestId);
     if (request) {
@@ -158,18 +146,15 @@ export function AdminDispatchPage() {
         </div>
       </section>
 
+      <section className="statusTilesRow" aria-label="Dispatch summary">
+        <StatusTile label="Queued Requests" value={counts.queued} color="indigo" />
+        <StatusTile label="Offers Pending" value={counts.offered} color="amber" />
+        <StatusTile label="Active Visits" value={counts.accepted + counts.en_route} color="blue" />
+        <StatusTile label="Completed Today" value={counts.completed} color="green" />
+      </section>
+
       <section className="pipelineRow" aria-label="Dispatch pipeline">
-        <div className="pipelineCard">
-          <div className="pipelineStep">Queued <b>{counts.queued}</b></div>
-          <div className="pipelineArrow">-&gt;</div>
-          <div className="pipelineStep">Offered <b>{counts.offered}</b></div>
-          <div className="pipelineArrow">-&gt;</div>
-          <div className="pipelineStep">Accepted <b>{counts.accepted}</b></div>
-          <div className="pipelineArrow">-&gt;</div>
-          <div className="pipelineStep">En Route <b>{counts.en_route}</b></div>
-          <div className="pipelineArrow">-&gt;</div>
-          <div className="pipelineStep">Completed <b>{counts.completed}</b></div>
-        </div>
+        <DispatchPipeline />
       </section>
 
       <section className="dashboardSection">
@@ -212,18 +197,9 @@ export function AdminDispatchPage() {
         </div>
 
         <aside className="opsSecondary">
+          <AttentionPanel requests={requests} />
           <ProfessionalsPanel refreshKey={activityKey} />
           <ActivityFeed refreshKey={activityKey} />
-
-          <div className="attentionCard">
-            <h3 className="attentionTitle">Attention Needed</h3>
-            <div className="attentionList">
-              <div>{expiringOffers} offers expiring in 5 min</div>
-              <div>{failingItems} connected systems failing</div>
-              <div>{retryingItems} webhook deliveries retrying/failed</div>
-              <div>{pendingAccess} access requests pending</div>
-            </div>
-          </div>
         </aside>
       </section>
 

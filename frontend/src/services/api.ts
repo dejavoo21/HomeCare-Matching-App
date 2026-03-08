@@ -585,6 +585,35 @@ class ApiClient {
     return this.request('POST', `/connected-systems/${id}/test`, {});
   }
 
+  // =========================================================================
+  // SCHEDULING ENDPOINTS
+  // =========================================================================
+
+  async getScheduleBoard(start: string, days = 7, role = 'all') {
+    const qs = new URLSearchParams({
+      start,
+      days: String(days),
+      role,
+    });
+    return this.request('GET', `/schedule/board?${qs.toString()}`);
+  }
+
+  async assignSchedule(payload: {
+    requestId: string;
+    professionalId: string;
+    preferredStart: string;
+  }) {
+    return this.request('POST', '/schedule/assign', payload);
+  }
+
+  async reassignSchedule(payload: {
+    requestId: string;
+    professionalId: string;
+    preferredStart: string;
+  }) {
+    return this.request('POST', '/schedule/reassign', payload);
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {

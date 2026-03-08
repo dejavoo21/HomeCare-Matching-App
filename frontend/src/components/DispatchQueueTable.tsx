@@ -196,15 +196,18 @@ export function DispatchQueueTable({ requests, onView, onOffer, onRequeue, onCan
                   </td>
 
                   <td>
-                    {onSetUrgency ? (
-                      <UrgencyQuickSet
-                        requestId={r.id}
-                        currentUrgency={r.urgency || 'low'}
-                        onSetUrgency={onSetUrgency}
-                      />
-                    ) : (
-                      <span className={urgencyPill(r.urgency)}>{String(r.urgency).toUpperCase()}</span>
-                    )}
+                    <div className="urgencyCell">
+                      <span className={`urgencyDot urgency-${String(r.urgency).toLowerCase()}`} />
+                      {onSetUrgency ? (
+                        <UrgencyQuickSet
+                          requestId={r.id}
+                          currentUrgency={r.urgency || 'low'}
+                          onSetUrgency={onSetUrgency}
+                        />
+                      ) : (
+                        <span className={urgencyPill(r.urgency)}>{String(r.urgency).toUpperCase()}</span>
+                      )}
+                    </div>
                   </td>
 
                   <td>
@@ -226,7 +229,7 @@ export function DispatchQueueTable({ requests, onView, onOffer, onRequeue, onCan
                     <Countdown expiresAt={(r as any).offerExpiresAt} />
                   </td>
 
-                  <td className="actionsCell">
+                  <td className="actionsCell queueActions">
                     <div className="actionsRow">
                       <button className="btn btn-small" onClick={() => onView(r)}>
                         View
@@ -264,20 +267,6 @@ export function DispatchQueueTable({ requests, onView, onOffer, onRequeue, onCan
                       >
                         Cancel
                       </button>
-
-                      <select
-                        className="select mini"
-                        value={String(r.urgency).toLowerCase()}
-                        onChange={(e) => {
-                          if (onSetUrgency) onSetUrgency(r.id, e.target.value);
-                        }}
-                        aria-label="Set urgency"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="critical">Critical</option>
-                      </select>
                     </div>
                   </td>
                 </tr>
