@@ -15,38 +15,96 @@ function endOfDay(date: Date) {
   return copy;
 }
 
-function mockAuthorizationStatus(row: any): 'ok' | 'low' | 'expired' {
-  const urgency = String(row.urgency || '').toLowerCase();
-  const status = String(row.status || '').toLowerCase();
+function computeAuthorizationBadge(visit: any, authRows: any[]) {
+  const matching = authRows.find(
+    (authorization) =>
+      String(authorization.client_id) === String(visit.client_id) &&
+      String(authorization.service_type).toLowerCase() ===
+        String(visit.service_type).toLowerCase()
+  );
 
-  if (status === 'queued' && (urgency === 'critical' || urgency === 'high')) {
-    return 'low';
+  if (!matching) {
+    return {
+      authorizationStatus: 'missing' as const,
+      authorizationLabel: 'No auth',
+    };
   }
 
-  if (status === 'cancelled') {
-    return 'expired';
+  const visitDate = new Date(visit.preferred_start).getTime();
+  const fromDate = new Date(matching.authorized_from).getTime();
+  const toDate = new Date(matching.authorized_to).getTime();
+
+  if (
+    String(matching.status).toLowerCase() !== 'active' ||
+    visitDate > toDate ||
+    visitDate < fromDate
+  ) {
+    return {
+      authorizationStatus: 'expired' as const,
+      authorizationLabel: 'Auth expired',
+    };
   }
 
-  const created = new Date(row.created_at).getTime();
-  const threeDays = 3 * 24 * 60 * 60 * 1000;
-  if (Date.now() - created > threeDays && status !== 'completed') {
-    return 'expired';
+  if (matching.remaining_visits !== null && Number(matching.remaining_visits) <= 0) {
+    return {
+      authorizationStatus: 'exhausted' as const,
+      authorizationLabel: 'Auth exhausted',
+    };
   }
 
-  return 'ok';
+  const daysLeft = Math.ceil((toDate - Date.now()) / (1000 * 60 * 60 * 24));
+  if (daysLeft <= 2) {
+    return {
+      authorizationStatus: 'warning' as const,
+      authorizationLabel: 'Auth ending soon',
+    };
+  }
+
+  return {
+    authorizationStatus: 'ok' as const,
+    authorizationLabel: matching.payer_name
+      ? `Auth ok · ${matching.payer_name}`
+      : 'Auth ok',
+  };
 }
 
-function mockAuthorizationRemaining(row: any): number {
-  const status = mockAuthorizationStatus(row);
-  if (status === 'expired') {
-    return 0;
+function computeConflictBadge(visit: any, allVisits: any[]) {
+  if (!visit.professional_id) {
+    return {
+      hasConflict: false,
+      conflictLabel: '',
+    };
   }
 
-  const urgency = String(row.urgency || '').toLowerCase();
-  if (urgency === 'critical') return 1;
-  if (urgency === 'high') return 2;
-  if (urgency === 'medium') return 4;
-  return 6;
+  const visitTime = new Date(visit.preferred_start).getTime();
+
+  const nearby = allVisits.find((other) => {
+    if (String(other.id) === String(visit.id)) return false;
+    if (String(other.professional_id || '') !== String(visit.professional_id || '')) {
+      return false;
+    }
+
+    const status = String(other.status || '').toLowerCase();
+    if (!['offered', 'accepted', 'en_route'].includes(status)) {
+      return false;
+    }
+
+    const otherTime = new Date(other.preferred_start).getTime();
+    const diffMinutes = Math.abs(visitTime - otherTime) / (1000 * 60);
+    return diffMinutes < 60;
+  });
+
+  if (nearby) {
+    return {
+      hasConflict: true,
+      conflictLabel: 'Schedule conflict',
+    };
+  }
+
+  return {
+    hasConflict: false,
+    conflictLabel: '',
+  };
 }
 
 function visitDayKey(isoDate: string): string {
@@ -139,12 +197,26 @@ export function createScheduleRouter(pool: Pool) {
           [startDate.toISOString(), endDate.toISOString()]
         );
 
-        const visits = visitsResult.rows.map((row: any) => ({
-          ...row,
-          authorizationStatus: mockAuthorizationStatus(row),
-          authorizationRemaining: mockAuthorizationRemaining(row),
-          hasConflict: false,
-          conflictType: null as string | null,
+        const authorizationsResult = await pool.query(
+          `SELECT
+             id,
+             client_id,
+             service_type,
+             authorized_from,
+             authorized_to,
+             remaining_visits,
+             status,
+             payer_name
+           FROM client_authorizations`
+        );
+
+        const rawVisits = visitsResult.rows || [];
+        const authRows = authorizationsResult.rows || [];
+
+        const visits = rawVisits.map((visit: any) => ({
+          ...visit,
+          ...computeAuthorizationBadge(visit, authRows),
+          ...computeConflictBadge(visit, rawVisits),
           hasOvertimeRisk: false,
           overtimeRiskLevel: null as 'warn' | 'danger' | null,
         }));
@@ -174,8 +246,8 @@ export function createScheduleRouter(pool: Pool) {
             if (diffMinutes < 60) {
               current.hasConflict = true;
               next.hasConflict = true;
-              current.conflictType = 'overlap';
-              next.conflictType = 'overlap';
+              current.conflictLabel = 'Schedule conflict';
+              next.conflictLabel = 'Schedule conflict';
             }
           }
         }

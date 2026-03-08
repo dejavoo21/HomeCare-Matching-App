@@ -21,10 +21,10 @@ type Visit = {
   client_name?: string;
   professional_name?: string;
   professional_role?: string;
-  authorizationStatus?: 'ok' | 'low' | 'expired';
-  authorizationRemaining?: number;
+  authorizationStatus?: 'ok' | 'warning' | 'missing' | 'expired' | 'exhausted';
+  authorizationLabel?: string;
   hasConflict?: boolean;
-  conflictType?: string | null;
+  conflictLabel?: string;
   hasOvertimeRisk?: boolean;
   overtimeRiskLevel?: 'warn' | 'danger' | null;
 };
@@ -95,19 +95,29 @@ function mergeDateWithOriginalTime(targetDay: Date, originalDateTime: string) {
 function VisitFlags({ visit }: { visit: Visit }) {
   const flags: Array<{ label: string; className: string }> = [];
 
-  if (visit.authorizationStatus === 'low') {
+  if (visit.authorizationLabel && visit.authorizationStatus === 'warning') {
     flags.push({
-      label: `AUTH LOW (${visit.authorizationRemaining ?? 0})`,
+      label: visit.authorizationLabel,
       className: 'visitFlag visitFlag-warn',
     });
   }
 
-  if (visit.authorizationStatus === 'expired') {
-    flags.push({ label: 'AUTH EXPIRED', className: 'visitFlag visitFlag-danger' });
+  if (
+    visit.authorizationLabel &&
+    ['missing', 'expired', 'exhausted'].includes(visit.authorizationStatus || '')
+  ) {
+    flags.push({ label: visit.authorizationLabel, className: 'visitFlag visitFlag-danger' });
+  }
+
+  if (visit.authorizationLabel && visit.authorizationStatus === 'ok') {
+    flags.push({ label: visit.authorizationLabel, className: 'visitFlag visitFlag-ok' });
   }
 
   if (visit.hasConflict) {
-    flags.push({ label: 'CONFLICT', className: 'visitFlag visitFlag-danger' });
+    flags.push({
+      label: visit.conflictLabel || 'Schedule conflict',
+      className: 'visitFlag visitFlag-info',
+    });
   }
 
   if (visit.hasOvertimeRisk) {
