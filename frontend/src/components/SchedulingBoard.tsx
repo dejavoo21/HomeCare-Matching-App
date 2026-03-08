@@ -22,6 +22,9 @@ type Visit = {
   client_name?: string;
   professional_name?: string;
   professional_role?: string;
+  evv_status?: 'not_started' | 'in_progress' | 'completed';
+  checked_in_at?: string | null;
+  checked_out_at?: string | null;
   authorizationStatus?: 'ok' | 'warning' | 'missing' | 'expired' | 'exhausted';
   authorizationLabel?: string;
   hasConflict?: boolean;
@@ -112,6 +115,14 @@ function mergeDateWithOriginalTime(targetDay: Date, originalDateTime: string) {
 
 function VisitFlags({ visit }: { visit: Visit }) {
   const flags: Array<{ label: string; className: string }> = [];
+
+  if (visit.evv_status === 'completed') {
+    flags.push({ label: 'EVV completed', className: 'visitFlag visitFlag-ok' });
+  } else if (visit.evv_status === 'in_progress') {
+    flags.push({ label: 'EVV in progress', className: 'visitFlag visitFlag-info' });
+  } else if (visit.evv_status === 'not_started') {
+    flags.push({ label: 'EVV not started', className: 'visitFlag visitFlag-muted' });
+  }
 
   if (visit.authorizationLabel && visit.authorizationStatus === 'warning') {
     flags.push({

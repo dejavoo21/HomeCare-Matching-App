@@ -8014,6 +8014,12 @@ html {
   border-color: rgba(59, 130, 246, 0.18);
 }
 
+.visitFlag-muted {
+  background: rgba(148, 163, 184, 0.12);
+  color: #475569;
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
 .scheduleDayLoad {
   display: inline-flex;
   align-items: center;

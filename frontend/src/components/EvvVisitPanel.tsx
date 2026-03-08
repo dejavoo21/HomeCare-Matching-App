@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import { getBrowserLocation } from '../utils/location';
 
 type EvvEvent = {
   id: string;
   event_type: string;
   event_time?: string;
+  latitude?: number;
+  longitude?: number;
   notes?: string;
 };
 
@@ -23,6 +26,7 @@ export function EvvVisitPanel({ requestId }: { requestId: string }) {
   const [data, setData] = useState<EvvResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [capturingLocation, setCapturingLocation] = useState(false);
 
   const load = async () => {
     try {
@@ -44,28 +48,50 @@ export function EvvVisitPanel({ requestId }: { requestId: string }) {
   const checkIn = async () => {
     try {
       setBusy(true);
+      setCapturingLocation(true);
       setMessage('');
-      await api.evvCheckIn({ requestId });
-      setMessage('Checked in successfully.');
+      const location = await getBrowserLocation();
+      await api.evvCheckIn({
+        requestId,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        notes: location.error ? `Location note: ${location.error}` : undefined,
+      });
+      setMessage(
+        location.error ? `Checked in. ${location.error}` : 'Checked in successfully with location.'
+      );
       await load();
     } catch (err: any) {
       setMessage(err?.message || 'Failed to check in');
     } finally {
       setBusy(false);
+      setCapturingLocation(false);
     }
   };
 
   const checkOut = async () => {
     try {
       setBusy(true);
+      setCapturingLocation(true);
       setMessage('');
-      await api.evvCheckOut({ requestId });
-      setMessage('Checked out successfully.');
+      const location = await getBrowserLocation();
+      await api.evvCheckOut({
+        requestId,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        notes: location.error ? `Location note: ${location.error}` : undefined,
+      });
+      setMessage(
+        location.error
+          ? `Checked out. ${location.error}`
+          : 'Checked out successfully with location.'
+      );
       await load();
     } catch (err: any) {
       setMessage(err?.message || 'Failed to check out');
     } finally {
       setBusy(false);
+      setCapturingLocation(false);
     }
   };
 
@@ -77,7 +103,9 @@ export function EvvVisitPanel({ requestId }: { requestId: string }) {
       <div className="drawerSectionTop">
         <div>
           <h3 className="sectionTitle">EVV</h3>
-          <p className="muted">Electronic visit verification timeline and controls.</p>
+          <p className="muted">
+            Electronic visit verification timeline, status, and location-aware check-in/out.
+          </p>
         </div>
 
         <div className="evvActions">
@@ -88,7 +116,7 @@ export function EvvVisitPanel({ requestId }: { requestId: string }) {
               busy || visit?.evv_status === 'in_progress' || visit?.evv_status === 'completed'
             }
           >
-            Check In
+            {capturingLocation && busy ? 'Checking In...' : 'Check In'}
           </button>
 
           <button
@@ -96,7 +124,7 @@ export function EvvVisitPanel({ requestId }: { requestId: string }) {
             onClick={checkOut}
             disabled={busy || visit?.evv_status !== 'in_progress'}
           >
-            Check Out
+            {capturingLocation && busy ? 'Checking Out...' : 'Check Out'}
           </button>
         </div>
       </div>
@@ -142,6 +170,11 @@ export function EvvVisitPanel({ requestId }: { requestId: string }) {
               <div className="evvTimelineMeta">
                 {event.event_time ? new Date(event.event_time).toLocaleString() : '-'}
               </div>
+              {event.latitude || event.longitude ? (
+                <div className="evvTimelineMeta">
+                  Location: {event.latitude ?? '-'}, {event.longitude ?? '-'}
+                </div>
+              ) : null}
               {event.notes ? <div className="evvTimelineMeta">{event.notes}</div> : null}
             </div>
           ))
