@@ -234,8 +234,8 @@ export function AdminDashboardPage() {
         </div>
 
         <aside className="opsSecondary">
-          <AttentionPanel requests={requests} />
           <ProfessionalsPanel refreshKey={activityKey} />
+          <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
         </aside>
       </section>
