@@ -8093,6 +8093,38 @@ html {
   cursor: pointer;
 }
 
+.modalSub {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.createModeToggle {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  margin: 0 0 16px;
+  border-radius: 999px;
+  background: #eef2ff;
+}
+
+.createModeBtn {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: #4338ca;
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.createModeBtn-active {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
 .pageStack {
   display: grid;
   gap: 18px;

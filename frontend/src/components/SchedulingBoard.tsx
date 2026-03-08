@@ -63,6 +63,8 @@ type QuickCreateState = {
   day: string;
 };
 
+type QuickCreateMode = 'single' | 'recurring';
+
 function formatDay(date: Date) {
   return date.toLocaleDateString(undefined, {
     weekday: 'short',
@@ -186,13 +188,18 @@ export function SchedulingBoard() {
   const [clients, setClients] = useState<Client[]>([]);
   const [quickCreate, setQuickCreate] = useState<QuickCreateState | null>(null);
   const [quickCreateBusy, setQuickCreateBusy] = useState(false);
+  const [quickCreateMode, setQuickCreateMode] = useState<QuickCreateMode>('single');
   const [quickCreateForm, setQuickCreateForm] = useState({
     clientId: '',
+    professionalId: '',
     serviceType: 'MEDICATION_ADMIN',
     addressText: '',
     description: '',
     urgency: 'medium',
-    time: '09:00',
+    preferredStart: '',
+    recurrenceType: 'weekly',
+    intervalValue: 2,
+    occurrences: 4,
   });
 
   const load = async () => {
@@ -324,14 +331,22 @@ export function SchedulingBoard() {
   };
 
   const openQuickCreate = (professional: Professional, day: Date) => {
+    const localDefault = new Date(day);
+    localDefault.setHours(9, 0, 0, 0);
+    const preferredStart = new Date(localDefault.getTime() - localDefault.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+
     setQuickCreate({
       professionalId: professional.id,
       professionalName: professional.name,
       day: day.toISOString(),
     });
+    setQuickCreateMode('single');
     setQuickCreateForm((current) => ({
       ...current,
-      time: current.time || '09:00',
+      professionalId: professional.id,
+      preferredStart,
     }));
     setMessage('');
   };
@@ -339,13 +354,18 @@ export function SchedulingBoard() {
   const closeQuickCreate = () => {
     setQuickCreate(null);
     setQuickCreateBusy(false);
+    setQuickCreateMode('single');
     setQuickCreateForm({
       clientId: '',
+      professionalId: '',
       serviceType: 'MEDICATION_ADMIN',
       addressText: '',
       description: '',
       urgency: 'medium',
-      time: '09:00',
+      preferredStart: '',
+      recurrenceType: 'weekly',
+      intervalValue: 2,
+      occurrences: 4,
     });
   };
 
@@ -359,26 +379,44 @@ export function SchedulingBoard() {
       setQuickCreateBusy(true);
       setMessage('');
 
-      const [hours, minutes] = quickCreateForm.time.split(':').map((value) => Number(value));
-      const scheduledDate = new Date(quickCreate.day);
-      scheduledDate.setHours(hours || 0, minutes || 0, 0, 0);
-
-      await api.createSchedule({
-        clientId: quickCreateForm.clientId,
-        professionalId: quickCreate.professionalId,
-        serviceType: quickCreateForm.serviceType,
-        addressText: quickCreateForm.addressText,
-        description: quickCreateForm.description || undefined,
-        urgency: quickCreateForm.urgency,
-        preferredStart: scheduledDate.toISOString(),
-      });
+      if (quickCreateMode === 'single') {
+        await api.createSchedule({
+          clientId: quickCreateForm.clientId,
+          professionalId: quickCreateForm.professionalId || quickCreate.professionalId,
+          serviceType: quickCreateForm.serviceType,
+          addressText: quickCreateForm.addressText,
+          description: quickCreateForm.description || undefined,
+          urgency: quickCreateForm.urgency,
+          preferredStart: new Date(quickCreateForm.preferredStart).toISOString(),
+        });
+      } else {
+        await api.createRecurringSchedule({
+          clientId: quickCreateForm.clientId,
+          professionalId: quickCreateForm.professionalId || quickCreate.professionalId,
+          serviceType: quickCreateForm.serviceType,
+          addressText: quickCreateForm.addressText,
+          description: quickCreateForm.description || undefined,
+          urgency: quickCreateForm.urgency,
+          startDateTime: new Date(quickCreateForm.preferredStart).toISOString(),
+          recurrenceType: quickCreateForm.recurrenceType as 'daily' | 'every_x_days' | 'weekly',
+          intervalValue:
+            quickCreateForm.recurrenceType === 'every_x_days'
+              ? Number(quickCreateForm.intervalValue || 1)
+              : undefined,
+          occurrences: Number(quickCreateForm.occurrences || 1),
+        });
+      }
 
       closeQuickCreate();
-      setMessage('Visit created successfully.');
+      setMessage(
+        quickCreateMode === 'single'
+          ? 'Visit created successfully.'
+          : 'Recurring schedule created successfully.'
+      );
       await load();
     } catch (err: any) {
       console.error('Failed to create visit from board:', err);
-      setMessage(err?.message || 'Failed to create visit');
+      setMessage(err?.message || 'Failed to create schedule');
       setQuickCreateBusy(false);
     }
   };
@@ -638,9 +676,13 @@ export function SchedulingBoard() {
           >
             <div className="scheduleQuickCreateHeader">
               <div>
-                <h3 className="settingsCardTitle">Create Visit</h3>
+                <h3 className="settingsCardTitle">Create from Board</h3>
                 <p className="settingsCardText">
                   {quickCreate.professionalName} on {formatDay(new Date(quickCreate.day))}
+                </p>
+                <p className="modalSub">
+                  Create a one-time visit or a recurring schedule directly from the scheduling
+                  board.
                 </p>
               </div>
               <button
@@ -649,6 +691,35 @@ export function SchedulingBoard() {
                 onClick={closeQuickCreate}
               >
                 ×
+              </button>
+            </div>
+
+            <div className="createModeToggle" role="tablist" aria-label="Create mode">
+              <button
+                type="button"
+                className={
+                  quickCreateMode === 'single'
+                    ? 'createModeBtn createModeBtn-active'
+                    : 'createModeBtn'
+                }
+                onClick={() => setQuickCreateMode('single')}
+                role="tab"
+                aria-selected={quickCreateMode === 'single'}
+              >
+                One Visit
+              </button>
+              <button
+                type="button"
+                className={
+                  quickCreateMode === 'recurring'
+                    ? 'createModeBtn createModeBtn-active'
+                    : 'createModeBtn'
+                }
+                onClick={() => setQuickCreateMode('recurring')}
+                role="tab"
+                aria-selected={quickCreateMode === 'recurring'}
+              >
+                Recurring
               </button>
             </div>
 
@@ -676,19 +747,24 @@ export function SchedulingBoard() {
               </div>
 
               <div className="formGroup">
-                <label className="formLabel">Time</label>
-                <input
-                  className="input"
-                  type="time"
-                  value={quickCreateForm.time}
+                <label className="formLabel">Professional</label>
+                <select
+                  className="select"
+                  value={quickCreateForm.professionalId}
                   onChange={(event) =>
                     setQuickCreateForm((current) => ({
                       ...current,
-                      time: event.target.value,
+                      professionalId: event.target.value,
                     }))
                   }
-                  required
-                />
+                >
+                  <option value="">Unassigned</option>
+                  {(board?.professionals || []).map((professional) => (
+                    <option key={professional.id} value={professional.id}>
+                      {professional.name} ({professional.role})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="formGroup">
@@ -755,9 +831,89 @@ export function SchedulingBoard() {
                 />
               </div>
 
+              <div className="formGroup">
+                <label className="formLabel">
+                  {quickCreateMode === 'single' ? 'Date & Time' : 'Start Date & Time'}
+                </label>
+                <input
+                  className="input"
+                  type="datetime-local"
+                  value={quickCreateForm.preferredStart}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      preferredStart: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+
+              {quickCreateMode === 'recurring' ? (
+                <>
+                  <div className="formGroup">
+                    <label className="formLabel">Recurrence</label>
+                    <select
+                      className="select"
+                      value={quickCreateForm.recurrenceType}
+                      onChange={(event) =>
+                        setQuickCreateForm((current) => ({
+                          ...current,
+                          recurrenceType: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="every_x_days">Every X days</option>
+                      <option value="weekly">Weekly</option>
+                    </select>
+                  </div>
+
+                  {quickCreateForm.recurrenceType === 'every_x_days' ? (
+                    <div className="formGroup">
+                      <label className="formLabel">Interval (days)</label>
+                      <input
+                        className="input"
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={quickCreateForm.intervalValue}
+                        onChange={(event) =>
+                          setQuickCreateForm((current) => ({
+                            ...current,
+                            intervalValue: Number(event.target.value),
+                          }))
+                        }
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className="formGroup">
+                    <label className="formLabel">Occurrences</label>
+                    <input
+                      className="input"
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={quickCreateForm.occurrences}
+                      onChange={(event) =>
+                        setQuickCreateForm((current) => ({
+                          ...current,
+                          occurrences: Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+                </>
+              ) : null}
+
               <div className="recurringActions recurringGrid-full">
                 <button type="submit" className="btn btn-primary" disabled={quickCreateBusy}>
-                  {quickCreateBusy ? 'Creating...' : 'Create Visit'}
+                  {quickCreateBusy
+                    ? 'Saving...'
+                    : quickCreateMode === 'single'
+                      ? 'Create Visit'
+                      : 'Create Recurring Schedule'}
                 </button>
               </div>
             </form>
