@@ -5,7 +5,6 @@ import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { DispatchPipeline } from '../components/DispatchPipeline';
 import { StatusTile } from '../components/StatusTile';
 import { AttentionPanel } from '../components/AttentionPanel';
-import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
 import { RequestDrawer } from '../components/RequestDrawer';
 import type { CareRequest } from '../types/index';
 
@@ -20,14 +19,12 @@ export function AdminDispatchPage() {
   const [selectedRequest, setSelectedRequest] = useState<CareRequest | null>(null);
   const [tab, setTab] = useState<TabFilter>('queued');
   const [search, setSearch] = useState('');
-  const [activityKey, setActivityKey] = useState(0);
 
   const loadDispatch = useCallback(async () => {
     try {
       setIsLoading(true);
       const reqs = (await api.getAllRequests()) as any;
       setRequests(reqs?.data || []);
-      setActivityKey((k) => k + 1);
     } catch (err) {
       console.error('Failed to load dispatch page:', err);
       setRequests([]);
@@ -231,7 +228,6 @@ export function AdminDispatchPage() {
         </div>
 
         <aside className="opsSecondary">
-          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
           <AttentionPanel requests={requests} />
         </aside>
       </section>
