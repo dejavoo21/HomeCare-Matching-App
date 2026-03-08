@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CareRequest } from "../types";
 import { api } from "../services/api";
+import { EvvVisitPanel } from "./EvvVisitPanel";
 
 type Pro = { id: string; name: string; role: string; isActive?: boolean };
 
@@ -239,6 +240,10 @@ export function RequestDrawer({
               </div>
             )}
           </div>
+
+          <div className="divider" />
+
+          <EvvVisitPanel requestId={request.id} />
         </div>
       </div>
     </div>

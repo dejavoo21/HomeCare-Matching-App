@@ -31,6 +31,7 @@ import { createWebhookAdminRouter } from './routes/webhook-admin.routes';
 import { createConnectedSystemsRouter } from './routes/connected-systems.routes';
 import { createOpsRouter } from './routes/ops.routes';
 import { createScheduleRouter } from './routes/schedule.routes';
+import { createEvvRouter } from './routes/evv.routes';
 
 // Migrations
 import { runMigrations } from './migrations/runner';
@@ -156,6 +157,7 @@ app.use('/analytics', createAnalyticsRouter(pool));
 app.use('/webhooks/admin', createWebhookAdminRouter(pool));
 app.use('/connected-systems', createConnectedSystemsRouter(pool));
 app.use('/schedule', createScheduleRouter(pool));
+app.use('/evv', createEvvRouter(pool));
 app.use('/users', userRoutes);
 app.use('/requests', requestRoutes);
 app.use('/visits', visitRoutes);
@@ -183,6 +185,7 @@ const API_ROUTES = [
   '/webhooks',
   '/connected-systems',
   '/schedule',
+  '/evv',
   '/users',
   '/requests',
   '/visits',

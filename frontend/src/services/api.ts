@@ -641,6 +641,28 @@ class ApiClient {
     return this.request('POST', '/schedule/recurring', payload);
   }
 
+  async evvCheckIn(payload: {
+    requestId: string;
+    latitude?: number;
+    longitude?: number;
+    notes?: string;
+  }) {
+    return this.request('POST', '/evv/check-in', payload);
+  }
+
+  async evvCheckOut(payload: {
+    requestId: string;
+    latitude?: number;
+    longitude?: number;
+    notes?: string;
+  }) {
+    return this.request('POST', '/evv/check-out', payload);
+  }
+
+  async getEvvForRequest(requestId: string) {
+    return this.request('GET', `/evv/request/${requestId}`);
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {

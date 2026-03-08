@@ -8162,8 +8162,69 @@ html {
   font-weight: 600;
 }
 
+.evvActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.evvSummaryRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.evvSummaryCard {
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.evvStatusText {
+  text-transform: capitalize;
+  font-size: 20px;
+}
+
+.evvMetaValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.evvTimeline {
+  display: grid;
+  gap: 12px;
+}
+
+.evvTimelineItem {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+  background: #fff;
+}
+
+.evvTimelineType {
+  font-size: 13px;
+  font-weight: 800;
+  color: #4338ca;
+  margin-bottom: 6px;
+}
+
+.evvTimelineMeta {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
 @media (max-width: 900px) {
   .recurringGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .evvSummaryRow {
     grid-template-columns: 1fr;
   }
 }
