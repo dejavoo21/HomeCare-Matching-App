@@ -7745,6 +7745,232 @@ html {
   }
 }
 
+.assistantRoot {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 80;
+}
+
+.assistantPanel {
+  width: min(380px, calc(100vw - 28px));
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.98) 100%);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+.assistantHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.assistantTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.assistantBadge {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(67, 56, 202, 0.3);
+}
+
+.assistantTitle {
+  display: grid;
+  gap: 2px;
+}
+
+.assistantTitleMain {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.assistantSub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.assistantIconButton {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #475569;
+  cursor: pointer;
+}
+
+.assistantIconButton:hover {
+  background: #fff;
+}
+
+.assistantIntro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(99, 102, 241, 0.08);
+  color: #4338ca;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.assistantQuick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.assistantChip {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(99, 102, 241, 0.16);
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.assistantChip:hover {
+  border-color: rgba(67, 56, 202, 0.3);
+  color: #4338ca;
+}
+
+.assistantList {
+  max-height: 320px;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.assistantMessageRow {
+  display: flex;
+}
+
+.assistantMessageRow-user {
+  justify-content: flex-end;
+}
+
+.assistantMessageRow-bot {
+  justify-content: flex-start;
+}
+
+.assistantBubble {
+  max-width: 88%;
+  padding: 12px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.assistantBubble-bot {
+  border-top-left-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.assistantBubble-user {
+  border-top-right-radius: 8px;
+  background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+  color: #fff;
+}
+
+.assistantComposer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.assistantInput {
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 14px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.assistantSend {
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(67, 56, 202, 0.24);
+  cursor: pointer;
+}
+
+.assistantSend:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.assistantFab {
+  min-height: 52px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.28);
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .assistantRoot {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .assistantPanel {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+  }
+
+  .assistantFab {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .reviewSummaryGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

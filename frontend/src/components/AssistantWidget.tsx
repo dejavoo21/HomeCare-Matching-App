@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, MessageCircle, Send, Bot } from "lucide-react";
+import { X, MessageCircle, Send, Bot, Sparkles } from "lucide-react";
 import { api } from "../services/api";
 import { useAssistantActions } from "../contexts/AssistantActionsContext";
 import type { AssistantAction } from "../types/assistant";
 
 type Msg = { role: "assistant" | "user"; text: string; ts: number };
 
-const LS_KEY = "assistant_widget_state_v1"; // { open: boolean, dismissed: boolean }
+const LS_KEY = "assistant_widget_state_v1";
 
 function loadState(): { open: boolean; dismissed: boolean } {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return { open: true, dismissed: false }; // auto-open default
+    if (!raw) return { open: true, dismissed: false };
     return JSON.parse(raw);
   } catch {
     return { open: true, dismissed: false };
@@ -30,7 +30,7 @@ export function AssistantWidget() {
   const [messages, setMessages] = useState<Msg[]>(() => [
     {
       role: "assistant",
-      text: "Hi 👋 I can help you navigate the queue, switch views, and open requests. What do you need?",
+      text: "I can help with queue status, request lookup, dispatch actions, and workflow questions.",
       ts: Date.now(),
     },
   ]);
@@ -39,9 +39,9 @@ export function AssistantWidget() {
   const runActions = useAssistantActions();
 
   useEffect(() => {
-    const s = loadState();
-    setOpen(s.open && !s.dismissed);
-    setDismissed(s.dismissed);
+    const state = loadState();
+    setOpen(state.open && !state.dismissed);
+    setDismissed(state.dismissed);
   }, []);
 
   useEffect(() => {
@@ -49,41 +49,42 @@ export function AssistantWidget() {
   }, [open, dismissed]);
 
   useEffect(() => {
-    // auto scroll
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
   const quickActions = useMemo(
-    () => [
-      "Show queued",
-      "Show offered",
-      "Show completed",
-      "How do I manually offer?",
-    ],
+    () => ["Show queued", "Show offered", "Show completed", "How do I manually offer?"],
     []
   );
 
   const send = async (text: string) => {
-    const q = text.trim();
-    if (!q || busy) return;
+    const query = text.trim();
+    if (!query || busy) return;
 
-    setMessages((m) => [...m, { role: "user", text: q, ts: Date.now() }]);
+    setMessages((current) => [...current, { role: "user", text: query, ts: Date.now() }]);
     setInput("");
     setBusy(true);
 
     try {
-      const res: any = await api.assistantQuery(q);
-      const answer = res?.data?.answer || "Sorry — I couldn't generate a response.";
-      setMessages((m) => [...m, { role: "assistant", text: answer, ts: Date.now() }]);
+      const res: any = await api.assistantQuery(query);
+      const answer = res?.data?.answer || "Sorry, I couldn't generate a response.";
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", text: answer, ts: Date.now() },
+      ]);
 
       const actions: AssistantAction[] = res?.data?.actions || [];
       if (actions.length) {
         runActions(actions);
       }
-    } catch (e: any) {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", text: "I hit an error talking to the server. Try again.", ts: Date.now() },
+    } catch {
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          text: "I hit an error talking to the server. Try again.",
+          ts: Date.now(),
+        },
       ]);
     } finally {
       setBusy(false);
@@ -92,44 +93,78 @@ export function AssistantWidget() {
 
   const handleClose = () => {
     setOpen(false);
-    setDismissed(true); // prevents auto-open next time
+    setDismissed(true);
   };
 
   const handleToggle = () => {
-    setOpen((v) => !v);
-    if (!open) setDismissed(false); // if user reopens, it's not dismissed anymore
+    setOpen((current) => !current);
+    if (!open) {
+      setDismissed(false);
+    }
   };
 
   return (
     <div className="assistantRoot">
       {open ? (
-        <div className="assistantPanel" role="dialog" aria-label="Assistant chat">
+        <section className="assistantPanel" role="dialog" aria-label="Assistant chat">
           <div className="assistantHeader">
-            <div className="assistantTitle">
+            <div className="assistantTitleGroup">
               <span className="assistantBadge">
                 <Bot size={16} />
               </span>
-              Assistant
-              <span className="assistantSub">Guided help</span>
+              <div className="assistantTitle">
+                <span className="assistantTitleMain">Operations Assistant</span>
+                <span className="assistantSub">Queue guidance and quick answers</span>
+              </div>
             </div>
 
-            <button className="iconBtn" onClick={handleClose} aria-label="Close assistant">
+            <button
+              className="assistantIconButton"
+              onClick={handleClose}
+              aria-label="Close assistant"
+              type="button"
+            >
               <X size={18} />
             </button>
           </div>
 
+          <div className="assistantIntro">
+            <Sparkles size={14} />
+            <span>Ask about dispatch workflow, requests, offers, or admin actions.</span>
+          </div>
+
           <div className="assistantQuick">
-            {quickActions.slice(0, 3).map((q) => (
-              <button key={q} className="chip" onClick={() => send(q)}>
-                {q}
+            {quickActions.slice(0, 3).map((action) => (
+              <button
+                key={action}
+                className="assistantChip"
+                onClick={() => send(action)}
+                type="button"
+              >
+                {action}
               </button>
             ))}
           </div>
 
           <div className="assistantList" ref={listRef}>
-            {messages.map((m, idx) => (
-              <div key={idx} className={m.role === "user" ? "msg msgUser" : "msg msgBot"}>
-                <div className="msgBubble">{m.text}</div>
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={
+                  message.role === "user"
+                    ? "assistantMessageRow assistantMessageRow-user"
+                    : "assistantMessageRow assistantMessageRow-bot"
+                }
+              >
+                <div
+                  className={
+                    message.role === "user"
+                      ? "assistantBubble assistantBubble-user"
+                      : "assistantBubble assistantBubble-bot"
+                  }
+                >
+                  {message.text}
+                </div>
               </div>
             ))}
           </div>
@@ -137,21 +172,26 @@ export function AssistantWidget() {
           <div className="assistantComposer">
             <input
               className="assistantInput"
-              placeholder="Ask me anything…"
+              placeholder="Ask about queue status, offers, or a request..."
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") send(input);
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") send(input);
               }}
               disabled={busy}
             />
-            <button className="assistantSend" onClick={() => send(input)} disabled={busy}>
+            <button
+              className="assistantSend"
+              onClick={() => send(input)}
+              disabled={busy}
+              type="button"
+            >
               <Send size={16} />
             </button>
           </div>
-        </div>
+        </section>
       ) : (
-        <button className="assistantFab" onClick={handleToggle} aria-label="Open assistant">
+        <button className="assistantFab" onClick={handleToggle} aria-label="Open assistant" type="button">
           <MessageCircle size={18} />
           <span>Assistant</span>
         </button>
