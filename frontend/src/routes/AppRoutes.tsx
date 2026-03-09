@@ -14,6 +14,7 @@ import { ClinicianVisitsPage } from '../pages/ClinicianVisitsPage';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { AdminDispatchPage } from '../pages/AdminDispatchPage';
 import { AdminRequestQueuePage } from '../pages/AdminRequestQueuePage';
+import { AdminRequestDetailPage } from '../pages/AdminRequestDetailPage';
 import { AdminSchedulingPage } from '../pages/AdminSchedulingPage';
 import { AdminTeamPage } from '../pages/AdminTeamPage';
 import { AdminAccessPage } from '../pages/AdminAccessPage';
@@ -105,6 +106,10 @@ export function AppRoutes() {
         <Route
           path="requests"
           element={<WithPermission permission={PERMISSIONS.DISPATCH_READ} element={<AdminRequestQueuePage />} />}
+        />
+        <Route
+          path="requests/:requestId"
+          element={<WithPermission permission={PERMISSIONS.DISPATCH_READ} element={<AdminRequestDetailPage />} />}
         />
         <Route
           path="scheduling"

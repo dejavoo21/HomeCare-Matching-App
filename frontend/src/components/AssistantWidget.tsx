@@ -60,6 +60,14 @@ export function AssistantWidget() {
   }, [messages, open]);
 
   const pageSuggestions = useMemo(() => {
+    if (location.pathname.match(/\/admin\/requests\/[^/]+$/)) {
+      return [
+        'Summarize this request',
+        'Explain service risk',
+        'Show next actions',
+        'Summarize timeline',
+      ];
+    }
     if (location.pathname.includes('/admin/requests')) {
       return [
         'Summarize queued requests',
@@ -189,6 +197,15 @@ export function AssistantWidget() {
 
     if (normalized.includes('unassigned visits') || normalized.includes('overloaded today')) {
       navigate('/admin/scheduling');
+      return;
+    }
+
+    if (
+      normalized.includes('this request') ||
+      normalized.includes('service risk') ||
+      normalized.includes('next actions') ||
+      normalized.includes('timeline')
+    ) {
       return;
     }
 

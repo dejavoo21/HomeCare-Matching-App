@@ -1,22 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
-import { RequestDrawer } from '../components/RequestDrawer';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import PageHero from '../components/ui/PageHero';
 import AppPage from '../components/layout/AppPage';
 import SectionCard from '../components/ui/SectionCard';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import type { CareRequest } from '../types/index';
 
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
 type TabFilter = (typeof TABS)[number];
 
 export function AdminRequestQueuePage() {
+  const navigate = useNavigate();
   const { on } = useRealTime();
   const [requests, setRequests] = useState<CareRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [drawerRequest, setDrawerRequest] = useState<CareRequest | null>(null);
   const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabFilter>('queued');
   const [search, setSearch] = useState('');
@@ -91,7 +92,7 @@ export function AdminRequestQueuePage() {
   const onOffer = async (requestId: string) => {
     const request = requests.find((item) => item.id === requestId);
     if (request) {
-      setDrawerRequest(request);
+      navigate(`/admin/requests/${request.id}`);
     }
   };
 
@@ -162,7 +163,7 @@ export function AdminRequestQueuePage() {
           ) : (
             <DispatchQueueTable
               requests={tabbed as any}
-              onView={setDrawerRequest}
+              onView={(request) => navigate(`/admin/requests/${request.id}`)}
               onOpenThread={setRequestChatRequestId}
               onOffer={onOffer}
               onRequeue={onRequeue}
@@ -188,14 +189,10 @@ export function AdminRequestQueuePage() {
               </div>
             </div>
           </SectionCard>
+
+          <AssistantPanel context="dispatch" contextData={{ page: 'request_queue', activeTab: tab }} />
         </div>
       </div>
-
-      <RequestDrawer
-        request={drawerRequest}
-        onClose={() => setDrawerRequest(null)}
-        onRefresh={loadRequests}
-      />
 
       <RequestChatDrawer
         open={!!requestChatRequestId}

@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
+import RequestDetailDrawer from '../components/requests/RequestDetailDrawer';
 import { InsightCard } from '../components/InsightCard';
 import PermissionNotice from '../components/auth/PermissionNotice';
 import ProtectedAction from '../components/auth/ProtectedAction';
@@ -60,6 +61,7 @@ export function AdminDispatchPage() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<CareRequest | null>(null);
   const [drawerRequest, setDrawerRequest] = useState<CareRequest | null>(null);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
 
   const loadDispatch = useCallback(async () => {
@@ -491,7 +493,7 @@ export function AdminDispatchPage() {
                 <div className="dispatchActionGrid">
                   <button
                     className="dispatchActionTile dispatchActionTile-info"
-                    onClick={() => setDrawerRequest(selectedRequest)}
+                    onClick={() => setDetailDrawerOpen(true)}
                     type="button"
                   >
                     <span className="dispatchActionTitle">Open full request</span>
@@ -668,6 +670,12 @@ export function AdminDispatchPage() {
         request={drawerRequest}
         onClose={() => setDrawerRequest(null)}
         onRefresh={loadDispatch}
+      />
+
+      <RequestDetailDrawer
+        requestId={selectedRequest?.id || null}
+        open={detailDrawerOpen}
+        onClose={() => setDetailDrawerOpen(false)}
       />
 
       <RequestChatDrawer
