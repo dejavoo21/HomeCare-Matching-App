@@ -60,11 +60,22 @@ export function AssistantWidget() {
   }, [messages, open]);
 
   const pageSuggestions = useMemo(() => {
+    if (location.pathname.includes('/admin/access')) {
+      return [
+        'Show blocked onboarding requests',
+        'Summarize pending verifications',
+        'Draft request for missing documents',
+      ];
+    }
     if (location.pathname.includes('/admin/dispatch')) {
       return ['Show critical requests', 'Open unread conversations', 'Who is available right now?'];
     }
     if (location.pathname.includes('/admin/scheduling')) {
-      return ['Show unassigned visits', 'Who is overloaded today?', 'Open workforce chat'];
+      return [
+        'Show unassigned visits',
+        'Explain conflict risk',
+        'Summarize authorization warnings',
+      ];
     }
     return ['Who is on shift now?', 'Open unread conversations', 'Show active clinicians'];
   }, [location.pathname]);
@@ -133,6 +144,15 @@ export function AssistantWidget() {
 
     if (normalized.includes('critical requests')) {
       navigate('/admin/dispatch');
+      return;
+    }
+
+    if (
+      normalized.includes('blocked onboarding') ||
+      normalized.includes('pending verifications') ||
+      normalized.includes('missing documents')
+    ) {
+      navigate('/admin/access');
       return;
     }
 

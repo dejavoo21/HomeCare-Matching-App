@@ -11635,6 +11635,206 @@ textarea.input:focus {
   gap: 18px;
 }
 
+.accessHeroCard {
+  background: linear-gradient(135deg, #0f172a 0%, #0f3a68 45%, #312e81 100%);
+  border-radius: 28px;
+  padding: 24px;
+  color: #fff;
+  box-shadow: 0 24px 54px rgba(15, 23, 42, 0.18);
+}
+
+.accessHeroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 520px);
+  gap: 24px;
+  align-items: end;
+}
+
+.accessHeroEyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.accessHeroTitle {
+  margin: 8px 0 0;
+  font-size: 34px;
+  line-height: 1.05;
+  font-weight: 900;
+}
+
+.accessHeroText {
+  margin: 12px 0 0;
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.accessHeroStats,
+.accessFunnelGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.accessHeroStats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.accessHeroStat {
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.accessHeroStatLabel,
+.accessFunnelLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.accessHeroStatLabel {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.accessHeroStatValue {
+  display: block;
+  margin-top: 10px;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 900;
+  color: #fff;
+}
+
+.accessHeroStatText {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.accessFunnelGrid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.accessFunnelCard {
+  border-radius: 24px;
+  padding: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.accessFunnelCard-warning {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, #ffffff 100%);
+  border-color: rgba(245, 158, 11, 0.16);
+}
+
+.accessFunnelCard-info {
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.12) 0%, #ffffff 100%);
+  border-color: rgba(14, 165, 233, 0.16);
+}
+
+.accessFunnelCard-success {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.12) 0%, #ffffff 100%);
+  border-color: rgba(16, 185, 129, 0.16);
+}
+
+.accessFunnelCard-danger {
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.12) 0%, #ffffff 100%);
+  border-color: rgba(244, 63, 94, 0.16);
+}
+
+.accessFunnelLabel {
+  color: #64748b;
+}
+
+.accessFunnelValue {
+  margin-top: 10px;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.accessFunnelText {
+  margin-top: 10px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.accessHubLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+
+.accessMainColumn,
+.accessAsideStack {
+  display: grid;
+  gap: 18px;
+}
+
+.accessAsideCard {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.accessAsideTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.accessAsideText {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.accessAsideList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.accessAsideItem {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.04);
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.accessAsideItem-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.accessAsideItem-info {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0369a1;
+}
+
+.accessAsideItem-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
 .accessWorkflowCard {
   min-width: 0;
 }
@@ -11693,8 +11893,9 @@ textarea.input:focus {
   gap: 14px;
   padding: 16px;
   border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 18px;
-  background: #fff;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fff 0%, #fbfcff 100%);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
 }
 
 .accessBadgeStack {
@@ -11723,10 +11924,10 @@ textarea.input:focus {
 .verificationPanel {
   display: grid;
   gap: 12px;
-  padding: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 16px;
-  background: #f8fafc;
+  padding: 16px;
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fafbff 0%, #f8faff 100%);
 }
 
 .verificationTitle {
@@ -11748,6 +11949,23 @@ textarea.input:focus {
   flex-wrap: wrap;
 }
 
+.accessBlockedNote {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.btn-disabled {
+  background: #cbd5e1;
+  border-color: #cbd5e1;
+  color: #fff;
+  cursor: not-allowed;
+}
+
 @media (max-width: 1400px) {
   .statusTilesRow,
   .teamSummaryGrid,
@@ -11761,6 +11979,10 @@ textarea.input:focus {
 
   .teamAvailabilityMetrics {
     grid-template-columns: 1fr;
+  }
+
+  .accessFunnelGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -11780,7 +12002,9 @@ textarea.input:focus {
   .opsMainGrid,
   .settingsGrid,
   .pageGridTwo,
-  .teamToolbar {
+  .teamToolbar,
+  .accessHubLayout,
+  .accessHeroGrid {
     grid-template-columns: 1fr;
   }
 
@@ -11837,7 +12061,9 @@ textarea.input:focus {
   .summaryStrip,
   .statusTilesRow,
   .teamSummaryGrid,
-  .settingsOverviewGrid {
+  .settingsOverviewGrid,
+  .accessHeroStats,
+  .accessFunnelGrid {
     grid-template-columns: 1fr;
   }
 

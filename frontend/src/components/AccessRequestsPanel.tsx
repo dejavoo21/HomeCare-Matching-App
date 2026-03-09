@@ -8,7 +8,6 @@ type AccessRequestRow = {
   requested_role: string;
   reason?: string | null;
   status: string;
-  reviewed_by?: string | null;
   reviewed_at?: string | null;
   created_at: string;
   reviewer_email?: string | null;
@@ -34,8 +33,8 @@ type VerificationDraft = {
 
 function formatDate(value?: string | null) {
   if (!value) return '-';
-  const d = new Date(value);
-  return isNaN(d.getTime()) ? '-' : d.toLocaleString();
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
 }
 
 function createDraft(item: AccessRequestRow): VerificationDraft {
@@ -50,7 +49,13 @@ function createDraft(item: AccessRequestRow): VerificationDraft {
   };
 }
 
-export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
+export function AccessRequestsPanel({
+  refreshKey,
+  hideSummary = false,
+}: {
+  refreshKey?: number;
+  hideSummary?: boolean;
+}) {
   const [items, setItems] = useState<AccessRequestRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -63,10 +68,10 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
       const response = (await api.getAccessRequests()) as any;
       const rows = Array.isArray(response?.data) ? response.data : [];
       setItems(rows);
-      setDrafts((prev) => {
-        const next = { ...prev };
+      setDrafts((previous) => {
+        const next = { ...previous };
         for (const item of rows) {
-          next[item.id] = prev[item.id] || createDraft(item);
+          next[item.id] = previous[item.id] || createDraft(item);
         }
         return next;
       });
@@ -92,10 +97,10 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
   );
 
   const updateDraft = (id: string, patch: Partial<VerificationDraft>) => {
-    setDrafts((prev) => ({
-      ...prev,
+    setDrafts((previous) => ({
+      ...previous,
       [id]: {
-        ...(prev[id] || {
+        ...(previous[id] || {
           additionalInfoRequested: false,
           additionalInfoNote: '',
           identityVerified: false,
@@ -155,9 +160,7 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
       await api.decideAccessRequest(item.id, decision, draft?.reviewNotes || undefined);
       await load();
       setMessage(
-        decision === 'approved'
-          ? 'Access request approved.'
-          : 'Access request rejected.'
+        decision === 'approved' ? 'Access request approved.' : 'Access request rejected.'
       );
     } catch (err: any) {
       console.error(`Failed to ${decision} access request:`, err);
@@ -172,12 +175,14 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
       <div className="sideHeader">
         <div>
           <h3 className="sideTitle">Access Requests</h3>
-          <p className="muted">Review identity, documents, and onboarding readiness before approval.</p>
+          <p className="muted">
+            Review identity, documents, and onboarding readiness before approval.
+          </p>
         </div>
       </div>
 
       <div className="rowGap">
-        {!loading ? (
+        {!loading && !hideSummary ? (
           <div className="accessWorkflowSummary">
             <div className="accessWorkflowMetric accessWorkflowMetric-neutral">
               <span className="accessWorkflowMetricLabel">Pending</span>
@@ -218,23 +223,25 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                 draft.licenseVerified &&
                 draft.complianceVerified &&
                 draft.backgroundCheckVerified;
+              const canApprove =
+                !busyId &&
+                item.status !== 'approved' &&
+                !draft.additionalInfoRequested &&
+                (verificationCompleted ||
+                  String(item.requested_role).toLowerCase() === 'client');
 
               return (
                 <article key={item.id} className="accessWorkflowItem">
                   <div className="accessTop">
                     <div>
-                      <div className="accessTitle">
-                        {item.requester_name || item.requester_email}
-                      </div>
+                      <div className="accessTitle">{item.requester_name || item.requester_email}</div>
                       <div className="accessMeta muted">
-                        {item.requester_email} • {String(item.requested_role).toUpperCase()}
+                        {item.requester_email} | {String(item.requested_role).toUpperCase()}
                       </div>
                     </div>
 
                     <div className="accessBadgeStack">
-                      <span className={`pill pill-${item.status}`}>
-                        {item.status.toUpperCase()}
-                      </span>
+                      <span className={`pill pill-${item.status}`}>{item.status.toUpperCase()}</span>
                       {draft.additionalInfoRequested ? (
                         <span className="pill pill-warning">INFO REQUESTED</span>
                       ) : null}
@@ -250,8 +257,8 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
 
                   <div className="accessDates muted">
                     Requested: {formatDate(item.created_at)}
-                    {item.reviewed_at ? ` • Reviewed: ${formatDate(item.reviewed_at)}` : ''}
-                    {item.reviewer_email ? ` • Reviewer: ${item.reviewer_email}` : ''}
+                    {item.reviewed_at ? ` | Reviewed: ${formatDate(item.reviewed_at)}` : ''}
+                    {item.reviewer_email ? ` | Reviewer: ${item.reviewer_email}` : ''}
                   </div>
 
                   <div className="accessWorkflowChecks">
@@ -261,10 +268,16 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                     <span className={draft.licenseVerified ? 'pill pill-approved' : 'pill pill-info'}>
                       License
                     </span>
-                    <span className={draft.complianceVerified ? 'pill pill-approved' : 'pill pill-info'}>
+                    <span
+                      className={draft.complianceVerified ? 'pill pill-approved' : 'pill pill-info'}
+                    >
                       Compliance
                     </span>
-                    <span className={draft.backgroundCheckVerified ? 'pill pill-approved' : 'pill pill-info'}>
+                    <span
+                      className={
+                        draft.backgroundCheckVerified ? 'pill pill-approved' : 'pill pill-info'
+                      }
+                    >
                       Background
                     </span>
                   </div>
@@ -277,8 +290,8 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                         <input
                           type="checkbox"
                           checked={draft.identityVerified}
-                          onChange={(e) =>
-                            updateDraft(item.id, { identityVerified: e.target.checked })
+                          onChange={(event) =>
+                            updateDraft(item.id, { identityVerified: event.target.checked })
                           }
                         />
                         <span>Identity verified</span>
@@ -288,8 +301,8 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                         <input
                           type="checkbox"
                           checked={draft.licenseVerified}
-                          onChange={(e) =>
-                            updateDraft(item.id, { licenseVerified: e.target.checked })
+                          onChange={(event) =>
+                            updateDraft(item.id, { licenseVerified: event.target.checked })
                           }
                         />
                         <span>License verified</span>
@@ -299,8 +312,8 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                         <input
                           type="checkbox"
                           checked={draft.complianceVerified}
-                          onChange={(e) =>
-                            updateDraft(item.id, { complianceVerified: e.target.checked })
+                          onChange={(event) =>
+                            updateDraft(item.id, { complianceVerified: event.target.checked })
                           }
                         />
                         <span>Compliance documents verified</span>
@@ -310,8 +323,8 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                         <input
                           type="checkbox"
                           checked={draft.backgroundCheckVerified}
-                          onChange={(e) =>
-                            updateDraft(item.id, { backgroundCheckVerified: e.target.checked })
+                          onChange={(event) =>
+                            updateDraft(item.id, { backgroundCheckVerified: event.target.checked })
                           }
                         />
                         <span>Background check verified</span>
@@ -323,8 +336,8 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                         <input
                           type="checkbox"
                           checked={draft.additionalInfoRequested}
-                          onChange={(e) =>
-                            updateDraft(item.id, { additionalInfoRequested: e.target.checked })
+                          onChange={(event) =>
+                            updateDraft(item.id, { additionalInfoRequested: event.target.checked })
                           }
                         />
                         <span>Request additional information</span>
@@ -334,8 +347,8 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                         className="input accessTextarea"
                         rows={3}
                         value={draft.additionalInfoNote}
-                        onChange={(e) =>
-                          updateDraft(item.id, { additionalInfoNote: e.target.value })
+                        onChange={(event) =>
+                          updateDraft(item.id, { additionalInfoNote: event.target.value })
                         }
                         placeholder="List missing documents, certifications, or identity proof..."
                       />
@@ -344,12 +357,20 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                         className="input accessTextarea"
                         rows={3}
                         value={draft.reviewNotes}
-                        onChange={(e) =>
-                          updateDraft(item.id, { reviewNotes: e.target.value })
+                        onChange={(event) =>
+                          updateDraft(item.id, { reviewNotes: event.target.value })
                         }
                         placeholder="Add internal review notes or onboarding comments..."
                       />
                     </div>
+
+                    {!verificationCompleted &&
+                    String(item.requested_role).toLowerCase() !== 'client' ? (
+                      <div className="accessBlockedNote">
+                        Onboarding remains blocked until identity, license, compliance, and
+                        background checks are complete.
+                      </div>
+                    ) : null}
 
                     <div className="verificationSummary muted">
                       {verificationCompleted
@@ -367,7 +388,7 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                         Save Verification
                       </button>
                       <button
-                        className="btn btn-primary"
+                        className={canApprove ? 'btn btn-primary' : 'btn btn-disabled'}
                         type="button"
                         disabled={
                           busyId === item.id ||
@@ -378,7 +399,7 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                         }
                         onClick={() => decide(item, 'approved')}
                       >
-                        Approve
+                        Verify & Unlock Onboarding
                       </button>
                       <button
                         className="btn btn-danger"
