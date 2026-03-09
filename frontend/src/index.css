@@ -4468,6 +4468,327 @@ html {
   border-color: rgba(245, 158, 11, 0.18);
 }
 
+.dispatchCommandLayout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr) minmax(260px, 320px);
+  gap: 18px;
+  align-items: start;
+}
+
+.dispatchRail,
+.dispatchCenterColumn {
+  display: grid;
+  gap: 18px;
+}
+
+.dispatchCommandCard {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.04);
+}
+
+.dispatchCommandCardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.dispatchCommandTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dispatchExceptionList,
+.dispatchCoverageList,
+.dispatchThreadList,
+.dispatchPriorityList {
+  display: grid;
+  gap: 12px;
+}
+
+.dispatchExceptionCard,
+.dispatchThreadCard {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dispatchExceptionCard:hover,
+.dispatchThreadCard:hover {
+  border-color: rgba(79, 70, 229, 0.24);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+.dispatchExceptionCard-active {
+  border-color: rgba(79, 70, 229, 0.3);
+  background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.1);
+}
+
+.dispatchExceptionTop,
+.dispatchWorkHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.dispatchExceptionTitle,
+.dispatchWorkTitle,
+.dispatchThreadTitle,
+.dispatchCoverageName {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dispatchExceptionMeta,
+.dispatchThreadMeta,
+.dispatchCoverageMeta,
+.dispatchWorkMeta,
+.dispatchWorkEyebrow,
+.dispatchInfoLabel {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.dispatchWorkEyebrow {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dispatchExceptionBadges,
+.dispatchThreadBadges,
+.dispatchWorkBadges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.dispatchExceptionNote {
+  margin: 10px 0 0;
+  color: #475569;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.dispatchStatusTag,
+.dispatchPriorityTag,
+.dispatchInfoTag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border: 1px solid transparent;
+  text-transform: capitalize;
+}
+
+.dispatchStatusTag-queued {
+  background: rgba(79, 70, 229, 0.1);
+  color: #4338ca;
+  border-color: rgba(79, 70, 229, 0.16);
+}
+
+.dispatchStatusTag-offered,
+.dispatchInfoTag-warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.18);
+}
+
+.dispatchStatusTag-accepted,
+.dispatchStatusTag-en-route,
+.dispatchStatusTag-enroute,
+.dispatchInfoTag-ok {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0369a1;
+  border-color: rgba(14, 165, 233, 0.18);
+}
+
+.dispatchStatusTag-completed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.18);
+}
+
+.dispatchStatusTag-cancelled {
+  background: rgba(148, 163, 184, 0.12);
+  color: #475569;
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+.dispatchPriorityTag-critical,
+.dispatchPriorityItem-0 {
+  background: rgba(244, 63, 94, 0.12);
+  color: #be123c;
+  border-color: rgba(244, 63, 94, 0.18);
+}
+
+.dispatchPriorityTag-high,
+.dispatchPriorityItem-1 {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.18);
+}
+
+.dispatchPriorityTag-medium,
+.dispatchInfoTag {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+  border-color: rgba(59, 130, 246, 0.16);
+}
+
+.dispatchPriorityTag-low,
+.dispatchPriorityItem-2 {
+  background: rgba(148, 163, 184, 0.12);
+  color: #475569;
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+.dispatchWorkCard {
+  min-height: 100%;
+}
+
+.dispatchActionGrid,
+.dispatchWorkGrid {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.dispatchActionGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dispatchWorkGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dispatchActionTile {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #ffffff;
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dispatchActionTile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.dispatchActionTile-primary {
+  background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
+  border-color: rgba(79, 70, 229, 0.18);
+}
+
+.dispatchActionTile-warn {
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+  border-color: rgba(245, 158, 11, 0.18);
+}
+
+.dispatchActionTile-danger {
+  background: linear-gradient(180deg, #fff1f2 0%, #ffffff 100%);
+  border-color: rgba(244, 63, 94, 0.18);
+}
+
+.dispatchActionTile-info {
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+  border-color: rgba(59, 130, 246, 0.16);
+}
+
+.dispatchActionTitle,
+.dispatchPanelTitle {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dispatchActionText {
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.dispatchWorkPanel {
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: #f8fafc;
+  padding: 16px;
+}
+
+.dispatchInfoStack {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dispatchInfoRow,
+.dispatchCoverageRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.dispatchInfoRow {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.dispatchCoverageRow {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.dispatchCoverageRight {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.dispatchCoverageLoad {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.dispatchPriorityItem {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.dispatchPriorityItem-soft {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.16);
+  color: #334155;
+}
+
 @media (max-width: 1100px) {
   .dashboardTopGrid {
     grid-template-columns: 1fr 1fr;
@@ -4476,11 +4797,22 @@ html {
   .dashboardGrid {
     grid-template-columns: 1fr;
   }
+
+  .dispatchCommandLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .dispatchActionGrid,
+  .dispatchWorkGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
   .dispatchHeader,
-  .dashboardPanelHeader {
+  .dashboardPanelHeader,
+  .dispatchExceptionTop,
+  .dispatchWorkHeader {
     flex-direction: column;
     align-items: flex-start;
   }

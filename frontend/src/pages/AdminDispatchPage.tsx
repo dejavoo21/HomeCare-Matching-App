@@ -9,13 +9,54 @@ import type { CareRequest } from '../types/index';
 
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
 type TabFilter = (typeof TABS)[number];
+type Professional = {
+  id: string;
+  name: string;
+  role: string;
+  location?: string;
+  isActive?: boolean;
+  is_active?: boolean;
+};
+
+function normalizeStatus(status?: string) {
+  return String(status || '').toLowerCase();
+}
+
+function severityScore(request: CareRequest) {
+  const urgency = String(request.urgency || '').toLowerCase();
+  const status = normalizeStatus(request.status);
+
+  if (urgency === 'critical' && ['queued', 'offered'].includes(status)) return 0;
+  if (status === 'queued') return 1;
+  if (status === 'offered') return 2;
+  if (status === 'accepted') return 3;
+  if (status === 'en_route') return 4;
+  return 8;
+}
+
+function formatShortTime(value: Date | string | undefined) {
+  if (!value) return 'Unscheduled';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? 'Unscheduled'
+    : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatServiceType(value?: string) {
+  return String(value || 'General care')
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
 export function AdminDispatchPage() {
   const { on } = useRealTime();
 
   const [requests, setRequests] = useState<CareRequest[]>([]);
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<CareRequest | null>(null);
+  const [drawerRequest, setDrawerRequest] = useState<CareRequest | null>(null);
   const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabFilter>('queued');
   const [search, setSearch] = useState('');
@@ -36,6 +77,28 @@ export function AdminDispatchPage() {
   useEffect(() => {
     loadDispatch();
   }, [loadDispatch]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const response = (await api.getProfessionals()) as any;
+        if (mounted) {
+          setProfessionals(response?.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to load professionals for dispatch:', err);
+        if (mounted) {
+          setProfessionals([]);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const unsubs = [
@@ -124,10 +187,112 @@ export function AdminDispatchPage() {
     };
   }, [counts.queued, requests]);
 
+  const professionalMap = useMemo(() => {
+    return new Map(
+      professionals.map((professional) => [
+        professional.id,
+        {
+          ...professional,
+          isActive: professional.isActive ?? professional.is_active ?? true,
+        },
+      ])
+    );
+  }, [professionals]);
+
+  const exceptionRequests = useMemo(() => {
+    return [...requests]
+      .filter((request) => {
+        const status = normalizeStatus(request.status);
+        const urgency = String(request.urgency || '').toLowerCase();
+        return (
+          ['queued', 'offered', 'accepted', 'en_route'].includes(status) ||
+          ['critical', 'high'].includes(urgency)
+        );
+      })
+      .sort((a, b) => {
+        const severityDiff = severityScore(a) - severityScore(b);
+        if (severityDiff !== 0) return severityDiff;
+
+        const aScheduled = new Date(a.scheduledDateTime || 0).getTime();
+        const bScheduled = new Date(b.scheduledDateTime || 0).getTime();
+        return aScheduled - bScheduled;
+      })
+      .slice(0, 6);
+  }, [requests]);
+
+  useEffect(() => {
+    setSelectedRequest((current) => {
+      if (current) {
+        return requests.find((request) => request.id === current.id) || null;
+      }
+      return exceptionRequests[0] || null;
+    });
+  }, [requests, exceptionRequests]);
+
+  const activeClinicians = useMemo(() => {
+    const loadMap = new Map<string, number>();
+
+    requests.forEach((request) => {
+      if (!request.assignedProfessionalId) return;
+      const status = normalizeStatus(request.status);
+      if (!['accepted', 'en_route', 'queued', 'offered'].includes(status)) return;
+      loadMap.set(
+        request.assignedProfessionalId,
+        (loadMap.get(request.assignedProfessionalId) || 0) + 1
+      );
+    });
+
+    return Array.from(loadMap.entries())
+      .map(([professionalId, currentLoad]) => {
+        const professional = professionalMap.get(professionalId);
+        return {
+          id: professionalId,
+          name: professional?.name || `Professional ${professionalId.slice(0, 8)}`,
+          region: professional?.location || 'Region not set',
+          role: professional?.role || 'clinician',
+          currentLoad,
+          status: currentLoad >= 3 ? 'Busy' : 'Available',
+        };
+      })
+      .sort((a, b) => b.currentLoad - a.currentLoad)
+      .slice(0, 4);
+  }, [professionalMap, requests]);
+
+  const requestThreads = useMemo(() => {
+    return exceptionRequests.slice(0, 4).map((request) => ({
+      id: request.id,
+      title: request.description || formatServiceType(String(request.serviceType)),
+      scheduled: formatShortTime(request.scheduledDateTime),
+      serviceType: formatServiceType(String(request.serviceType)),
+      status: normalizeStatus(request.status),
+      urgency: String(request.urgency || '').toLowerCase(),
+    }));
+  }, [exceptionRequests]);
+
+  const dispatchPriorities = useMemo(() => {
+    const items: string[] = [];
+
+    if (dispatchMetrics.criticalAtRisk > 0) {
+      items.push(`${dispatchMetrics.criticalAtRisk} critical request${dispatchMetrics.criticalAtRisk === 1 ? '' : 's'} need intervention`);
+    }
+    if (dispatchMetrics.offersExpiring > 0) {
+      items.push(`${dispatchMetrics.offersExpiring} offer${dispatchMetrics.offersExpiring === 1 ? '' : 's'} expiring within 30 minutes`);
+    }
+    if (counts.queued > 0) {
+      items.push(`${counts.queued} queued request${counts.queued === 1 ? '' : 's'} waiting for coverage`);
+    }
+    if (counts.en_route > 0) {
+      items.push(`${counts.en_route} active visit${counts.en_route === 1 ? '' : 's'} currently en route`);
+    }
+
+    return items.slice(0, 4);
+  }, [counts.en_route, counts.queued, dispatchMetrics.criticalAtRisk, dispatchMetrics.offersExpiring]);
+
   const onOffer = async (requestId: string) => {
     const request = requests.find((item) => item.id === requestId);
     if (request) {
       setSelectedRequest(request);
+      setDrawerRequest(request);
     }
   };
 
@@ -157,6 +322,10 @@ export function AdminDispatchPage() {
       console.error('Failed to set urgency:', err);
     }
   };
+
+  const selectedAssignedProfessional = selectedRequest?.assignedProfessionalId
+    ? professionalMap.get(selectedRequest.assignedProfessionalId)
+    : null;
 
   return (
     <main className="pageStack" role="main" aria-label="Dispatch page">
@@ -217,6 +386,291 @@ export function AdminDispatchPage() {
         />
       </section>
 
+      <section className="dispatchCommandLayout" aria-label="Dispatch command center">
+        <aside className="dispatchRail">
+          <div className="dispatchCommandCard">
+            <div className="dispatchCommandCardHeader">
+              <div>
+                <h2 className="dispatchCommandTitle">Live Exceptions</h2>
+                <p className="muted">
+                  Prioritize coverage gaps, expiring offers, and high-risk requests.
+                </p>
+              </div>
+            </div>
+
+            <div className="dispatchExceptionList">
+              {exceptionRequests.length === 0 ? (
+                <div className="premiumEmptyState">
+                  <div className="premiumEmptyTitle">No live exceptions</div>
+                  <div className="premiumEmptyText">
+                    Dispatch is clear right now. New queue pressure will appear here first.
+                  </div>
+                </div>
+              ) : (
+                exceptionRequests.map((request) => {
+                  const status = normalizeStatus(request.status);
+                  const urgency = String(request.urgency || '').toLowerCase();
+                  return (
+                    <button
+                      key={request.id}
+                      className={
+                        selectedRequest?.id === request.id
+                          ? 'dispatchExceptionCard dispatchExceptionCard-active'
+                          : 'dispatchExceptionCard'
+                      }
+                      onClick={() => setSelectedRequest(request)}
+                      type="button"
+                    >
+                      <div className="dispatchExceptionTop">
+                        <div>
+                          <div className="dispatchExceptionTitle">
+                            {request.description || formatServiceType(String(request.serviceType))}
+                          </div>
+                          <div className="dispatchExceptionMeta">
+                            {formatShortTime(request.scheduledDateTime)} | {formatServiceType(String(request.serviceType))}
+                          </div>
+                        </div>
+                        <span className={`dispatchStatusTag dispatchStatusTag-${status.replace(/[^a-z]+/g, '-')}`}>
+                          {status.replace('_', ' ')}
+                        </span>
+                      </div>
+
+                      <div className="dispatchExceptionBadges">
+                        <span className={`dispatchPriorityTag dispatchPriorityTag-${urgency}`}>
+                          {urgency} priority
+                        </span>
+                        {request.offerExpiresAt ? (
+                          <span className="dispatchInfoTag">Offer live</span>
+                        ) : null}
+                      </div>
+
+                      <p className="dispatchExceptionNote">{request.address}</p>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <div className="dispatchCommandCard">
+            <div className="dispatchCommandCardHeader">
+              <div>
+                <h2 className="dispatchCommandTitle">Available Coverage</h2>
+                <p className="muted">Current clinician load for reassignment decisions.</p>
+              </div>
+            </div>
+
+            <div className="dispatchCoverageList">
+              {activeClinicians.length === 0 ? (
+                <div className="muted">No active clinician loads yet.</div>
+              ) : (
+                activeClinicians.map((clinician) => (
+                  <div key={clinician.id} className="dispatchCoverageRow">
+                    <div>
+                      <div className="dispatchCoverageName">{clinician.name}</div>
+                      <div className="dispatchCoverageMeta">
+                        {clinician.region} | {String(clinician.role).toUpperCase()}
+                      </div>
+                    </div>
+                    <div className="dispatchCoverageRight">
+                      <span
+                        className={
+                          clinician.status === 'Busy'
+                            ? 'dispatchInfoTag dispatchInfoTag-warn'
+                            : 'dispatchInfoTag dispatchInfoTag-ok'
+                        }
+                      >
+                        {clinician.status}
+                      </span>
+                      <span className="dispatchCoverageLoad">Load {clinician.currentLoad}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </aside>
+
+        <section className="dispatchCenterColumn">
+          <div className="dispatchCommandCard dispatchWorkCard">
+            {!selectedRequest ? (
+              <div className="premiumEmptyState">
+                <div className="premiumEmptyTitle">Select a dispatch item</div>
+                <div className="premiumEmptyText">
+                  Choose a live exception to inspect risk, open its request thread, or take action.
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="dispatchWorkHeader">
+                  <div>
+                    <div className="dispatchWorkEyebrow">Selected Request</div>
+                    <h2 className="dispatchWorkTitle">
+                      {selectedRequest.description || formatServiceType(String(selectedRequest.serviceType))}
+                    </h2>
+                    <p className="dispatchWorkMeta">
+                      {formatServiceType(String(selectedRequest.serviceType))} |{' '}
+                      {formatShortTime(selectedRequest.scheduledDateTime)} | {selectedRequest.address}
+                    </p>
+                  </div>
+
+                  <div className="dispatchWorkBadges">
+                    <span
+                      className={`dispatchStatusTag dispatchStatusTag-${normalizeStatus(selectedRequest.status).replace(/[^a-z]+/g, '-')}`}
+                    >
+                      {normalizeStatus(selectedRequest.status).replace('_', ' ')}
+                    </span>
+                    <span
+                      className={`dispatchPriorityTag dispatchPriorityTag-${String(selectedRequest.urgency || '').toLowerCase()}`}
+                    >
+                      {String(selectedRequest.urgency || '').toLowerCase()} priority
+                    </span>
+                  </div>
+                </div>
+
+                <div className="dispatchActionGrid">
+                  <button
+                    className="dispatchActionTile dispatchActionTile-info"
+                    onClick={() => setDrawerRequest(selectedRequest)}
+                    type="button"
+                  >
+                    <span className="dispatchActionTitle">Open full request</span>
+                    <span className="dispatchActionText">Review offer controls, EVV state, and manual actions.</span>
+                  </button>
+                  <button
+                    className="dispatchActionTile dispatchActionTile-primary"
+                    onClick={() => setRequestChatRequestId(selectedRequest.id)}
+                    type="button"
+                  >
+                    <span className="dispatchActionTitle">Open request thread</span>
+                    <span className="dispatchActionText">Continue work-linked communication for this visit.</span>
+                  </button>
+                  <button
+                    className="dispatchActionTile dispatchActionTile-warn"
+                    onClick={() => void onRequeue(selectedRequest.id)}
+                    type="button"
+                  >
+                    <span className="dispatchActionTitle">Reassign coverage</span>
+                    <span className="dispatchActionText">Requeue the request and re-open matching.</span>
+                  </button>
+                  <button
+                    className="dispatchActionTile dispatchActionTile-danger"
+                    onClick={() => void onCancel(selectedRequest.id)}
+                    type="button"
+                  >
+                    <span className="dispatchActionTitle">Cancel request</span>
+                    <span className="dispatchActionText">Stop dispatching and remove it from active queue flow.</span>
+                  </button>
+                </div>
+
+                <div className="dispatchWorkGrid">
+                  <div className="dispatchWorkPanel">
+                    <div className="dispatchPanelTitle">Service Risk Summary</div>
+                    <div className="dispatchInfoStack">
+                      <div className="dispatchInfoRow">
+                        <span className="dispatchInfoLabel">Assigned clinician</span>
+                        <strong>{selectedAssignedProfessional?.name || 'Not assigned'}</strong>
+                      </div>
+                      <div className="dispatchInfoRow">
+                        <span className="dispatchInfoLabel">Offer expiry</span>
+                        <strong>
+                          {selectedRequest.offerExpiresAt
+                            ? new Date(selectedRequest.offerExpiresAt).toLocaleString()
+                            : 'No active offer'}
+                        </strong>
+                      </div>
+                      <div className="dispatchInfoRow">
+                        <span className="dispatchInfoLabel">Current status</span>
+                        <strong>{normalizeStatus(selectedRequest.status).replace('_', ' ')}</strong>
+                      </div>
+                      <div className="dispatchInfoRow">
+                        <span className="dispatchInfoLabel">Request ID</span>
+                        <strong className="mono">{selectedRequest.id.slice(0, 8)}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="dispatchWorkPanel">
+                    <div className="dispatchPanelTitle">Recommended Next Steps</div>
+                    <div className="dispatchPriorityList">
+                      {[
+                        'Confirm assigned clinician coverage and ETA.',
+                        'Notify patient or family if timing changes materially.',
+                        'Open the request thread to coordinate the next action.',
+                      ].map((item) => (
+                        <div key={item} className="dispatchPriorityItem dispatchPriorityItem-soft">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        <aside className="dispatchRail">
+          <div className="dispatchCommandCard">
+            <div className="dispatchCommandCardHeader">
+              <div>
+                <h2 className="dispatchCommandTitle">Request Threads</h2>
+                <p className="muted">Communication tied directly to live dispatch work.</p>
+              </div>
+            </div>
+
+            <div className="dispatchThreadList">
+              {requestThreads.length === 0 ? (
+                <div className="muted">No live request threads yet.</div>
+              ) : (
+                requestThreads.map((thread) => (
+                  <button
+                    key={thread.id}
+                    className="dispatchThreadCard"
+                    onClick={() => setRequestChatRequestId(thread.id)}
+                    type="button"
+                  >
+                    <div className="dispatchThreadTitle">{thread.title}</div>
+                    <div className="dispatchThreadMeta">
+                      {thread.scheduled} | {thread.serviceType}
+                    </div>
+                    <div className="dispatchThreadBadges">
+                      <span className={`dispatchStatusTag dispatchStatusTag-${thread.status.replace(/[^a-z]+/g, '-')}`}>
+                        {thread.status.replace('_', ' ')}
+                      </span>
+                      <span className={`dispatchPriorityTag dispatchPriorityTag-${thread.urgency}`}>
+                        {thread.urgency}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="dispatchCommandCard">
+            <div className="dispatchCommandCardHeader">
+              <div>
+                <h2 className="dispatchCommandTitle">Dispatch Priorities</h2>
+                <p className="muted">High-signal issues to keep on the board.</p>
+              </div>
+            </div>
+
+            <div className="dispatchPriorityList">
+              {dispatchPriorities.length === 0 ? (
+                <div className="muted">No urgent dispatch priorities at the moment.</div>
+              ) : (
+                dispatchPriorities.map((item, index) => (
+                  <div key={item} className={`dispatchPriorityItem dispatchPriorityItem-${index % 3}`}>
+                    {item}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </aside>
+      </section>
+
       <section className="dashboardSection">
         <div className="tabs" role="tablist" aria-label="Dispatch status filters">
           {TABS.map((currentTab) => (
@@ -243,7 +697,10 @@ export function AdminDispatchPage() {
       ) : (
         <DispatchQueueTable
           requests={tabbed as any}
-          onView={setSelectedRequest}
+          onView={(request) => {
+            setSelectedRequest(request);
+            setDrawerRequest(request);
+          }}
           onOpenThread={setRequestChatRequestId}
           onOffer={onOffer}
           onRequeue={onRequeue}
@@ -255,8 +712,8 @@ export function AdminDispatchPage() {
       )}
 
       <RequestDrawer
-        request={selectedRequest}
-        onClose={() => setSelectedRequest(null)}
+        request={drawerRequest}
+        onClose={() => setDrawerRequest(null)}
         onRefresh={loadDispatch}
       />
 
