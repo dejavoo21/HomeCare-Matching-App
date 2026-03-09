@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ClinicianVisitDocumentation } from '../components/ClinicianVisitDocumentation';
 import { EvvVisitPanel } from '../components/EvvVisitPanel';
 import { api } from '../services/api';
 
@@ -16,6 +17,11 @@ type Visit = {
   evv_status?: 'not_started' | 'in_progress' | 'completed';
   checked_in_at?: string | null;
   checked_out_at?: string | null;
+  visit_notes?: string;
+  visit_outcome?: string;
+  follow_up_required?: boolean;
+  escalation_required?: boolean;
+  documented_at?: string | null;
 };
 
 type TabType = 'today' | 'upcoming' | 'completed';
@@ -55,7 +61,11 @@ export function ClinicianVisitsPage() {
     try {
       setLoading(true);
       const response = (await api.getMyClinicianVisits()) as { data?: Visit[] };
-      setVisits(response?.data || []);
+      const nextVisits = response?.data || [];
+      setVisits(nextVisits);
+      setSelectedVisit((current) =>
+        current ? nextVisits.find((visit) => visit.id === current.id) || current : current
+      );
     } catch (err) {
       console.error('Failed to load clinician visits:', err);
       setVisits([]);
@@ -163,7 +173,12 @@ export function ClinicianVisitsPage() {
                 <span className={`clinicianUrgency clinicianUrgency-${String(visit.urgency).toLowerCase()}`}>
                   {String(visit.urgency).toUpperCase()}
                 </span>
-                <span className="clinicianOpenText">Open</span>
+                <div className="clinicianVisitFooterRight">
+                  {visit.documented_at ? (
+                    <span className="clinicianDocBadge">Documented</span>
+                  ) : null}
+                  <span className="clinicianOpenText">Open</span>
+                </div>
               </div>
             </button>
           ))}
@@ -220,6 +235,15 @@ export function ClinicianVisitsPage() {
             </div>
 
             <EvvVisitPanel requestId={selectedVisit.id} />
+
+            <ClinicianVisitDocumentation
+              requestId={selectedVisit.id}
+              initialNotes={selectedVisit.visit_notes || ''}
+              initialOutcome={selectedVisit.visit_outcome || ''}
+              initialFollowUpRequired={!!selectedVisit.follow_up_required}
+              initialEscalationRequired={!!selectedVisit.escalation_required}
+              onSaved={load}
+            />
           </div>
         </div>
       ) : null}

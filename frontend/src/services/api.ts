@@ -668,6 +668,16 @@ class ApiClient {
     return this.request('GET', `/clinician/my-visits${qs}`);
   }
 
+  async saveClinicianVisitNote(payload: {
+    requestId: string;
+    visitNotes?: string;
+    visitOutcome?: string;
+    followUpRequired?: boolean;
+    escalationRequired?: boolean;
+  }) {
+    return this.request('POST', '/clinician/visit-note', payload);
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {
