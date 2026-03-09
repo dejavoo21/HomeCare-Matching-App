@@ -247,6 +247,12 @@ export function createClinicianRouter(pool: Pool) {
              cr.follow_up_required,
              cr.escalation_required,
              cr.documented_at,
+             cr.admin_follow_up_scheduled,
+             cr.admin_escalation_acknowledged,
+             cr.admin_issue_resolved,
+             cr.admin_review_notes,
+             cr.admin_reviewed_at,
+             cr.admin_reviewed_by,
              cr.created_at,
              cr.updated_at,
              c.name AS client_name,
@@ -269,6 +275,92 @@ export function createClinicianRouter(pool: Pool) {
       } catch (err) {
         console.error('Admin clinician review error:', err);
         res.status(500).json({ error: 'Failed to load clinician review data' });
+      }
+    }
+  );
+
+  router.post(
+    '/admin-action',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response) => {
+      const {
+        requestId,
+        adminFollowUpScheduled,
+        adminEscalationAcknowledged,
+        adminIssueResolved,
+        adminReviewNotes,
+      } = req.body || {};
+
+      if (!requestId) {
+        res.status(400).json({ error: 'requestId is required' });
+        return;
+      }
+
+      try {
+        const existing = await pool.query(
+          `SELECT id
+           FROM care_requests
+           WHERE id = $1
+           LIMIT 1`,
+          [requestId]
+        );
+
+        if (existing.rows.length === 0) {
+          res.status(404).json({ error: 'Visit not found' });
+          return;
+        }
+
+        const updated = await pool.query(
+          `UPDATE care_requests
+           SET admin_follow_up_scheduled = COALESCE($2, admin_follow_up_scheduled),
+               admin_escalation_acknowledged = COALESCE($3, admin_escalation_acknowledged),
+               admin_issue_resolved = COALESCE($4, admin_issue_resolved),
+               admin_review_notes = COALESCE($5, admin_review_notes),
+               admin_reviewed_at = now(),
+               admin_reviewed_by = $6,
+               updated_at = now()
+           WHERE id = $1
+           RETURNING *`,
+          [
+            requestId,
+            typeof adminFollowUpScheduled === 'boolean' ? adminFollowUpScheduled : null,
+            typeof adminEscalationAcknowledged === 'boolean'
+              ? adminEscalationAcknowledged
+              : null,
+            typeof adminIssueResolved === 'boolean' ? adminIssueResolved : null,
+            adminReviewNotes ?? null,
+            req.user?.userId || null,
+          ]
+        );
+
+        await logAudit(
+          pool,
+          req.user?.userId || null,
+          'ADMIN_CLINICIAN_REVIEW_ACTION',
+          'care_request',
+          requestId,
+          {
+            adminFollowUpScheduled:
+              typeof adminFollowUpScheduled === 'boolean'
+                ? adminFollowUpScheduled
+                : undefined,
+            adminEscalationAcknowledged:
+              typeof adminEscalationAcknowledged === 'boolean'
+                ? adminEscalationAcknowledged
+                : undefined,
+            adminIssueResolved:
+              typeof adminIssueResolved === 'boolean' ? adminIssueResolved : undefined,
+          }
+        );
+
+        res.json({
+          success: true,
+          data: updated.rows[0],
+        });
+      } catch (err) {
+        console.error('Admin clinician action error:', err);
+        res.status(500).json({ error: 'Failed to save admin action' });
       }
     }
   );

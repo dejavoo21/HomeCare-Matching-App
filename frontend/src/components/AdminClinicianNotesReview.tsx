@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AdminClinicianReviewActions } from './AdminClinicianReviewActions';
 import { api } from '../services/api';
 
 type ReviewItem = {
@@ -17,12 +18,18 @@ type ReviewItem = {
   follow_up_required?: boolean;
   escalation_required?: boolean;
   documented_at?: string | null;
+  admin_follow_up_scheduled?: boolean;
+  admin_escalation_acknowledged?: boolean;
+  admin_issue_resolved?: boolean;
+  admin_review_notes?: string;
+  admin_reviewed_at?: string | null;
+  admin_reviewed_by?: string | null;
 };
 
 function formatDateTime(value?: string | null) {
   if (!value) return '-';
   const date = new Date(value);
-  return isNaN(date.getTime()) ? '-' : date.toLocaleString();
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
 }
 
 export function AdminClinicianNotesReview() {
@@ -102,7 +109,9 @@ export function AdminClinicianNotesReview() {
           <select
             className="select"
             value={filters.outcome}
-            onChange={(event) => setFilters((current) => ({ ...current, outcome: event.target.value }))}
+            onChange={(event) =>
+              setFilters((current) => ({ ...current, outcome: event.target.value }))
+            }
           >
             <option value="">All outcomes</option>
             <option value="completed_successfully">Completed successfully</option>
@@ -115,7 +124,9 @@ export function AdminClinicianNotesReview() {
           <select
             className="select"
             value={filters.documented}
-            onChange={(event) => setFilters((current) => ({ ...current, documented: event.target.value }))}
+            onChange={(event) =>
+              setFilters((current) => ({ ...current, documented: event.target.value }))
+            }
           >
             <option value="all">All documentation</option>
             <option value="true">Documented</option>
@@ -138,7 +149,10 @@ export function AdminClinicianNotesReview() {
             className="select"
             value={filters.escalationRequired}
             onChange={(event) =>
-              setFilters((current) => ({ ...current, escalationRequired: event.target.value }))
+              setFilters((current) => ({
+                ...current,
+                escalationRequired: event.target.value,
+              }))
             }
           >
             <option value="all">All escalations</option>
@@ -158,11 +172,11 @@ export function AdminClinicianNotesReview() {
                 <div className="reviewCardTop">
                   <div>
                     <div className="reviewCardTitle">
-                      {item.client_name || 'Client'} • {item.service_type || 'Visit'}
+                      {item.client_name || 'Client'} - {item.service_type || 'Visit'}
                     </div>
                     <div className="reviewCardMeta">
                       {item.professional_name || '-'}
-                      {item.professional_role ? ` (${item.professional_role})` : ''} •{' '}
+                      {item.professional_role ? ` (${item.professional_role})` : ''} -{' '}
                       {formatDateTime(item.preferred_start)}
                     </div>
                   </div>
@@ -182,6 +196,20 @@ export function AdminClinicianNotesReview() {
                       <span className="reviewBadge reviewBadge-danger">Escalation</span>
                     ) : null}
 
+                    {item.admin_follow_up_scheduled ? (
+                      <span className="reviewBadge reviewBadge-ok">Follow-up scheduled</span>
+                    ) : null}
+
+                    {item.admin_escalation_acknowledged ? (
+                      <span className="reviewBadge reviewBadge-ok">
+                        Escalation acknowledged
+                      </span>
+                    ) : null}
+
+                    {item.admin_issue_resolved ? (
+                      <span className="reviewBadge reviewBadge-ok">Resolved</span>
+                    ) : null}
+
                     {item.documented_at ? (
                       <span className="reviewBadge reviewBadge-ok">Documented</span>
                     ) : (
@@ -199,9 +227,19 @@ export function AdminClinicianNotesReview() {
                   </div>
                 </div>
 
+                <AdminClinicianReviewActions
+                  requestId={item.id}
+                  initialFollowUpScheduled={!!item.admin_follow_up_scheduled}
+                  initialEscalationAcknowledged={!!item.admin_escalation_acknowledged}
+                  initialIssueResolved={!!item.admin_issue_resolved}
+                  initialReviewNotes={item.admin_review_notes || ''}
+                  onSaved={load}
+                />
+
                 <div className="reviewFoot">
                   <span>EVV: {item.evv_status || 'not_started'}</span>
                   <span>Documented: {formatDateTime(item.documented_at)}</span>
+                  <span>Reviewed: {formatDateTime(item.admin_reviewed_at)}</span>
                 </div>
               </div>
             ))}

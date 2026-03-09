@@ -701,6 +701,16 @@ class ApiClient {
     return this.request('GET', `/clinician/admin-review${suffix}`);
   }
 
+  async saveClinicianAdminAction(payload: {
+    requestId: string;
+    adminFollowUpScheduled?: boolean;
+    adminEscalationAcknowledged?: boolean;
+    adminIssueResolved?: boolean;
+    adminReviewNotes?: string;
+  }) {
+    return this.request('POST', '/clinician/admin-action', payload);
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {

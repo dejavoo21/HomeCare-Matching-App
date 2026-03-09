@@ -3662,6 +3662,29 @@ html {
   margin-bottom: 12px;
 }
 
+.adminActionBox {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  background: #f8fafc;
+  display: grid;
+  gap: 12px;
+}
+
+.adminActionTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.adminActionFoot {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .panelList {
   display: flex;
   flex-direction: column;
