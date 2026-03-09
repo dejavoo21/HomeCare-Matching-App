@@ -90,6 +90,9 @@ export function AdminTeamPage() {
       active: people.filter((person) =>
         ['online', 'on_shift', 'in_visit', 'busy'].includes(String(person.presenceStatus || '').toLowerCase())
       ).length,
+      availableNow: people.filter((person) =>
+        ['online', 'on_shift'].includes(String(person.presenceStatus || '').toLowerCase())
+      ).length,
       nurses: people.filter((person) => String(person.role).toLowerCase() === 'nurse').length,
       doctors: people.filter((person) => String(person.role).toLowerCase() === 'doctor').length,
     };
@@ -131,7 +134,7 @@ export function AdminTeamPage() {
 
         <div className="teamSummaryCard">
           <div className="teamSummaryLabel">Available Right Now</div>
-          <div className="teamSummaryValue">{counts.active}</div>
+          <div className="teamSummaryValue">{counts.availableNow}</div>
         </div>
 
         <div className="teamSummaryCard">

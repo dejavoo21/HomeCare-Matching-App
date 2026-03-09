@@ -49,13 +49,15 @@ export function WorkforceCard({
   onMessage: () => void;
   onCall: () => void;
 }) {
+  const roleClass = `workforceCard-${String(person.role || '').toLowerCase()}`;
+
   return (
-    <article className="workforceCard">
+    <article className={`workforceCard ${roleClass}`}>
       <div className="workforceCardTop">
         <div className="workforceIdentity">
           <div className="workforceAvatar">{initials(person.name)}</div>
 
-          <div>
+          <div className="workforceIdentityText">
             <div className="workforceName">{person.name}</div>
             <div className="workforceMeta">
               {String(person.role).toUpperCase()}
@@ -76,18 +78,22 @@ export function WorkforceCard({
         </div>
       </div>
 
-      <div className="workforceStats">
-        <div className="workforceStat">
-          <span className="workforceStatLabel">Active visits</span>
-          <strong>{person.currentWorkload?.activeVisits || 0}</strong>
+      <div className="workforceStatsGrid">
+        <div className="workforceStatBox">
+          <div className="workforceStatLabel">Active visits</div>
+          <div className="workforceStatValue">{person.currentWorkload?.activeVisits || 0}</div>
         </div>
-        <div className="workforceStat">
-          <span className="workforceStatLabel">Queued</span>
-          <strong>{person.currentWorkload?.queuedAssignments || 0}</strong>
+
+        <div className="workforceStatBox">
+          <div className="workforceStatLabel">Queued</div>
+          <div className="workforceStatValue">{person.currentWorkload?.queuedAssignments || 0}</div>
         </div>
-        <div className="workforceStat workforceStat-wide">
-          <span className="workforceStatLabel">Next visit</span>
-          <strong>{formatNextVisit(person.currentWorkload?.nextVisitAt)}</strong>
+
+        <div className="workforceStatBox workforceStatBox-wide">
+          <div className="workforceStatLabel">Next visit</div>
+          <div className="workforceStatValue workforceStatValue-small">
+            {formatNextVisit(person.currentWorkload?.nextVisitAt)}
+          </div>
         </div>
       </div>
 
@@ -97,10 +103,10 @@ export function WorkforceCard({
       </div>
 
       <div className="workforceActions">
-        <button className="btn btn-secondary" type="button" onClick={onMessage}>
+        <button className="btn" type="button" onClick={onMessage}>
           Message
         </button>
-        <button className="btn btn-secondary" type="button" onClick={onCall}>
+        <button className="btn" type="button" onClick={onCall}>
           Call
         </button>
         <button className="btn btn-primary" type="button" onClick={onViewProfile}>
