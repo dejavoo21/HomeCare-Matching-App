@@ -678,6 +678,29 @@ class ApiClient {
     return this.request('POST', '/clinician/visit-note', payload);
   }
 
+  async getClinicianAdminReview(params?: {
+    outcome?: string;
+    documented?: boolean;
+    followUpRequired?: boolean;
+    escalationRequired?: boolean;
+    limit?: number;
+  }) {
+    const qs = new URLSearchParams();
+
+    if (params?.outcome) qs.set('outcome', params.outcome);
+    if (typeof params?.documented === 'boolean') qs.set('documented', String(params.documented));
+    if (typeof params?.followUpRequired === 'boolean') {
+      qs.set('followUpRequired', String(params.followUpRequired));
+    }
+    if (typeof params?.escalationRequired === 'boolean') {
+      qs.set('escalationRequired', String(params.escalationRequired));
+    }
+    if (params?.limit) qs.set('limit', String(params.limit));
+
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return this.request('GET', `/clinician/admin-review${suffix}`);
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {

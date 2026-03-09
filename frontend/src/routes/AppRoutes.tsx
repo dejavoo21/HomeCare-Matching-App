@@ -20,6 +20,7 @@ import { AdminConnectedSystemsPage } from '../pages/AdminConnectedSystemsPage';
 import { AdminReliabilityPage } from '../pages/AdminReliabilityPage';
 import { AdminFhirPage } from '../pages/AdminFhirPage';
 import { AdminSettingsPage } from '../pages/AdminSettingsPage';
+import { AdminClinicianReviewPage } from '../pages/AdminClinicianReviewPage';
 
 function ProtectedRoute({
   element,
@@ -87,6 +88,7 @@ export function AppRoutes() {
         <Route path="access" element={<AdminAccessPage />} />
         <Route path="access-requests" element={<Navigate to="/admin/access" replace />} />
         <Route path="audit" element={<AdminAuditPage />} />
+        <Route path="clinician-review" element={<AdminClinicianReviewPage />} />
         <Route path="analytics" element={<AdminAnalyticsPage />} />
         <Route path="integrations" element={<AdminConnectedSystemsPage />} />
         <Route path="integrations/reliability" element={<AdminReliabilityPage />} />

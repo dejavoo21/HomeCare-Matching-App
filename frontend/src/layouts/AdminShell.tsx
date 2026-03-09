@@ -12,6 +12,7 @@ import {
   ActivitySquare,
   Files,
   Settings,
+  ClipboardPen,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { AssistantWidget } from '../components/AssistantWidget';
@@ -84,6 +85,11 @@ export function AdminShell() {
                 to="/admin/audit"
                 icon={<FileSearch size={18} />}
                 label="Audit & Compliance"
+              />
+              <AdminNavItem
+                to="/admin/clinician-review"
+                icon={<ClipboardPen size={18} />}
+                label="Clinician Review"
               />
               <AdminNavItem
                 to="/admin/analytics"
