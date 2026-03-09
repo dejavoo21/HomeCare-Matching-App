@@ -1331,8 +1331,62 @@ body {
   background: rgba(99,102,241,.06);
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(14, 165, 233, 0.35);
+  outline-offset: 2px;
+}
+
 .nowrap { 
   white-space: nowrap; 
+}
+
+.queueMobileList {
+  display: none;
+  gap: 12px;
+}
+
+.queueMobileCard {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.queueMobileTop {
+  min-width: 0;
+}
+
+.queueMobileMetaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.queueMobileMetaItem {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.queueMobileMetaLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.queueMobileActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 /* ===== Request column hierarchy ===== */
@@ -4220,10 +4274,13 @@ html {
     height: 100%;
     border-radius: 0;
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(220px, 34vh) 1fr;
   }
 
   .chatDrawerSidebar {
-    display: none;
+    display: grid;
+    border-right: 0;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   }
 
   .requestChatDrawer {
@@ -11074,6 +11131,22 @@ textarea.input:focus {
 }
 
 @media (max-width: 900px) {
+  .table-wrap {
+    display: none;
+  }
+
+  .queueMobileList {
+    display: grid;
+  }
+
+  .queue-footer {
+    text-align: center;
+  }
+
+  .queueMobileMetaGrid {
+    grid-template-columns: 1fr;
+  }
+
   .topbarInner {
     height: auto;
     min-height: 76px;
@@ -11116,5 +11189,11 @@ textarea.input:focus {
 
   .accessBadgeStack {
     justify-content: flex-start;
+  }
+
+  .assistantRoot {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
   }
 }

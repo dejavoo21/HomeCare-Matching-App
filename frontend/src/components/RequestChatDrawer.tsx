@@ -27,9 +27,9 @@ type RequestThreadMessage = {
 };
 
 function formatDateTime(value?: string) {
-  if (!value) return '—';
+  if (!value) return '-';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
 }
 
 function formatTime(value?: string) {
@@ -167,7 +167,7 @@ export function RequestChatDrawer({
             </h2>
             {meta ? (
               <div className="chatThreadMeta">
-                {meta.serviceType || 'Care request'} • {meta.clientName || 'Client'} •{' '}
+                {meta.serviceType || 'Care request'} | {meta.clientName || 'Client'} |{' '}
                 {formatDateTime(meta.preferredStart)}
               </div>
             ) : null}
@@ -186,17 +186,17 @@ export function RequestChatDrawer({
               <div className="requestThreadSummary">
                 <div className="requestThreadSummaryItem">
                   <span className="requestThreadSummaryLabel">Status</span>
-                  <strong>{meta.status || '—'}</strong>
+                  <strong>{meta.status || '-'}</strong>
                 </div>
 
                 <div className="requestThreadSummaryItem">
                   <span className="requestThreadSummaryLabel">Urgency</span>
-                  <strong>{meta.urgency || '—'}</strong>
+                  <strong>{meta.urgency || '-'}</strong>
                 </div>
 
                 <div className="requestThreadSummaryItem requestThreadSummaryItem-wide">
                   <span className="requestThreadSummaryLabel">Address</span>
-                  <strong>{meta.addressText || '—'}</strong>
+                  <strong>{meta.addressText || '-'}</strong>
                 </div>
               </div>
             ) : null}
@@ -216,7 +216,7 @@ export function RequestChatDrawer({
                         <div className="chatBubbleSender">
                           {message.senderName}
                           {message.senderRole
-                            ? ` • ${String(message.senderRole).toUpperCase()}`
+                            ? ` | ${String(message.senderRole).toUpperCase()}`
                             : ''}
                         </div>
                       ) : null}

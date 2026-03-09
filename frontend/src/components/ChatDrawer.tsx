@@ -271,7 +271,7 @@ export function ChatDrawer({
           </div>
 
           {loadingConversations ? (
-            <div className="empty">Loading conversations…</div>
+            <div className="empty">Loading conversations...</div>
           ) : conversations.length === 0 ? (
             <div className="premiumEmptyState">
               <div className="premiumEmptyTitle">No conversations yet</div>
@@ -300,7 +300,7 @@ export function ChatDrawer({
                   </div>
 
                   <div className="conversationListMeta">
-                    {String(conversation.otherUser.role || '').toUpperCase()} •{' '}
+                    {String(conversation.otherUser.role || '').toUpperCase()} |{' '}
                     {String(conversation.otherUser.presenceStatus || 'offline').replace(/_/g, ' ')}
                   </div>
 
@@ -322,7 +322,7 @@ export function ChatDrawer({
                 <div>
                   <div className="chatThreadTitle">{activeConversation.otherUser.name}</div>
                   <div className="chatThreadMeta">
-                    {String(activeConversation.otherUser.role || '').toUpperCase()} •{' '}
+                    {String(activeConversation.otherUser.role || '').toUpperCase()} |{' '}
                     {String(activeConversation.otherUser.presenceStatus || 'offline').replace(/_/g, ' ')}
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export function ChatDrawer({
 
               <div className="chatThreadMessages">
                 {loadingMessages ? (
-                  <div className="empty">Loading messages…</div>
+                  <div className="empty">Loading messages...</div>
                 ) : messages.length === 0 ? (
                   <div className="empty">No messages yet.</div>
                 ) : (
@@ -358,7 +358,7 @@ export function ChatDrawer({
               <div className="chatComposer">
                 <input
                   className="input"
-                  placeholder="Type a message…"
+                  placeholder="Type a message..."
                   value={messageText}
                   onChange={(event) => setMessageText(event.target.value)}
                   onKeyDown={(event) => {
