@@ -3,6 +3,12 @@ import type { Pool } from 'pg';
 import { authMiddleware, AuthRequest, requireRole } from '../middleware/auth';
 import { UserRole } from '../types/index';
 
+const ACTIVE_SCHEDULE_STATUSES = ['offered', 'accepted', 'en_route', 'enroute'];
+const ACTIVE_OR_COMPLETED_SCHEDULE_STATUSES = [
+  ...ACTIVE_SCHEDULE_STATUSES,
+  'completed',
+];
+
 function startOfDay(date: Date) {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
@@ -91,7 +97,7 @@ function computeConflictBadge(visit: any, allVisits: any[]) {
     }
 
     const status = String(other.status || '').toLowerCase();
-    if (!['offered', 'accepted', 'en_route'].includes(status)) {
+    if (!ACTIVE_SCHEDULE_STATUSES.includes(status)) {
       return false;
     }
 
@@ -130,7 +136,7 @@ function computeWorkloadBadge(visit: any, allVisits: any[]) {
     }
 
     const status = String(other.status || '').toLowerCase();
-    if (!['offered', 'accepted', 'en_route', 'completed'].includes(status)) {
+    if (!ACTIVE_OR_COMPLETED_SCHEDULE_STATUSES.includes(status)) {
       return false;
     }
 
@@ -255,7 +261,7 @@ export function createScheduleRouter(pool: Pool) {
            LEFT JOIN users p ON p.id = cr.professional_id
            WHERE cr.preferred_start >= $1
              AND cr.preferred_start <= $2
-             AND cr.status IN ('queued', 'offered', 'accepted', 'en_route', 'completed')
+             AND cr.status IN ('queued', 'offered', 'accepted', 'en_route', 'enroute', 'completed')
            ORDER BY cr.preferred_start ASC`,
           [startDate.toISOString(), endDate.toISOString()]
         );
@@ -468,11 +474,12 @@ export function createScheduleRouter(pool: Pool) {
             }
 
             const status = professionalId ? 'offered' : 'queued';
+            const preferredEnd = new Date(scheduledDate.getTime() + 60 * 60 * 1000);
 
             const inserted = await client.query(
               `INSERT INTO care_requests
-               (client_id, professional_id, service_type, address_text, preferred_start, urgency, status, description, created_at, updated_at)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())
+               (client_id, professional_id, service_type, address_text, preferred_start, preferred_end, urgency, status, description, created_at, updated_at)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), now())
                RETURNING *`,
               [
                 clientId,
@@ -480,9 +487,10 @@ export function createScheduleRouter(pool: Pool) {
                 serviceType,
                 addressText,
                 scheduledDate.toISOString(),
+                preferredEnd.toISOString(),
                 urgency,
                 status,
-                description || null,
+                description || serviceType,
               ]
             );
 
@@ -599,7 +607,7 @@ export function createScheduleRouter(pool: Pool) {
              FROM care_requests
              WHERE professional_id = $1
                AND preferred_start BETWEEN $2 AND $3
-               AND status IN ('offered', 'accepted', 'en_route')
+               AND status IN ('offered', 'accepted', 'en_route', 'enroute')
              LIMIT 1`,
             [professionalId, slotStart.toISOString(), slotEnd.toISOString()]
           );
@@ -611,10 +619,11 @@ export function createScheduleRouter(pool: Pool) {
         }
 
         const status = professionalId ? 'offered' : 'queued';
+        const preferredEnd = new Date(scheduled.getTime() + 60 * 60 * 1000);
         const created = await pool.query(
           `INSERT INTO care_requests
-           (client_id, professional_id, service_type, address_text, preferred_start, urgency, status, description, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())
+           (client_id, professional_id, service_type, address_text, preferred_start, preferred_end, urgency, status, description, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), now())
            RETURNING *`,
           [
             clientId,
@@ -622,9 +631,10 @@ export function createScheduleRouter(pool: Pool) {
             serviceType,
             addressText,
             scheduled.toISOString(),
+            preferredEnd.toISOString(),
             urgency,
             status,
-            description || null,
+            description || serviceType,
           ]
         );
 
@@ -708,7 +718,7 @@ export function createScheduleRouter(pool: Pool) {
            FROM care_requests
            WHERE professional_id = $1
              AND preferred_start BETWEEN $2 AND $3
-             AND status IN ('offered', 'accepted', 'en_route')
+             AND status IN ('offered', 'accepted', 'en_route', 'enroute')
              AND id <> $4
            LIMIT 1`,
           [professionalId, slotStart.toISOString(), slotEnd.toISOString(), requestId]
@@ -817,7 +827,7 @@ export function createScheduleRouter(pool: Pool) {
            FROM care_requests
            WHERE professional_id = $1
              AND preferred_start BETWEEN $2 AND $3
-             AND status IN ('offered', 'accepted', 'en_route')
+             AND status IN ('offered', 'accepted', 'en_route', 'enroute')
              AND id <> $4
            LIMIT 1`,
           [professionalId, slotStart.toISOString(), slotEnd.toISOString(), requestId]
