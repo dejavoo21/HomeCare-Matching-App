@@ -584,7 +584,7 @@ export function AdminDispatchPage() {
           </div>
         </section>
 
-        <aside className="dispatchRail">
+        <aside className="dispatchRail dispatchRail-secondary">
           <div className="dispatchCommandCard">
             <div className="dispatchCommandCardHeader">
               <div>

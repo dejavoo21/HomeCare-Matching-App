@@ -12547,3 +12547,107 @@ textarea.input:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================================
+   RESPONSIVE BREAKPOINT PASS
+   ============================================================================ */
+
+@media (max-width: 1279px) {
+  .adminShellBody {
+    grid-template-columns: 1fr;
+  }
+
+  .adminSidebar {
+    display: none;
+  }
+
+  .adminContent {
+    padding: 0;
+  }
+
+  .workforceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .queueTools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(2, minmax(170px, 1fr));
+    align-items: start;
+    justify-content: stretch;
+  }
+
+  .searchField {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .queueStatusBadge {
+    justify-self: start;
+  }
+
+  .actionsRow {
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .queueTools {
+    grid-template-columns: 1fr;
+  }
+
+  .filterPills {
+    flex-wrap: wrap;
+  }
+
+  .queueStatusBadge {
+    width: fit-content;
+  }
+}
+
+@media (min-width: 1280px) and (max-width: 1535px) {
+  .dispatchCommandLayout {
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  }
+
+  .dispatchRail-secondary {
+    grid-column: 1 / -1;
+  }
+
+  .scheduleCommandLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1536px) {
+  .dispatchCommandLayout {
+    grid-template-columns: 300px minmax(0, 1fr) 280px;
+  }
+
+  .dispatchRail-secondary {
+    grid-column: auto;
+  }
+
+  .scheduleHeroGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  }
+
+  .scheduleCommandLayout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+@media (max-width: 1535px) {
+  .scheduleHeroGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .scheduleSummaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .scheduleSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
