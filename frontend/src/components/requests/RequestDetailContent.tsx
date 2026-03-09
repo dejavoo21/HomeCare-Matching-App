@@ -168,9 +168,11 @@ export default function RequestDetailContent({
         <div className="space-y-6">
           <SectionCard title="Actions">
             <div className="space-y-3">
-              <Button variant="secondary" onClick={onOpenThread}>
-                Open request thread
-              </Button>
+              {onOpenThread ? (
+                <Button variant="secondary" onClick={onOpenThread}>
+                  Open request thread
+                </Button>
+              ) : null}
 
               <ProtectedAction
                 permission={PERMISSIONS.DISPATCH_MANAGE}

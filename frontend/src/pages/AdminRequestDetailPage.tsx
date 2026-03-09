@@ -6,8 +6,8 @@ import SectionCard from '../components/ui/SectionCard';
 import Button from '../components/ui/Button';
 import AssistantPanel from '../components/assistant/AssistantPanel';
 import RequestDetailContent from '../components/requests/RequestDetailContent';
+import RequestThreadPanel from '../components/requests/RequestThreadPanel';
 import { api } from '../services/api';
-import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import type { CareRequest } from '../types/index';
 
 export function AdminRequestDetailPage() {
@@ -16,7 +16,6 @@ export function AdminRequestDetailPage() {
   const [request, setRequest] = useState<CareRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [threadOpen, setThreadOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,7 +59,7 @@ export function AdminRequestDetailPage() {
           <div>
             <div className="text-lg font-semibold text-white">Request actions</div>
             <div className="mt-3 space-y-3">
-              <button className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm hover:bg-white/15" onClick={() => setThreadOpen(true)}>
+              <button className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm hover:bg-white/15">
                 Open thread
               </button>
               <button className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm hover:bg-white/15">
@@ -94,12 +93,14 @@ export function AdminRequestDetailPage() {
           </div>
         </SectionCard>
       ) : request ? (
-        <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
-          <div>
-            <RequestDetailContent request={request} onOpenThread={() => setThreadOpen(true)} />
+        <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="space-y-6">
+            <RequestDetailContent request={request} />
           </div>
 
           <div className="space-y-6">
+            <RequestThreadPanel requestId={request.id} compact={false} showComposer />
+
             <AssistantPanel
               context="dispatch"
               contextData={{ page: 'request_detail', requestId: request.id }}
@@ -108,22 +109,16 @@ export function AdminRequestDetailPage() {
             <SectionCard title="Workspace guidance">
               <div className="space-y-3">
                 <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  Use this page for deep review, timeline tracing, and controlled request actions.
+                  Use this page for deep review, timeline tracing, request-linked communication, and controlled request actions.
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  Use Dispatch Center for urgent live coordination across multiple active requests.
+                  Keep communication tied to the request so operational decisions remain traceable.
                 </div>
               </div>
             </SectionCard>
           </div>
         </div>
       ) : null}
-
-      <RequestChatDrawer
-        open={threadOpen}
-        requestId={requestId || null}
-        onClose={() => setThreadOpen(false)}
-      />
     </AppPage>
   );
 }

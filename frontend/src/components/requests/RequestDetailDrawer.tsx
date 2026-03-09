@@ -4,7 +4,7 @@ import { api } from '../../services/api';
 import SectionCard from '../ui/SectionCard';
 import Button from '../ui/Button';
 import RequestDetailContent from './RequestDetailContent';
-import { RequestChatDrawer } from '../RequestChatDrawer';
+import RequestThreadPanel from './RequestThreadPanel';
 import type { CareRequest } from '../../types/index';
 
 export default function RequestDetailDrawer({
@@ -19,7 +19,6 @@ export default function RequestDetailDrawer({
   const [request, setRequest] = useState<CareRequest | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [threadOpen, setThreadOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -92,22 +91,19 @@ export default function RequestDetailDrawer({
               </div>
             </SectionCard>
           ) : request ? (
-            <RequestDetailContent
-              request={request}
-              compact
-              onClose={onClose}
-              onOpenThread={() => setThreadOpen(true)}
-              onOpenFullPage={() => navigate(`/admin/requests/${request.id}`)}
-            />
+            <div className="grid gap-6">
+              <RequestDetailContent
+                request={request}
+                compact
+                onClose={onClose}
+                onOpenFullPage={() => navigate(`/admin/requests/${request.id}`)}
+              />
+
+              <RequestThreadPanel requestId={request.id} compact showComposer />
+            </div>
           ) : null}
         </div>
       </div>
-
-      <RequestChatDrawer
-        open={threadOpen}
-        requestId={requestId}
-        onClose={() => setThreadOpen(false)}
-      />
     </div>
   );
 }
