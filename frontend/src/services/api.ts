@@ -693,7 +693,7 @@ class ApiClient {
 
   async assistantQuery(query: string) {
     // Assistant widget query method
-    return this.request('POST', '/assistant/query', { query });
+    return this.request('POST', '/assistant/query', { message: query });
   }
 }
 

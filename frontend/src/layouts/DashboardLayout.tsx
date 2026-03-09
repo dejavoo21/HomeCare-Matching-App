@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { CommandBar } from '../components/CommandBar';
-import { AiHelper } from '../components/AiHelper';
+import { AssistantWidget } from '../components/AssistantWidget';
 import { CommandPalette } from '../components/CommandPalette';
 import { AdminSidebar } from '../components/AdminSidebar';
 import { useAuth } from '../contexts/AuthContext';
@@ -93,7 +93,7 @@ export function DashboardLayout({
         )}
       </div>
 
-      <AiHelper />
+      <AssistantWidget />
 
       <CommandPalette
         open={paletteOpen}

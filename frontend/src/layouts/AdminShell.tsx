@@ -14,6 +14,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
+import { AssistantWidget } from '../components/AssistantWidget';
 import '../index.css';
 
 type NavItemProps = {
@@ -124,6 +125,8 @@ export function AdminShell() {
           <Outlet />
         </section>
       </div>
+
+      <AssistantWidget />
     </div>
   );
 }
