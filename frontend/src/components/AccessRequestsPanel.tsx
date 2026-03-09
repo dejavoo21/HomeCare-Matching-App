@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
+import { verificationBadgeVariant } from '../lib/ui/statusMaps';
+import Badge from './ui/Badge';
+import Button from './ui/Button';
+import EmptyState from './ui/states/EmptyState';
+import LoadingState from './ui/states/LoadingState';
 
 type AccessRequestRow = {
   id: string;
@@ -47,6 +52,13 @@ function createDraft(item: AccessRequestRow): VerificationDraft {
     backgroundCheckVerified: !!item.background_check_verified,
     reviewNotes: item.review_notes || '',
   };
+}
+
+function normalizeVerificationStatus(item: AccessRequestRow) {
+  if (item.verification_completed) return 'verified';
+  if (item.additional_info_requested) return 'info_requested';
+  if (item.status === 'rejected') return 'rejected';
+  return 'pending_review';
 }
 
 export function AccessRequestsPanel({
@@ -206,14 +218,12 @@ export function AccessRequestsPanel({
         ) : null}
 
         {loading ? (
-          <div className="empty">Loading access requests...</div>
+          <LoadingState rows={4} />
         ) : items.length === 0 ? (
-          <div className="premiumEmptyState premiumEmptyState-compact">
-            <div className="premiumEmptyTitle">No access requests found</div>
-            <div className="premiumEmptyText">
-              New onboarding requests will appear here for review and verification.
-            </div>
-          </div>
+          <EmptyState
+            title="No access requests found"
+            description="New onboarding requests will appear here for review and verification."
+          />
         ) : (
           <div className="accessList">
             {items.map((item) => {
@@ -223,32 +233,26 @@ export function AccessRequestsPanel({
                 draft.licenseVerified &&
                 draft.complianceVerified &&
                 draft.backgroundCheckVerified;
-              const canApprove =
-                !busyId &&
-                item.status !== 'approved' &&
-                !draft.additionalInfoRequested &&
-                (verificationCompleted ||
-                  String(item.requested_role).toLowerCase() === 'client');
-
               return (
                 <article key={item.id} className="accessWorkflowItem">
                   <div className="accessTop">
                     <div>
                       <div className="accessTitle">{item.requester_name || item.requester_email}</div>
                       <div className="accessMeta muted">
-                        {item.requester_email} | {String(item.requested_role).toUpperCase()}
+                        {item.requester_email} • {String(item.requested_role).toUpperCase()}
                       </div>
                     </div>
 
                     <div className="accessBadgeStack">
-                      <span className={`pill pill-${item.status}`}>{item.status.toUpperCase()}</span>
-                      {draft.additionalInfoRequested ? (
-                        <span className="pill pill-warning">INFO REQUESTED</span>
-                      ) : null}
+                      <Badge
+                        variant={verificationBadgeVariant[normalizeVerificationStatus(item)] || 'neutral'}
+                      >
+                        {normalizeVerificationStatus(item).replace(/_/g, ' ').toUpperCase()}
+                      </Badge>
                       {verificationCompleted ? (
-                        <span className="pill pill-approved">VERIFIED</span>
+                        <Badge variant="success">VERIFIED</Badge>
                       ) : (
-                        <span className="pill pill-info">VERIFICATION PENDING</span>
+                        <Badge variant="info">VERIFICATION PENDING</Badge>
                       )}
                     </div>
                   </div>
@@ -257,29 +261,23 @@ export function AccessRequestsPanel({
 
                   <div className="accessDates muted">
                     Requested: {formatDate(item.created_at)}
-                    {item.reviewed_at ? ` | Reviewed: ${formatDate(item.reviewed_at)}` : ''}
-                    {item.reviewer_email ? ` | Reviewer: ${item.reviewer_email}` : ''}
+                    {item.reviewed_at ? ` • Reviewed: ${formatDate(item.reviewed_at)}` : ''}
+                    {item.reviewer_email ? ` • Reviewer: ${item.reviewer_email}` : ''}
                   </div>
 
                   <div className="accessWorkflowChecks">
-                    <span className={draft.identityVerified ? 'pill pill-approved' : 'pill pill-info'}>
+                    <Badge variant={draft.identityVerified ? 'success' : 'neutral'}>
                       Identity
-                    </span>
-                    <span className={draft.licenseVerified ? 'pill pill-approved' : 'pill pill-info'}>
+                    </Badge>
+                    <Badge variant={draft.licenseVerified ? 'success' : 'neutral'}>
                       License
-                    </span>
-                    <span
-                      className={draft.complianceVerified ? 'pill pill-approved' : 'pill pill-info'}
-                    >
+                    </Badge>
+                    <Badge variant={draft.complianceVerified ? 'success' : 'neutral'}>
                       Compliance
-                    </span>
-                    <span
-                      className={
-                        draft.backgroundCheckVerified ? 'pill pill-approved' : 'pill pill-info'
-                      }
-                    >
+                    </Badge>
+                    <Badge variant={draft.backgroundCheckVerified ? 'success' : 'neutral'}>
                       Background
-                    </span>
+                    </Badge>
                   </div>
 
                   <div className="verificationPanel">
@@ -379,16 +377,16 @@ export function AccessRequestsPanel({
                     </div>
 
                     <div className="verificationActions">
-                      <button
-                        className="btn"
+                      <Button
+                        variant="secondary"
                         type="button"
                         disabled={busyId === item.id}
                         onClick={() => saveVerification(item)}
                       >
                         Save Verification
-                      </button>
-                      <button
-                        className={canApprove ? 'btn btn-primary' : 'btn btn-disabled'}
+                      </Button>
+                      <Button
+                        variant="success"
                         type="button"
                         disabled={
                           busyId === item.id ||
@@ -400,15 +398,15 @@ export function AccessRequestsPanel({
                         onClick={() => decide(item, 'approved')}
                       >
                         Verify & Unlock Onboarding
-                      </button>
-                      <button
-                        className="btn btn-danger"
+                      </Button>
+                      <Button
+                        variant="danger"
                         type="button"
                         disabled={busyId === item.id || item.status === 'rejected'}
                         onClick={() => decide(item, 'rejected')}
                       >
                         Reject
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </article>

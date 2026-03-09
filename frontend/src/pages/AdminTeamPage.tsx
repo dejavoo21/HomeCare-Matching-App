@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChatDrawer } from '../components/ChatDrawer';
 import { WorkforceCard, type WorkforcePerson } from '../components/WorkforceCard';
 import { WorkforceProfileDrawer } from '../components/WorkforceProfileDrawer';
+import AppPage from '../components/layout/AppPage';
+import Button from '../components/ui/Button';
+import PageHero from '../components/ui/PageHero';
+import SectionCard from '../components/ui/SectionCard';
+import EmptyState from '../components/ui/states/EmptyState';
+import LoadingState from '../components/ui/states/LoadingState';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { api } from '../services/api';
 
@@ -10,14 +16,7 @@ type FilterType = 'all' | 'nurse' | 'doctor';
 function matchesQuery(person: WorkforcePerson, query: string) {
   if (!query) return true;
 
-  return [
-    person.name,
-    person.role,
-    person.region,
-    person.phone,
-    person.email,
-    person.customStatus,
-  ]
+  return [person.name, person.role, person.region, person.phone, person.email, person.customStatus]
     .filter(Boolean)
     .some((value) => String(value).toLowerCase().includes(query));
 }
@@ -88,7 +87,9 @@ export function AdminTeamPage() {
     return {
       total: people.length,
       active: people.filter((person) =>
-        ['online', 'on_shift', 'in_visit', 'busy'].includes(String(person.presenceStatus || '').toLowerCase())
+        ['online', 'on_shift', 'in_visit', 'busy'].includes(
+          String(person.presenceStatus || '').toLowerCase()
+        )
       ).length,
       availableNow: people.filter((person) =>
         ['online', 'on_shift'].includes(String(person.presenceStatus || '').toLowerCase())
@@ -108,47 +109,46 @@ export function AdminTeamPage() {
   }, [items, q, filter]);
 
   return (
-    <main className="pageStack" role="main" aria-label="Workforce directory">
-      <section className="pageHeaderBlock">
-        <div className="pageHeaderRow">
-          <div>
-            <h1 className="pageTitle">Workforce Directory</h1>
-            <p className="subtitle">
-              Live staffing visibility, workforce presence, and role-based contact access for care operations.
-            </p>
+    <AppPage>
+      <PageHero
+        eyebrow="Workforce directory"
+        title="Team operations"
+        description="A live directory for staffing, compliance, availability, workload, and work-linked communication."
+        stats={[
+          { label: 'Total workforce', value: counts.total, subtitle: 'Active directory members' },
+          { label: 'Available now', value: counts.availableNow, subtitle: 'Ready for work allocation' },
+          { label: 'Active now', value: counts.active, subtitle: 'Online, in visit, or busy' },
+          { label: 'Clinical mix', value: `${counts.nurses}/${counts.doctors}`, subtitle: 'Nurses to doctors' },
+        ]}
+        rightContent={
+          <div className="space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold">Workforce focus</h2>
+              <p className="mt-1 text-sm text-white/75">
+                Use the directory to balance staffing, open profile context, and start work-linked communication.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <button className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm transition hover:bg-white/15" type="button">
+                Review clinician availability before dispatch changes
+              </button>
+              <button className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm transition hover:bg-white/15" type="button">
+                Use profile drawers for workload and next visit context
+              </button>
+            </div>
           </div>
+        }
+      />
 
-          <div className="pageActions">
-            <button className="btn btn-primary" type="button" onClick={load}>
-              Refresh Directory
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="teamSummaryGrid">
-        <div className="teamSummaryCard">
-          <div className="teamSummaryLabel">Total Professionals</div>
-          <div className="teamSummaryValue">{counts.total}</div>
-        </div>
-
-        <div className="teamSummaryCard">
-          <div className="teamSummaryLabel">Available Right Now</div>
-          <div className="teamSummaryValue">{counts.availableNow}</div>
-        </div>
-
-        <div className="teamSummaryCard">
-          <div className="teamSummaryLabel">Nurses</div>
-          <div className="teamSummaryValue">{counts.nurses}</div>
-        </div>
-
-        <div className="teamSummaryCard">
-          <div className="teamSummaryLabel">Doctors</div>
-          <div className="teamSummaryValue">{counts.doctors}</div>
-        </div>
-      </section>
-
-      <section className="pageCard workforceDirectoryCard">
+      <SectionCard
+        title="Workforce directory"
+        subtitle="Search and filter the live workforce layer"
+        actions={
+          <Button variant="primary" type="button" onClick={load}>
+            Refresh Directory
+          </Button>
+        }
+      >
         <div className="teamToolbar">
           <input
             className="input"
@@ -184,19 +184,17 @@ export function AdminTeamPage() {
         </div>
 
         {loading ? (
-          <div className="premiumEmptyState">
-            <div className="premiumEmptyTitle">Loading workforce directory</div>
-            <div className="premiumEmptyText">
-              Pulling presence, workload, and staff availability for operations visibility.
-            </div>
-          </div>
+          <LoadingState rows={6} />
         ) : filtered.length === 0 ? (
-          <div className="premiumEmptyState">
-            <div className="premiumEmptyTitle">No team members match these filters</div>
-            <div className="premiumEmptyText">
-              Broaden the search or role filter to see more clinicians in the directory.
-            </div>
-          </div>
+          <EmptyState
+            title="No team members match these filters"
+            description="Broaden the search or role filter to see more clinicians in the directory."
+            actionLabel="Reset Filters"
+            onAction={() => {
+              setQ('');
+              setFilter('all');
+            }}
+          />
         ) : (
           <div className="workforceGrid">
             {filtered.map((person) => (
@@ -213,7 +211,7 @@ export function AdminTeamPage() {
             ))}
           </div>
         )}
-      </section>
+      </SectionCard>
 
       <WorkforceProfileDrawer person={selected} onClose={() => setSelected(null)} />
       <ChatDrawer
@@ -224,6 +222,6 @@ export function AdminTeamPage() {
           setChatRecipientUserId(null);
         }}
       />
-    </main>
+    </AppPage>
   );
 }

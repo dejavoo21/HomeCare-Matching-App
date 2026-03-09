@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AccessRequestsPanel } from '../components/AccessRequestsPanel';
 import { TotpSettingsPanel } from '../components/TotpSettingsPanel';
+import AppPage from '../components/layout/AppPage';
+import TwoColumnPage from '../components/layout/TwoColumnPage';
+import KpiCard from '../components/ui/KpiCard';
+import PageHero from '../components/ui/PageHero';
+import SectionCard from '../components/ui/SectionCard';
 import { api } from '../services/api';
-import '../index.css';
 
 type AccessSummaryRow = {
   status: string;
@@ -58,121 +62,97 @@ export function AdminAccessPage() {
   }, [items]);
 
   return (
-    <main className="pageStack" role="main" aria-label="Access management page">
-      <section className="accessHeroCard">
-        <div className="accessHeroGrid">
-          <div>
-            <div className="accessHeroEyebrow">Access and onboarding control</div>
-            <h1 className="accessHeroTitle">Workforce verification hub</h1>
-            <p className="accessHeroText">
-              Validate identity, credentials, and background requirements before onboarding is
-              released into the care operations platform.
-            </p>
-          </div>
+    <AppPage>
+      <PageHero
+        eyebrow="Access and onboarding control"
+        title="Workforce verification hub"
+        description="Validate identity, credentials, and background requirements before onboarding is released into the care operations platform."
+        stats={[
+          { label: 'Total queue', value: stats.total, subtitle: 'Active verification requests' },
+          { label: 'Pending', value: stats.pending, subtitle: 'Awaiting admin review' },
+          { label: 'Info requested', value: stats.infoRequested, subtitle: 'Waiting on applicant response' },
+          { label: 'Ready', value: stats.verified, subtitle: 'Ready for onboarding release' },
+        ]}
+      />
 
-          <div className="accessHeroStats">
-            <div className="accessHeroStat">
-              <span className="accessHeroStatLabel">Total queue</span>
-              <strong className="accessHeroStatValue">{stats.total}</strong>
-              <span className="accessHeroStatText">Active verification requests</span>
-            </div>
-            <div className="accessHeroStat">
-              <span className="accessHeroStatLabel">Pending</span>
-              <strong className="accessHeroStatValue">{stats.pending}</strong>
-              <span className="accessHeroStatText">Awaiting admin review</span>
-            </div>
-            <div className="accessHeroStat">
-              <span className="accessHeroStatLabel">Info requested</span>
-              <strong className="accessHeroStatValue">{stats.infoRequested}</strong>
-              <span className="accessHeroStatText">Waiting on applicant response</span>
-            </div>
-            <div className="accessHeroStat">
-              <span className="accessHeroStatLabel">Ready</span>
-              <strong className="accessHeroStatValue">{stats.verified}</strong>
-              <span className="accessHeroStatText">Ready for onboarding release</span>
-            </div>
-          </div>
-        </div>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5" aria-label="Verification funnel">
+        <KpiCard
+          title="Pending review"
+          value={stats.pending}
+          subtitle="Requests requiring verification work"
+          accent="warning"
+        />
+        <KpiCard
+          title="Information requested"
+          value={stats.infoRequested}
+          subtitle="Blocked until applicant provides more information"
+          accent="info"
+        />
+        <KpiCard
+          title="Verified"
+          value={stats.verified}
+          subtitle="Ready for onboarding release"
+          accent="success"
+        />
+        <KpiCard
+          title="Rejected"
+          value={stats.rejected}
+          subtitle="Requests closed after review"
+          accent="danger"
+        />
+        <KpiCard
+          title="Blocked onboarding"
+          value={stats.blocked}
+          subtitle="Cannot proceed until required checks are complete"
+          accent="default"
+        />
       </section>
 
-      <section className="accessFunnelGrid" aria-label="Verification funnel">
-        <div className="accessFunnelCard accessFunnelCard-warning">
-          <div className="accessFunnelLabel">Pending review</div>
-          <div className="accessFunnelValue">{stats.pending}</div>
-          <div className="accessFunnelText">Requests requiring verification work</div>
-        </div>
-        <div className="accessFunnelCard accessFunnelCard-info">
-          <div className="accessFunnelLabel">Information requested</div>
-          <div className="accessFunnelValue">{stats.infoRequested}</div>
-          <div className="accessFunnelText">Blocked until applicant provides more information</div>
-        </div>
-        <div className="accessFunnelCard accessFunnelCard-success">
-          <div className="accessFunnelLabel">Verified</div>
-          <div className="accessFunnelValue">{stats.verified}</div>
-          <div className="accessFunnelText">Ready for onboarding release</div>
-        </div>
-        <div className="accessFunnelCard accessFunnelCard-danger">
-          <div className="accessFunnelLabel">Rejected</div>
-          <div className="accessFunnelValue">{stats.rejected}</div>
-          <div className="accessFunnelText">Requests closed after review</div>
-        </div>
-        <div className="accessFunnelCard">
-          <div className="accessFunnelLabel">Blocked onboarding</div>
-          <div className="accessFunnelValue">{stats.blocked}</div>
-          <div className="accessFunnelText">Cannot proceed until required checks are complete</div>
-        </div>
-      </section>
+      <TwoColumnPage
+        left={<AccessRequestsPanel refreshKey={refreshKey} hideSummary />}
+        right={
+          <>
+            <SectionCard
+              title="Queue priorities"
+              subtitle="Operational focus areas for the verification team"
+            >
+              <div className="accessAsideList">
+                <div className="accessAsideItem accessAsideItem-warning">
+                  {stats.pending} request{stats.pending === 1 ? '' : 's'} awaiting verification review
+                </div>
+                <div className="accessAsideItem accessAsideItem-info">
+                  {stats.infoRequested} request{stats.infoRequested === 1 ? '' : 's'} blocked pending more information
+                </div>
+                <div className="accessAsideItem">
+                  {stats.blocked} applicant{stats.blocked === 1 ? '' : 's'} currently blocked from onboarding
+                </div>
+                <div className="accessAsideItem accessAsideItem-success">
+                  {stats.verified} applicant{stats.verified === 1 ? '' : 's'} ready for onboarding release
+                </div>
+              </div>
+            </SectionCard>
 
-      <section className="accessHubLayout">
-        <div className="accessMainColumn">
-          <AccessRequestsPanel refreshKey={refreshKey} hideSummary />
-        </div>
+            <SectionCard
+              title="Verification guidance"
+              subtitle="Keep decisions consistent, auditable, and ready for downstream onboarding"
+            >
+              <div className="accessAsideList">
+                <div className="accessAsideItem">
+                  Verify identity, license, compliance, and background checks before release.
+                </div>
+                <div className="accessAsideItem">
+                  Use structured information requests instead of informal follow-ups.
+                </div>
+                <div className="accessAsideItem">
+                  Record internal notes to preserve audit traceability and operational continuity.
+                </div>
+              </div>
+            </SectionCard>
 
-        <aside className="accessAsideStack">
-          <div className="accessAsideCard">
-            <div className="accessAsideTitle">Queue priorities</div>
-            <p className="accessAsideText">
-              Operational focus areas for the verification team.
-            </p>
-
-            <div className="accessAsideList">
-              <div className="accessAsideItem accessAsideItem-warning">
-                {stats.pending} request{stats.pending === 1 ? '' : 's'} awaiting verification review
-              </div>
-              <div className="accessAsideItem accessAsideItem-info">
-                {stats.infoRequested} request{stats.infoRequested === 1 ? '' : 's'} blocked pending more information
-              </div>
-              <div className="accessAsideItem">
-                {stats.blocked} applicant{stats.blocked === 1 ? '' : 's'} currently blocked from onboarding
-              </div>
-              <div className="accessAsideItem accessAsideItem-success">
-                {stats.verified} applicant{stats.verified === 1 ? '' : 's'} ready for onboarding release
-              </div>
-            </div>
-          </div>
-
-          <div className="accessAsideCard">
-            <div className="accessAsideTitle">Verification guidance</div>
-            <p className="accessAsideText">
-              Keep decisions consistent, auditable, and ready for downstream onboarding.
-            </p>
-
-            <div className="accessAsideList">
-              <div className="accessAsideItem">
-                Verify identity, license, compliance, and background checks before release.
-              </div>
-              <div className="accessAsideItem">
-                Use structured information requests instead of informal follow-ups.
-              </div>
-              <div className="accessAsideItem">
-                Record internal notes to preserve audit traceability and operational continuity.
-              </div>
-            </div>
-          </div>
-
-          <TotpSettingsPanel />
-        </aside>
-      </section>
-    </main>
+            <TotpSettingsPanel />
+          </>
+        }
+      />
+    </AppPage>
   );
 }

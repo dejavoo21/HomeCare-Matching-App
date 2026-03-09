@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import KpiCard from './ui/KpiCard';
 
 type InsightTone = 'indigo' | 'amber' | 'blue' | 'green' | 'rose';
 
@@ -17,17 +18,38 @@ export function InsightCard({
   tone: InsightTone;
   action?: ReactNode;
 }) {
+  const accent =
+    tone === 'indigo'
+      ? 'violet'
+      : tone === 'amber'
+        ? 'warning'
+        : tone === 'blue'
+          ? 'info'
+          : tone === 'green'
+            ? 'success'
+            : 'danger';
+
+  const trendTone =
+    tone === 'green'
+      ? 'success'
+      : tone === 'amber'
+        ? 'warning'
+        : tone === 'rose'
+          ? 'danger'
+          : 'info';
+
   return (
-    <article className={`insightCard insightCard-${tone}`}>
-      <div className="insightCardTop">
-        <div className="insightCardLabel">{label}</div>
-        {trend ? <div className="insightCardTrend">{trend}</div> : null}
-      </div>
-
-      <div className="insightCardValue">{value}</div>
-      <div className="insightCardDetail">{detail}</div>
-
-      {action ? <div className="insightCardActionRow">{action}</div> : null}
+    <article>
+      <KpiCard
+        title={label}
+        value={value}
+        subtitle={detail}
+        trend={trend}
+        trendTone={trend ? trendTone : 'neutral'}
+        accent={accent}
+      >
+        {action ? <div className="insightCardActionRow">{action}</div> : null}
+      </KpiCard>
     </article>
   );
 }

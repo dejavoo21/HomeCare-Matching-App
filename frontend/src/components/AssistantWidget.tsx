@@ -62,7 +62,7 @@ export function AssistantWidget() {
   const pageSuggestions = useMemo(() => {
     if (location.pathname.includes('/admin/dashboard')) {
       return [
-        'Summarize today’s priorities',
+        "Summarize today's priorities",
         'Show open exceptions',
         'Explain coverage health',
       ];
@@ -155,7 +155,6 @@ export function AssistantWidget() {
     }
 
     if (
-      normalized.includes('today’s priorities') ||
       normalized.includes("today's priorities") ||
       normalized.includes('open exceptions') ||
       normalized.includes('coverage health')

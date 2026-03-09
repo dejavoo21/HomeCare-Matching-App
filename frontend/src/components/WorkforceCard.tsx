@@ -1,4 +1,7 @@
 import { PresenceDot } from './PresenceDot';
+import Badge from './ui/Badge';
+import Button from './ui/Button';
+import { presenceBadgeVariant } from '../lib/ui/statusMaps';
 
 export type WorkforcePerson = {
   id: string;
@@ -67,10 +70,13 @@ export function WorkforceCard({
         </div>
 
         <div className="workforcePresenceStack">
-          <span className={`presencePill presencePill-${String(person.presenceStatus || 'offline')}`}>
+          <Badge
+            variant={presenceBadgeVariant[String(person.presenceStatus || 'offline')] || 'neutral'}
+            className={`presencePill presencePill-${String(person.presenceStatus || 'offline')}`}
+          >
             <PresenceDot status={person.presenceStatus} />
             {String(person.presenceStatus || 'offline').replace('_', ' ')}
-          </span>
+          </Badge>
 
           {person.customStatus ? (
             <div className="workforceSubtleText">{person.customStatus}</div>
@@ -103,15 +109,15 @@ export function WorkforceCard({
       </div>
 
       <div className="workforceActions">
-        <button className="btn" type="button" onClick={onMessage}>
+        <Button variant="secondary" type="button" onClick={onMessage}>
           Message
-        </button>
-        <button className="btn" type="button" onClick={onCall}>
+        </Button>
+        <Button variant="secondary" type="button" onClick={onCall}>
           Call
-        </button>
-        <button className="btn btn-primary" type="button" onClick={onViewProfile}>
+        </Button>
+        <Button variant="primary" type="button" onClick={onViewProfile}>
           View Profile
-        </button>
+        </Button>
       </div>
     </article>
   );
