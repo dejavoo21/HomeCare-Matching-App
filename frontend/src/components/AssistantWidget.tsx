@@ -88,6 +88,22 @@ export function AssistantWidget() {
     [summary]
   );
 
+  const proactiveAlerts = useMemo(() => {
+    const alerts: string[] = [];
+
+    if (summary.unreadMessages > 0) {
+      alerts.push(`${summary.unreadMessages} unread chat message${summary.unreadMessages === 1 ? '' : 's'} need review`);
+    }
+    if (summary.workforcePresence.inVisit > 0) {
+      alerts.push(`${summary.workforcePresence.inVisit} clinician${summary.workforcePresence.inVisit === 1 ? '' : 's'} currently in visit`);
+    }
+    if (summary.workforcePresence.busy > 0) {
+      alerts.push(`${summary.workforcePresence.busy} clinician${summary.workforcePresence.busy === 1 ? '' : 's'} marked busy`);
+    }
+
+    return alerts.slice(0, 3);
+  }, [summary]);
+
   const quickActions = useMemo(
     () => [
       ...communicationSuggestions.slice(0, 2),
@@ -199,19 +215,42 @@ export function AssistantWidget() {
             <span>Ask about dispatch workflow, unread chats, workforce presence, or admin actions.</span>
           </div>
 
-          <div className="assistantQuick">
-            {quickActions.map((action) => (
-              <button
-                key={action}
-                className="assistantChip"
-                onClick={() => {
-                  void runAssistantShortcut(action);
-                }}
-                type="button"
-              >
-                {action}
-              </button>
-            ))}
+          {proactiveAlerts.length > 0 ? (
+            <div className="assistantActionBar">
+              <div className="assistantActionBarTitle">Live alerts</div>
+              <div className="assistantAlertList">
+                {proactiveAlerts.map((alert) => (
+                  <button
+                    key={alert}
+                    className="assistantAlertCard"
+                    onClick={() => {
+                      void runAssistantShortcut(alert);
+                    }}
+                    type="button"
+                  >
+                    {alert}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="assistantActionBar assistantActionBar-soft">
+            <div className="assistantActionBarTitle">Suggested actions</div>
+            <div className="assistantQuick">
+              {quickActions.map((action) => (
+                <button
+                  key={action}
+                  className="assistantChip"
+                  onClick={() => {
+                    void runAssistantShortcut(action);
+                  }}
+                  type="button"
+                >
+                  {action}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="assistantList" ref={listRef}>

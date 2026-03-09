@@ -4,6 +4,7 @@ import { useRealTime } from '../contexts/RealTimeContext';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
+import { InsightCard } from '../components/InsightCard';
 import type { CareRequest } from '../types/index';
 
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
@@ -186,26 +187,34 @@ export function AdminDispatchPage() {
       </section>
 
       <section className="dashboardTopGrid" aria-label="Dispatch summary">
-        <div className="dashboardMetricCard dashboardMetricCard-indigo">
-          <div className="dashboardMetricLabel">Queued Now</div>
-          <div className="dashboardMetricValue">{dispatchMetrics.queuedNow}</div>
-          <div className="dashboardMetricMeta">Requests waiting for immediate action</div>
-        </div>
-        <div className="dashboardMetricCard dashboardMetricCard-amber">
-          <div className="dashboardMetricLabel">Offers Expiring</div>
-          <div className="dashboardMetricValue">{dispatchMetrics.offersExpiring}</div>
-          <div className="dashboardMetricMeta">Assignments approaching expiry in the next 30 min</div>
-        </div>
-        <div className="dashboardMetricCard dashboardMetricCard-amber">
-          <div className="dashboardMetricLabel">Critical At Risk</div>
-          <div className="dashboardMetricValue">{dispatchMetrics.criticalAtRisk}</div>
-          <div className="dashboardMetricMeta">Critical queue items still unresolved</div>
-        </div>
-        <div className="dashboardMetricCard dashboardMetricCard-blue">
-          <div className="dashboardMetricLabel">Assigned Today</div>
-          <div className="dashboardMetricValue">{dispatchMetrics.assignedToday}</div>
-          <div className="dashboardMetricMeta">Accepted, en route, or completed today</div>
-        </div>
+        <InsightCard
+          label="Queued Now"
+          value={dispatchMetrics.queuedNow}
+          detail="Requests waiting for immediate action"
+          trend={`${counts.queued} live`}
+          tone="indigo"
+        />
+        <InsightCard
+          label="Offers Expiring"
+          value={dispatchMetrics.offersExpiring}
+          detail="Assignments approaching expiry in the next 30 min"
+          trend={dispatchMetrics.offersExpiring > 0 ? 'Time-sensitive' : 'Under control'}
+          tone="amber"
+        />
+        <InsightCard
+          label="Critical At Risk"
+          value={dispatchMetrics.criticalAtRisk}
+          detail="Critical queue items still unresolved"
+          trend={dispatchMetrics.criticalAtRisk > 0 ? 'Needs escalation' : 'Clear'}
+          tone={dispatchMetrics.criticalAtRisk > 0 ? 'rose' : 'green'}
+        />
+        <InsightCard
+          label="Assigned Today"
+          value={dispatchMetrics.assignedToday}
+          detail="Accepted, en route, or completed today"
+          trend={`${counts.accepted + counts.en_route} active now`}
+          tone="blue"
+        />
       </section>
 
       <section className="dashboardSection">

@@ -11,6 +11,7 @@ import { AnalyticsSummaryCard } from '../components/AnalyticsSummaryCard';
 import { AccessSummaryCard } from '../components/AccessSummaryCard';
 import { ReliabilitySummaryCard } from '../components/ReliabilitySummaryCard';
 import { FhirSummaryCard } from '../components/FhirSummaryCard';
+import { InsightCard } from '../components/InsightCard';
 
 type DashboardRequest = {
   urgency?: string;
@@ -115,26 +116,54 @@ export function AdminDashboardPage() {
       </section>
 
       <section className="dashboardTopGrid" aria-label="Operations summary">
-        <div className="dashboardMetricCard dashboardMetricCard-indigo">
-          <div className="dashboardMetricLabel">Visits Today</div>
-          <div className="dashboardMetricValue">{stats.completedRequests}</div>
-          <div className="dashboardMetricMeta">Completed and documented field activity</div>
-        </div>
-        <div className="dashboardMetricCard dashboardMetricCard-blue">
-          <div className="dashboardMetricLabel">Active Clinicians</div>
-          <div className="dashboardMetricValue">{activeVisitsCount}</div>
-          <div className="dashboardMetricMeta">Accepted and in-progress assignments</div>
-        </div>
-        <div className="dashboardMetricCard dashboardMetricCard-amber">
-          <div className="dashboardMetricLabel">Open Requests</div>
-          <div className="dashboardMetricValue">{stats.queuedRequests}</div>
-          <div className="dashboardMetricMeta">Queue volume waiting for dispatch action</div>
-        </div>
-        <div className="dashboardMetricCard dashboardMetricCard-green">
-          <div className="dashboardMetricLabel">Follow-ups Pending</div>
-          <div className="dashboardMetricValue">{followUpsPending}</div>
-          <div className="dashboardMetricMeta">Clinician review items still open</div>
-        </div>
+        <InsightCard
+          label="Visits Today"
+          value={stats.completedRequests}
+          detail="Completed and documented field activity"
+          trend="+12% flow"
+          tone="indigo"
+          action={
+            <Link to="/admin/scheduling" className="insightCardLink">
+              Open board -&gt;
+            </Link>
+          }
+        />
+        <InsightCard
+          label="Active Clinicians"
+          value={activeVisitsCount}
+          detail="Accepted and in-progress assignments"
+          trend={`${stats.acceptedRequests} accepted`}
+          tone="blue"
+          action={
+            <Link to="/admin/team" className="insightCardLink">
+              Open team -&gt;
+            </Link>
+          }
+        />
+        <InsightCard
+          label="Open Requests"
+          value={stats.queuedRequests}
+          detail="Queue volume waiting for dispatch action"
+          trend={`${stats.offeredRequests} offered`}
+          tone="amber"
+          action={
+            <Link to="/admin/dispatch" className="insightCardLink">
+              Open dispatch -&gt;
+            </Link>
+          }
+        />
+        <InsightCard
+          label="Follow-ups Pending"
+          value={followUpsPending}
+          detail="Clinician review items still open"
+          trend={followUpsPending > 0 ? 'Needs action' : 'Clear'}
+          tone={followUpsPending > 0 ? 'rose' : 'green'}
+          action={
+            <Link to="/admin/clinician-review" className="insightCardLink">
+              Review notes -&gt;
+            </Link>
+          }
+        />
       </section>
 
       <section className="dashboardGrid">

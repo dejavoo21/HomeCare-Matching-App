@@ -8589,6 +8589,45 @@ html {
   gap: 8px;
 }
 
+.assistantActionBar {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), #ffffff);
+}
+
+.assistantActionBar-soft {
+  background: linear-gradient(180deg, rgba(238, 242, 255, 0.58), #ffffff);
+}
+
+.assistantActionBarTitle {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.assistantAlertList {
+  display: grid;
+  gap: 8px;
+}
+
+.assistantAlertCard {
+  width: 100%;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  background: linear-gradient(180deg, rgba(238, 242, 255, 0.9), #ffffff);
+  padding: 12px 14px;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 .assistantChip {
   min-height: 34px;
   padding: 0 12px;
@@ -10378,6 +10417,116 @@ textarea.input:focus {
 .statusTile-green {
   border-color: rgba(16, 185, 129, 0.16);
   background: linear-gradient(180deg, rgba(236, 253, 245, 0.88), #fff);
+}
+
+.insightCard {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 12px;
+  min-height: 170px;
+  padding: 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.insightCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+}
+
+.insightCard-indigo::before {
+  background: linear-gradient(90deg, #4f46e5, #6366f1);
+}
+
+.insightCard-amber::before {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.insightCard-blue::before {
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+}
+
+.insightCard-green::before {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.insightCard-rose::before {
+  background: linear-gradient(90deg, #ef4444, #fb7185);
+}
+
+.insightCard-indigo {
+  background: linear-gradient(180deg, rgba(238, 242, 255, 0.86), #fff);
+}
+
+.insightCard-amber {
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.9), #fff);
+}
+
+.insightCard-blue {
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.9), #fff);
+}
+
+.insightCard-green {
+  background: linear-gradient(180deg, rgba(236, 253, 245, 0.9), #fff);
+}
+
+.insightCard-rose {
+  background: linear-gradient(180deg, rgba(255, 241, 242, 0.92), #fff);
+}
+
+.insightCardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.insightCardLabel {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.insightCardTrend {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+
+.insightCardValue {
+  font-size: 40px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.insightCardDetail {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.insightCardActionRow {
+  margin-top: auto;
+}
+
+.insightCardLink {
+  color: #4338ca;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .pipelineRow {
