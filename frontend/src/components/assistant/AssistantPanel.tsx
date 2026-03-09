@@ -2,6 +2,55 @@ import SectionCard from '../ui/SectionCard';
 import Button from '../ui/Button';
 
 function getSuggestions(context: string, contextData?: Record<string, any>) {
+  if (context === 'dashboard' && contextData?.area === 'connected_systems') {
+    return [
+      'Summarize connector health',
+      'Show systems with warnings',
+      'Explain sync posture',
+    ];
+  }
+
+  if (context === 'dashboard' && contextData?.area === 'reliability') {
+    return [
+      'Summarize service health',
+      'Explain queue backlog',
+      'Show reliability concerns',
+    ];
+  }
+
+  if (context === 'dashboard' && contextData?.area === 'fhir') {
+    return [
+      'Summarize FHIR readiness',
+      'Show supported resources',
+      'Explain interoperability posture',
+    ];
+  }
+
+  if (context === 'dashboard' && contextData?.area === 'analytics') {
+    return [
+      'Summarize operational trends',
+      'Explain performance risks',
+      'Recommend actions from analytics',
+    ];
+  }
+
+  if (context === 'dashboard' && contextData?.area === 'audit') {
+    return [
+      'Summarize recent audit events',
+      'Explain traceability posture',
+      'Show controlled workflow actions',
+    ];
+  }
+
+  if (context === 'dashboard') {
+    return [
+      'Summarize today’s priorities',
+      'Show open exceptions',
+      'Explain coverage health',
+      'Recommend next actions',
+    ];
+  }
+
   if (context === 'dispatch' && contextData?.page === 'request_detail') {
     if (contextData?.tab === 'thread') {
       return [

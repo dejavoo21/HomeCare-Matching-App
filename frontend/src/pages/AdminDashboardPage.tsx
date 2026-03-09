@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
+import AppPage from '../components/layout/AppPage';
+import ContentGrid from '../components/layout/ContentGrid';
+import PageHero from '../components/ui/PageHero';
+import SectionCard from '../components/ui/SectionCard';
+import KpiCard from '../components/ui/KpiCard';
+import Button from '../components/ui/Button';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { IntegrationsSummaryCard } from '../components/IntegrationsSummaryCard';
@@ -10,7 +17,6 @@ import { AnalyticsSummaryCard } from '../components/AnalyticsSummaryCard';
 import { AccessSummaryCard } from '../components/AccessSummaryCard';
 import { ReliabilitySummaryCard } from '../components/ReliabilitySummaryCard';
 import { FhirSummaryCard } from '../components/FhirSummaryCard';
-import { InsightCard } from '../components/InsightCard';
 
 type DashboardRequest = {
   id?: string;
@@ -50,12 +56,73 @@ function regionFromAddress(address?: string | null) {
   if (text.includes('johannesburg north')) return 'Johannesburg North';
   if (text.includes('johannesburg central')) return 'Johannesburg Central';
   if (text.includes('pretoria east')) return 'Pretoria East';
-  if (text.includes('cape town')) return 'Cape Town';
-  if (text.includes('boston')) return 'Boston';
+  if (text.includes('cape town')) return 'Cape Town Remote';
+  if (text.includes('boston')) return 'Boston MA';
   return 'General region';
 }
 
+function ExceptionItem({
+  item,
+}: {
+  item: { id: string; title: string; detail: string; tone: 'danger' | 'warning' | 'info' };
+}) {
+  const toneClass =
+    item.tone === 'danger'
+      ? 'bg-rose-50 text-rose-800'
+      : item.tone === 'warning'
+        ? 'bg-amber-50 text-amber-800'
+        : 'bg-sky-50 text-sky-800';
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+          <div className="mt-1 text-sm text-slate-500">{item.detail}</div>
+        </div>
+        <div className={`rounded-full px-2.5 py-1 text-xs font-semibold ${toneClass}`}>Active</div>
+      </div>
+
+      <div className="mt-4 flex gap-2">
+        <Link to="/admin/dispatch">
+          <Button variant="secondary" size="sm">Open</Button>
+        </Link>
+        <Link to="/admin/dispatch">
+          <Button size="sm">Take action</Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function RegionCoverageRow({ item }: { item: { region: string; score: number; open: number } }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-slate-900">{item.region}</div>
+          <div className="mt-1 text-xs text-slate-500">
+            {item.open} open issue{item.open === 1 ? '' : 's'}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-bold text-slate-900">{item.score}%</div>
+          <div className="text-[11px] uppercase tracking-wide text-slate-400">Coverage</div>
+        </div>
+      </div>
+
+      <div className="mt-3 h-2 rounded-full bg-white">
+        <div
+          className="h-2 rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500"
+          style={{ width: `${item.score}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function AdminDashboardPage() {
+  const navigate = useNavigate();
   const { on } = useRealTime();
   const [data, setData] = useState<DashboardData | null>(null);
   const [requests, setRequests] = useState<DashboardRequest[]>([]);
@@ -74,13 +141,15 @@ export function AdminDashboardPage() {
       setActivityKey((current) => current + 1);
     } catch (err) {
       console.error('Failed to load admin dashboard:', err);
+      setData(null);
+      setRequests([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadDashboard();
+    void loadDashboard();
   }, [loadDashboard]);
 
   useEffect(() => {
@@ -127,16 +196,16 @@ export function AdminDashboardPage() {
 
     const priorities = [
       stats.queuedRequests > 0
-        ? `Resolve ${stats.queuedRequests} queued request${stats.queuedRequests === 1 ? '' : 's'} before afternoon coverage changes`
+        ? `Resolve ${stats.queuedRequests} unassigned visit${stats.queuedRequests === 1 ? '' : 's'} before afternoon shift transitions`
         : null,
       followUpsPending > 0
-        ? `Review ${followUpsPending} clinician follow-up item${followUpsPending === 1 ? '' : 's'} awaiting admin action`
+        ? `Review ${followUpsPending} clinician note${followUpsPending === 1 ? '' : 's'} awaiting admin review`
+        : null,
+      blockedOnboarding > 0
+        ? `Verify ${blockedOnboarding} workforce access request${blockedOnboarding === 1 ? '' : 's'} still blocking onboarding`
         : null,
       lateCheckIns > 0
-        ? `Investigate ${lateCheckIns} EVV signal${lateCheckIns === 1 ? '' : 's'} still missing final check-in state`
-        : null,
-      stats.offeredRequests > 0
-        ? `Track ${stats.offeredRequests} live offer${stats.offeredRequests === 1 ? '' : 's'} and confirm dispatch conversions`
+        ? `Investigate ${lateCheckIns} late EVV check-in${lateCheckIns === 1 ? '' : 's'} needing confirmation`
         : null,
     ].filter(Boolean) as string[];
 
@@ -163,8 +232,8 @@ export function AdminDashboardPage() {
           title: request.id
             ? `Request ${String(request.id).slice(0, 8)} needs attention`
             : 'Live request needs attention',
-          detail: `${regionFromAddress(request.address)} | ${status.replace('_', ' ')} | ${normalizeUrgency(request.urgency) || 'standard'} priority`,
-          tone,
+          detail: `${regionFromAddress(request.address)} • ${status.replace('_', ' ')} • ${normalizeUrgency(request.urgency) || 'standard'} priority`,
+          tone: tone as 'danger' | 'warning' | 'info',
         };
       });
 
@@ -202,139 +271,104 @@ export function AdminDashboardPage() {
     };
   }, [data, requests]);
 
+  const assistantContext = useMemo(
+    () => ({
+      kpis: {
+        scheduledVisitsToday: derived.stats.completedRequests,
+        atRiskVisits: derived.atRiskVisits,
+        coverageHealth: derived.coverageHealth,
+        pendingReviews: derived.followUpsPending,
+        unassignedVisits: derived.stats.queuedRequests,
+        lateCheckIns: derived.lateCheckIns,
+        blockedOnboarding: derived.blockedOnboarding,
+      },
+      priorities: derived.priorities,
+    }),
+    [derived]
+  );
+
   if (isLoading || !data) {
     return (
-      <div className="pageStack">
-        <div className="pageHeaderBlock">
-          <h1 className="pageTitle">Operations Hub</h1>
-          <p className="subtitle">Loading operations view...</p>
-        </div>
-      </div>
+      <AppPage>
+        <SectionCard title="Loading operations hub">
+          <div className="empty">Loading operations view...</div>
+        </SectionCard>
+      </AppPage>
     );
   }
 
   return (
-    <main className="opsDashboard" role="main" aria-label="Operations dashboard">
-      <section className="dashboardHeroCard">
-        <div className="dashboardHeroGrid">
+    <AppPage>
+      <PageHero
+        eyebrow="Care operations command center"
+        title="Today's service delivery posture"
+        description="Monitor care coverage, workforce readiness, EVV integrity, verification blockers, and follow-up pressure from one operational surface."
+        stats={[
+          { label: 'Scheduled today', value: derived.stats.completedRequests, subtitle: 'Completed and documented field activity' },
+          { label: 'At risk', value: derived.atRiskVisits, subtitle: 'Needs operational intervention' },
+          { label: 'Coverage health', value: `${derived.coverageHealth}%`, subtitle: 'Regional staffing posture' },
+          { label: 'Pending reviews', value: derived.followUpsPending, subtitle: 'Admin review queue' },
+        ]}
+        rightContent={
           <div>
-            <div className="dashboardHeroEyebrow">Care operations command center</div>
-            <h1 className="dashboardHeroTitle">Today&apos;s service delivery posture</h1>
-            <p className="dashboardHeroText">
-              Monitor care coverage, workforce readiness, EVV integrity, verification blockers,
-              and follow-up pressure from one operating surface.
-            </p>
-
-            <div className="dashboardHeroStats">
-              <div className="dashboardHeroStat">
-                <span className="dashboardHeroStatLabel">Scheduled today</span>
-                <strong className="dashboardHeroStatValue">{derived.stats.completedRequests}</strong>
-                <span className="dashboardHeroStatText">Completed and documented field activity</span>
-              </div>
-              <div className="dashboardHeroStat">
-                <span className="dashboardHeroStatLabel">At risk</span>
-                <strong className="dashboardHeroStatValue">{derived.atRiskVisits}</strong>
-                <span className="dashboardHeroStatText">Needs operational intervention</span>
-              </div>
-              <div className="dashboardHeroStat">
-                <span className="dashboardHeroStatLabel">Coverage health</span>
-                <strong className="dashboardHeroStatValue">{derived.coverageHealth}%</strong>
-                <span className="dashboardHeroStatText">Regional staffing posture</span>
-              </div>
-              <div className="dashboardHeroStat">
-                <span className="dashboardHeroStatLabel">Pending reviews</span>
-                <strong className="dashboardHeroStatValue">{derived.followUpsPending}</strong>
-                <span className="dashboardHeroStatText">Admin follow-up queue</span>
-              </div>
+            <div className="text-lg font-semibold text-white">Priority actions</div>
+            <div className="mt-3 space-y-3">
+              {(derived.priorities.length > 0 ? derived.priorities : ['No priority blockers right now.']).map((item) => (
+                <button
+                  key={item}
+                  className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm hover:bg-white/15"
+                  type="button"
+                >
+                  {item}
+                </button>
+              ))}
             </div>
           </div>
+        }
+      />
 
-          <div className="dashboardPriorityCard">
-            <div className="dashboardPriorityHeader">
-              <div>
-                <h2 className="dashboardPriorityTitle">Priority actions</h2>
-                <p className="dashboardPriorityText">Highest-value actions for operations today.</p>
-              </div>
-              <div className="dashboardPriorityBadge">Today</div>
-            </div>
-
-            <div className="dashboardPriorityList">
-              {derived.priorities.length === 0 ? (
-                <div className="dashboardPriorityItem">No priority blockers right now.</div>
-              ) : (
-                derived.priorities.map((item) => (
-                  <button key={item} className="dashboardPriorityItem" type="button">
-                    {item}
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="dashboardTopGrid" aria-label="Operations summary">
-        <InsightCard
-          label="Unassigned Visits"
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <KpiCard
+          title="Unassigned visits"
           value={derived.stats.queuedRequests}
-          detail="Coverage gaps awaiting dispatch action"
+          subtitle="Coverage gaps awaiting dispatch action"
           trend={`${derived.stats.offeredRequests} offered`}
-          tone="amber"
-          action={
-            <Link to="/admin/dispatch" className="insightCardLink">
-              Open dispatch -&gt;
-            </Link>
-          }
+          trendTone="neutral"
+          accent="warning"
         />
-        <InsightCard
-          label="At Risk Visits"
+        <KpiCard
+          title="At risk visits"
           value={derived.atRiskVisits}
-          detail="Critical or unresolved requests still open"
-          trend={derived.atRiskVisits > 0 ? 'Escalate' : 'Stable'}
-          tone={derived.atRiskVisits > 0 ? 'rose' : 'green'}
-          action={
-            <Link to="/admin/dispatch" className="insightCardLink">
-              Review exceptions -&gt;
-            </Link>
-          }
+          subtitle="Critical or unresolved requests still open"
+          trend={derived.atRiskVisits > 0 ? '+1' : 'Stable'}
+          trendTone={derived.atRiskVisits > 0 ? 'warning' : 'neutral'}
+          accent="danger"
         />
-        <InsightCard
-          label="Late Check-ins"
+        <KpiCard
+          title="Late check-ins"
           value={derived.lateCheckIns}
-          detail="Potential EVV exceptions still missing final status"
-          trend={derived.lateCheckIns > 0 ? 'Needs review' : 'Clear'}
-          tone="blue"
-          action={
-            <Link to="/admin/scheduling" className="insightCardLink">
-              Open scheduling -&gt;
-            </Link>
-          }
+          subtitle="Potential EVV exceptions still missing final status"
+          trend="Stable"
+          trendTone="neutral"
+          accent="info"
         />
-        <InsightCard
-          label="Blocked Onboarding"
+        <KpiCard
+          title="Blocked onboarding"
           value={derived.blockedOnboarding}
-          detail="Verification or follow-up work still blocking release"
-          trend={derived.blockedOnboarding > 0 ? 'Pending action' : 'Clear'}
-          tone="indigo"
-          action={
-            <Link to="/admin/access" className="insightCardLink">
-              Open access hub -&gt;
-            </Link>
-          }
+          subtitle="Verification or follow-up work still blocking release"
+          trend={derived.blockedOnboarding > 0 ? '-1' : 'Clear'}
+          trendTone={derived.blockedOnboarding > 0 ? 'success' : 'neutral'}
+          accent="warning"
         />
-        <InsightCard
-          label="Coverage Health"
+        <KpiCard
+          title="Coverage health"
           value={`${derived.coverageHealth}%`}
-          detail="Overall staffing readiness across active requests"
-          trend="+2% this week"
-          tone="green"
-          action={
-            <Link to="/admin/team" className="insightCardLink">
-              Open workforce -&gt;
-            </Link>
-          }
+          subtitle="Overall staffing readiness across active requests"
+          trend="+2%"
+          trendTone="success"
+          accent="success"
         />
-      </section>
+      </div>
 
       <section className="dashboardOperationalStrip">
         <div className="dashboardOperationalCard">
@@ -342,9 +376,7 @@ export function AdminDashboardPage() {
           <div className="dashboardOperationalGrid">
             <div className="dashboardOperationalMetric dashboardOperationalMetric-success">
               <span className="dashboardOperationalLabel">Available now</span>
-              <strong className="dashboardOperationalValue">
-                {Math.max(derived.activeVisitsCount, 1)}
-              </strong>
+              <strong className="dashboardOperationalValue">{Math.max(derived.activeVisitsCount, 1)}</strong>
             </div>
             <div className="dashboardOperationalMetric dashboardOperationalMetric-warning">
               <span className="dashboardOperationalLabel">In visit</span>
@@ -383,8 +415,7 @@ export function AdminDashboardPage() {
           <div className="dashboardOperationalTitle">Review and follow-up pressure</div>
           <div className="dashboardOperationalStack">
             <div className="dashboardOperationalNarrative">
-              {derived.followUpsPending} clinician review item
-              {derived.followUpsPending === 1 ? '' : 's'} are awaiting admin action.
+              {derived.followUpsPending} clinician review item{derived.followUpsPending === 1 ? '' : 's'} are awaiting admin action.
             </div>
             <div className="dashboardOperationalNarrative">
               Escalate outcomes that require follow-up creation and supervisor attention.
@@ -396,132 +427,98 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="dashboardCommandLayout">
-        <div className="dashboardMainColumn">
-          <div className="dashboardPanel">
-            <div className="dashboardPanelHeader">
-              <div>
-                <div className="summaryLinkEyebrow">Operational focus</div>
-                <h2 className="dashboardPanelTitle">Live exceptions</h2>
-              </div>
-              <Link to="/admin/dispatch" className="summaryLinkAction">
-                View all -&gt;
-              </Link>
-            </div>
-
-            <div className="dashboardExceptionList">
-              {derived.exceptions.length === 0 ? (
-                <div className="premiumEmptyState premiumEmptyState-compact">
-                  <div className="premiumEmptyTitle">No live exceptions</div>
-                  <div className="premiumEmptyText">
-                    Operations are clear right now. New issues will surface here first.
+      <ContentGrid
+        main={
+          <>
+            <SectionCard
+              title="Live exceptions"
+              subtitle="Operational issues requiring attention across care delivery"
+              actions={<Button variant="secondary" onClick={() => navigate('/admin/dispatch')}>View all</Button>}
+            >
+              <div className="grid gap-3 lg:grid-cols-2">
+                {derived.exceptions.length === 0 ? (
+                  <div className="premiumEmptyState premiumEmptyState-compact lg:col-span-2">
+                    <div className="premiumEmptyTitle">No live exceptions</div>
+                    <div className="premiumEmptyText">
+                      Operations are clear right now. New issues will surface here first.
+                    </div>
                   </div>
+                ) : (
+                  derived.exceptions.map((item) => <ExceptionItem key={item.id} item={item} />)
+                )}
+              </div>
+            </SectionCard>
+
+            <SectionCard
+              title="Regional coverage"
+              subtitle="Staffing posture and open issue pressure by region"
+              actions={<Button variant="secondary" onClick={() => navigate('/admin/dispatch')}>Open dispatch</Button>}
+            >
+              <div className="grid gap-3 lg:grid-cols-2">
+                {derived.regionCoverage.map((item) => (
+                  <RegionCoverageRow key={item.region} item={item} />
+                ))}
+              </div>
+            </SectionCard>
+
+            <div className="summaryStrip">
+              <IntegrationsSummaryCard />
+              <AuditSummaryCard />
+              <AnalyticsSummaryCard />
+              <AccessSummaryCard />
+              <ReliabilitySummaryCard />
+              <FhirSummaryCard />
+            </div>
+          </>
+        }
+        rail={
+          <>
+            <AssistantPanel context="dashboard" contextData={assistantContext} />
+            <ActivityFeed refreshKey={activityKey} />
+            <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
+
+            <SectionCard title="Operational narrative">
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Care delivery is broadly healthy, but unassigned visits and late EVV signals need active intervention.
                 </div>
-              ) : (
-                derived.exceptions.map((item) => (
-                  <div key={item.id} className="dashboardExceptionCard">
-                    <div className="dashboardExceptionTop">
-                      <div>
-                        <div className="dashboardExceptionTitle">{item.title}</div>
-                        <div className="dashboardExceptionDetail">{item.detail}</div>
-                      </div>
-                      <span className={`dashboardExceptionTag dashboardExceptionTag-${item.tone}`}>
-                        Active
-                      </span>
-                    </div>
-                    <div className="dashboardExceptionActions">
-                      <Link to="/admin/dispatch" className="btn btn-small">
-                        Open
-                      </Link>
-                      <Link to="/admin/dispatch" className="btn btn-small btn-primary">
-                        Take action
-                      </Link>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="dashboardPanel">
-            <div className="dashboardPanelHeader">
-              <div>
-                <div className="summaryLinkEyebrow">Regional posture</div>
-                <h2 className="dashboardPanelTitle">Coverage by region</h2>
-              </div>
-              <Link to="/admin/dispatch" className="summaryLinkAction">
-                Open dispatch -&gt;
-              </Link>
-            </div>
-
-            <div className="dashboardCoverageList">
-              {derived.regionCoverage.map((item) => (
-                <div key={item.region} className="dashboardCoverageCard">
-                  <div className="dashboardCoverageTop">
-                    <div>
-                      <div className="dashboardCoverageTitle">{item.region}</div>
-                      <div className="dashboardCoverageMeta">
-                        {item.open} open issue{item.open === 1 ? '' : 's'}
-                      </div>
-                    </div>
-                    <div className="dashboardCoverageScore">
-                      <strong>{item.score}%</strong>
-                      <span>Coverage</span>
-                    </div>
-                  </div>
-                  <div className="dashboardCoverageBar">
-                    <div
-                      className="dashboardCoverageBarFill"
-                      style={{ width: `${item.score}%` }}
-                    />
-                  </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Workforce readiness is strong, with compliance and regional coverage supporting stable operations.
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <aside className="dashboardAsideRail">
-          <ActivityFeed refreshKey={activityKey} />
-          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
-
-          <div className="dashboardPanel">
-            <div className="dashboardPanelHeader">
-              <div>
-                <div className="summaryLinkEyebrow">Operational narrative</div>
-                <h2 className="dashboardPanelTitle">Today&apos;s story</h2>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Admin review and verification queues remain important blockers to close for smoother throughput.
+                </div>
               </div>
-            </div>
+            </SectionCard>
 
-            <div className="dashboardNarrativeList">
-              <div className="dashboardNarrativeItem">
-                Care delivery is broadly healthy, but unresolved queue pressure and EVV exceptions
-                still need intervention.
+            <SectionCard title="Fast actions">
+              <div className="space-y-3">
+                <button
+                  className="w-full rounded-2xl bg-sky-50 px-4 py-3 text-left text-sm font-medium text-sky-800 hover:bg-sky-100"
+                  onClick={() => navigate('/admin/dispatch')}
+                  type="button"
+                >
+                  Resolve unassigned visits
+                </button>
+                <button
+                  className="w-full rounded-2xl bg-amber-50 px-4 py-3 text-left text-sm font-medium text-amber-800 hover:bg-amber-100"
+                  onClick={() => navigate('/admin/scheduling')}
+                  type="button"
+                >
+                  Review EVV exceptions
+                </button>
+                <button
+                  className="w-full rounded-2xl bg-emerald-50 px-4 py-3 text-left text-sm font-medium text-emerald-800 hover:bg-emerald-100"
+                  onClick={() => navigate('/admin/access')}
+                  type="button"
+                >
+                  Release verified applicants to onboarding
+                </button>
               </div>
-              <div className="dashboardNarrativeItem">
-                Workforce readiness is stable, with active clinicians and regional coverage
-                supporting service continuity.
-              </div>
-              <div className="dashboardNarrativeItem">
-                Verification and follow-up queues remain the main blockers to smoother throughput.
-              </div>
-            </div>
-          </div>
-        </aside>
-      </section>
-
-      <section className="pageGridTwo">
-        <div className="dashboardPrimaryStack">
-          <div className="summaryStrip">
-            <IntegrationsSummaryCard />
-            <AuditSummaryCard />
-            <AnalyticsSummaryCard />
-            <AccessSummaryCard />
-            <ReliabilitySummaryCard />
-            <FhirSummaryCard />
-          </div>
-        </div>
-      </section>
-    </main>
+            </SectionCard>
+          </>
+        }
+      />
+    </AppPage>
   );
 }
