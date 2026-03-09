@@ -5,6 +5,7 @@ import { UrgencyQuickSet } from "./UrgencyQuickSet";
 type Props = {
   requests: CareRequest[];
   onView: (r: CareRequest) => void;
+  onOpenThread?: (requestId: string) => void;
   onOffer?: (requestId: string) => Promise<void>;
   onRequeue?: (requestId: string) => Promise<void>;
   onCancel?: (requestId: string) => Promise<void>;
@@ -66,7 +67,7 @@ function Countdown({ expiresAt }: { expiresAt?: string }) {
   return <span className={danger ? "countdown countdown-danger" : "countdown"}>{m}:{s}</span>;
 }
 
-export function DispatchQueueTable({ requests, onView, onOffer, onRequeue, onCancel, onSetUrgency, search, onSearchChange }: Props) {
+export function DispatchQueueTable({ requests, onView, onOpenThread, onOffer, onRequeue, onCancel, onSetUrgency, search, onSearchChange }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [urgencyFilter, setUrgencyFilter] = useState<string>("all");
 
@@ -233,6 +234,14 @@ export function DispatchQueueTable({ requests, onView, onOffer, onRequeue, onCan
                     <div className="actionsRow">
                       <button className="btn btn-small" onClick={() => onView(r)}>
                         View
+                      </button>
+
+                      <button
+                        className="btn btn-small btn-ghost"
+                        type="button"
+                        onClick={() => onOpenThread?.(r.id)}
+                      >
+                        Thread
                       </button>
 
                       <button

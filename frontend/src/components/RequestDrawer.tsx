@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CareRequest } from "../types";
 import { api } from "../services/api";
 import { EvvVisitPanel } from "./EvvVisitPanel";
+import { RequestChatDrawer } from "./RequestChatDrawer";
 
 type Pro = { id: string; name: string; role: string; isActive?: boolean };
 
@@ -18,6 +19,7 @@ export function RequestDrawer({
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [threadOpen, setThreadOpen] = useState(false);
 
   useEffect(() => {
     if (!request) return;
@@ -127,6 +129,13 @@ export function RequestDrawer({
         </div>
 
         <div className="drawerActions">
+          <button
+            className="btn btn-secondary btn-small"
+            onClick={() => setThreadOpen(true)}
+            type="button"
+          >
+            Open Thread
+          </button>
           <button 
             className="btn btn-secondary btn-small" 
             onClick={handleRequeue}
@@ -246,6 +255,12 @@ export function RequestDrawer({
           <EvvVisitPanel requestId={request.id} />
         </div>
       </div>
+
+      <RequestChatDrawer
+        open={threadOpen}
+        requestId={request.id}
+        onClose={() => setThreadOpen(false)}
+      />
     </div>
   );
 }

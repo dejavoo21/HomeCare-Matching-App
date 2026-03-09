@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type DragEvent } from 'react';
 import { api } from '../services/api';
+import { RequestChatDrawer } from './RequestChatDrawer';
 
 type Professional = {
   id: string;
@@ -200,6 +201,7 @@ export function SchedulingBoard() {
   const [quickCreate, setQuickCreate] = useState<QuickCreateState | null>(null);
   const [quickCreateBusy, setQuickCreateBusy] = useState(false);
   const [quickCreateMode, setQuickCreateMode] = useState<QuickCreateMode>('single');
+  const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
   const [quickCreateForm, setQuickCreateForm] = useState({
     clientId: '',
     professionalId: '',
@@ -598,6 +600,17 @@ export function SchedulingBoard() {
                     {visit.address_text ? (
                       <div className="scheduleVisitMeta">{visit.address_text}</div>
                     ) : null}
+
+                    <button
+                      type="button"
+                      className="scheduleVisitThreadBtn"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setRequestChatRequestId(visit.id);
+                      }}
+                    >
+                      Thread
+                    </button>
                   </div>
                 ))}
               </div>
@@ -707,6 +720,17 @@ export function SchedulingBoard() {
                                     {visit.address_text ? (
                                       <div className="scheduleVisitMeta">{visit.address_text}</div>
                                     ) : null}
+
+                                    <button
+                                      type="button"
+                                      className="scheduleVisitThreadBtn"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setRequestChatRequestId(visit.id);
+                                      }}
+                                    >
+                                      Thread
+                                    </button>
                                   </div>
                                 ))}
                               </div>
@@ -975,6 +999,12 @@ export function SchedulingBoard() {
           </section>
         </div>
       ) : null}
+
+      <RequestChatDrawer
+        open={!!requestChatRequestId}
+        requestId={requestChatRequestId}
+        onClose={() => setRequestChatRequestId(null)}
+      />
     </main>
   );
 }

@@ -754,6 +754,24 @@ class ApiClient {
     return this.request('POST', `/workforce/chat/conversations/${conversationId}/read`, {});
   }
 
+  async getOrCreateRequestThread(requestId: string) {
+    return this.request('POST', `/requests/${requestId}/chat/thread`, {});
+  }
+
+  async getRequestThread(requestId: string) {
+    return this.request('GET', `/requests/${requestId}/chat/thread`);
+  }
+
+  async getRequestThreadMessages(requestId: string) {
+    return this.request('GET', `/requests/${requestId}/chat/messages`);
+  }
+
+  async sendRequestThreadMessage(requestId: string, messageText: string) {
+    return this.request('POST', `/requests/${requestId}/chat/messages`, {
+      messageText,
+    });
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {

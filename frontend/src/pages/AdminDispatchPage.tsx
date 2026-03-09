@@ -5,6 +5,7 @@ import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { DispatchPipeline } from '../components/DispatchPipeline';
 import { AttentionPanel } from '../components/AttentionPanel';
 import { RequestDrawer } from '../components/RequestDrawer';
+import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import type { CareRequest } from '../types/index';
 
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
@@ -16,6 +17,7 @@ export function AdminDispatchPage() {
   const [requests, setRequests] = useState<CareRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<CareRequest | null>(null);
+  const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabFilter>('queued');
   const [search, setSearch] = useState('');
 
@@ -241,6 +243,7 @@ export function AdminDispatchPage() {
             <DispatchQueueTable
               requests={tabbed as any}
               onView={setSelectedRequest}
+              onOpenThread={setRequestChatRequestId}
               onOffer={onOffer}
               onRequeue={onRequeue}
               onCancel={onCancel}
@@ -260,6 +263,12 @@ export function AdminDispatchPage() {
         request={selectedRequest}
         onClose={() => setSelectedRequest(null)}
         onRefresh={loadDispatch}
+      />
+
+      <RequestChatDrawer
+        open={!!requestChatRequestId}
+        requestId={requestChatRequestId}
+        onClose={() => setRequestChatRequestId(null)}
       />
     </main>
   );
