@@ -1,4 +1,6 @@
 import AppPage from '../components/layout/AppPage';
+import ContentGrid from '../components/layout/ContentGrid';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
 import { FhirIntegrationPanel } from '../components/FhirIntegrationPanel';
@@ -18,29 +20,32 @@ export function AdminFhirPage() {
         ]}
       />
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-6">
+      <ContentGrid
+        main={
           <SectionCard title="FHIR resources" subtitle="Current and planned interoperability surface">
             <FhirIntegrationPanel />
           </SectionCard>
-        </div>
+        }
+        rail={
+          <>
+            <SectionCard title="Interoperability notes" subtitle="Standards and governance framing">
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-sky-50 px-4 py-3 text-sm text-sky-800">
+                  FHIR capability should align with controlled, permission-aware data access rather than broad exposure.
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Patient and practitioner resources provide a sensible starting point for enterprise interoperability.
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Additional clinical resources should be introduced with strong audit and access controls.
+                </div>
+              </div>
+            </SectionCard>
 
-        <div className="space-y-6">
-          <SectionCard title="Interoperability notes" subtitle="Standards and governance framing">
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-sky-50 px-4 py-3 text-sm text-sky-800">
-                FHIR capability should align with controlled, permission-aware data access rather than broad exposure.
-              </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                Patient and practitioner resources provide a sensible starting point for enterprise interoperability.
-              </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                Additional clinical resources should be introduced with strong audit and access controls.
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-      </div>
+            <AssistantPanel context="dashboard" contextData={{ area: 'fhir' }} />
+          </>
+        }
+      />
     </AppPage>
   );
 }

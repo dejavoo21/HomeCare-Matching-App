@@ -1,4 +1,6 @@
 import AppPage from '../components/layout/AppPage';
+import ContentGrid from '../components/layout/ContentGrid';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
 import KpiCard from '../components/ui/KpiCard';
@@ -26,29 +28,32 @@ export function AdminReliabilityPage() {
         <KpiCard title="Latency" value="221ms" subtitle="P95 response time" trend="+18ms" trendTone="warning" accent="default" />
       </div>
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-6">
+      <ContentGrid
+        main={
           <SectionCard title="Core reliability surface" subtitle="Runtime posture across operational services">
             <IntegrationReliabilityPanel />
           </SectionCard>
-        </div>
+        }
+        rail={
+          <>
+            <SectionCard title="Reliability narrative" subtitle="Operational trust summary">
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  Core care operations services are performing within acceptable thresholds.
+                </div>
+                <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  Real-time and delivery pathways should stay under observation when retries or dead letters increase.
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Queue pressure and replay capability are presented as operator controls rather than raw infrastructure noise.
+                </div>
+              </div>
+            </SectionCard>
 
-        <div className="space-y-6">
-          <SectionCard title="Reliability narrative" subtitle="Operational trust summary">
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                Core care operations services are performing within acceptable thresholds.
-              </div>
-              <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Real-time and delivery pathways should stay under observation when retries or dead letters increase.
-              </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                Queue pressure and replay capability are presented as operator controls rather than raw infrastructure noise.
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-      </div>
+            <AssistantPanel context="dashboard" contextData={{ area: 'reliability' }} />
+          </>
+        }
+      />
     </AppPage>
   );
 }

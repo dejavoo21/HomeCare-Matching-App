@@ -1,4 +1,6 @@
 import AppPage from '../components/layout/AppPage';
+import ContentGrid from '../components/layout/ContentGrid';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
 import { AuditDashboardPanel } from '../components/AuditDashboardPanel';
@@ -18,29 +20,32 @@ export function AdminAuditPage() {
         ]}
       />
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-6">
+      <ContentGrid
+        main={
           <SectionCard title="Recent audit events" subtitle="High-value workflow and operational actions">
             <AuditDashboardPanel />
           </SectionCard>
-        </div>
+        }
+        rail={
+          <>
+            <SectionCard title="Audit posture" subtitle="Governance-friendly signals">
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-sky-50 px-4 py-3 text-sm text-sky-800">
+                  High-value actions across access, scheduling, and communication are traceable.
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Audit visibility should remain aligned to role-based permissions and operational need.
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Controlled actions should include actor, timestamp, entity context, and workflow category.
+                </div>
+              </div>
+            </SectionCard>
 
-        <div className="space-y-6">
-          <SectionCard title="Audit posture" subtitle="Governance-friendly signals">
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-sky-50 px-4 py-3 text-sm text-sky-800">
-                High-value actions across access, scheduling, and communication are traceable.
-              </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                Audit visibility should remain aligned to role-based permissions and operational need.
-              </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                Controlled actions should include actor, timestamp, entity context, and workflow category.
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-      </div>
+            <AssistantPanel context="dashboard" contextData={{ area: 'audit' }} />
+          </>
+        }
+      />
     </AppPage>
   );
 }

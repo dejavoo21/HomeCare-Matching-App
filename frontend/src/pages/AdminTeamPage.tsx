@@ -3,6 +3,8 @@ import { ChatDrawer } from '../components/ChatDrawer';
 import { WorkforceCard, type WorkforcePerson } from '../components/WorkforceCard';
 import { WorkforceProfileDrawer } from '../components/WorkforceProfileDrawer';
 import AppPage from '../components/layout/AppPage';
+import ContentGrid from '../components/layout/ContentGrid';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import Button from '../components/ui/Button';
 import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
@@ -140,78 +142,99 @@ export function AdminTeamPage() {
         }
       />
 
-      <SectionCard
-        title="Workforce directory"
-        subtitle="Search and filter the live workforce layer"
-        actions={
-          <Button variant="primary" type="button" onClick={load}>
-            Refresh Directory
-          </Button>
+      <ContentGrid
+        main={
+          <>
+            <SectionCard
+              title="Workforce directory"
+              subtitle="Search and filter the live workforce layer"
+              actions={
+                <Button variant="primary" type="button" onClick={load}>
+                  Refresh Directory
+                </Button>
+              }
+            >
+              <div className="teamToolbar">
+                <input
+                  className="input"
+                  placeholder="Search workforce by name, role, region, phone, or email..."
+                  value={q}
+                  onChange={(event) => setQ(event.target.value)}
+                  aria-label="Search workforce directory"
+                />
+
+                <div className="teamFilters">
+                  <button
+                    className={filter === 'all' ? 'filterPill filterPill-active' : 'filterPill'}
+                    type="button"
+                    onClick={() => setFilter('all')}
+                  >
+                    All
+                  </button>
+                  <button
+                    className={filter === 'nurse' ? 'filterPill filterPill-active' : 'filterPill'}
+                    type="button"
+                    onClick={() => setFilter('nurse')}
+                  >
+                    Nurses
+                  </button>
+                  <button
+                    className={filter === 'doctor' ? 'filterPill filterPill-active' : 'filterPill'}
+                    type="button"
+                    onClick={() => setFilter('doctor')}
+                  >
+                    Doctors
+                  </button>
+                </div>
+              </div>
+
+              {loading ? (
+                <LoadingState rows={6} />
+              ) : filtered.length === 0 ? (
+                <EmptyState
+                  title="No team members match these filters"
+                  description="Broaden the search or role filter to see more clinicians in the directory."
+                  actionLabel="Reset Filters"
+                  onAction={() => {
+                    setQ('');
+                    setFilter('all');
+                  }}
+                />
+              ) : (
+                <div className="workforceGrid">
+                  {filtered.map((person) => (
+                    <WorkforceCard
+                      key={person.id}
+                      person={person}
+                      onViewProfile={() => setSelected(person)}
+                      onMessage={() => {
+                        setChatRecipientUserId(person.id);
+                        setChatOpen(true);
+                      }}
+                      onCall={() => setSelected(person)}
+                    />
+                  ))}
+                </div>
+              )}
+            </SectionCard>
+          </>
         }
-      >
-        <div className="teamToolbar">
-          <input
-            className="input"
-            placeholder="Search workforce by name, role, region, phone, or email..."
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            aria-label="Search workforce directory"
-          />
-
-          <div className="teamFilters">
-            <button
-              className={filter === 'all' ? 'filterPill filterPill-active' : 'filterPill'}
-              type="button"
-              onClick={() => setFilter('all')}
-            >
-              All
-            </button>
-            <button
-              className={filter === 'nurse' ? 'filterPill filterPill-active' : 'filterPill'}
-              type="button"
-              onClick={() => setFilter('nurse')}
-            >
-              Nurses
-            </button>
-            <button
-              className={filter === 'doctor' ? 'filterPill filterPill-active' : 'filterPill'}
-              type="button"
-              onClick={() => setFilter('doctor')}
-            >
-              Doctors
-            </button>
-          </div>
-        </div>
-
-        {loading ? (
-          <LoadingState rows={6} />
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            title="No team members match these filters"
-            description="Broaden the search or role filter to see more clinicians in the directory."
-            actionLabel="Reset Filters"
-            onAction={() => {
-              setQ('');
-              setFilter('all');
-            }}
-          />
-        ) : (
-          <div className="workforceGrid">
-            {filtered.map((person) => (
-              <WorkforceCard
-                key={person.id}
-                person={person}
-                onViewProfile={() => setSelected(person)}
-                onMessage={() => {
-                  setChatRecipientUserId(person.id);
-                  setChatOpen(true);
-                }}
-                onCall={() => setSelected(person)}
-              />
-            ))}
-          </div>
-        )}
-      </SectionCard>
+        rail={
+          <>
+            <SectionCard title="Workforce posture" subtitle="Live workforce signal for allocation and coordination">
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  Workforce readiness is stable across active regions.
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Use the directory to balance workload and identify available clinicians.
+                </div>
+              </div>
+            </SectionCard>
+            <AssistantPanel context="team" contextData={{ query: q, filter }} />
+          </>
+        }
+      />
 
       <WorkforceProfileDrawer person={selected} onClose={() => setSelected(null)} />
       <ChatDrawer

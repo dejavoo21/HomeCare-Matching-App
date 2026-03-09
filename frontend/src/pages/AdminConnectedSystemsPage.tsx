@@ -1,4 +1,6 @@
 import AppPage from '../components/layout/AppPage';
+import ContentGrid from '../components/layout/ContentGrid';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
 import { ConnectedSystemsPanel } from '../components/ConnectedSystemsPanel';
@@ -18,32 +20,35 @@ export function AdminConnectedSystemsPage() {
         ]}
       />
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-6">
+      <ContentGrid
+        main={
           <SectionCard
             title="Integration estate"
             subtitle="Operational view of connected platform systems"
           >
             <ConnectedSystemsPanel />
           </SectionCard>
-        </div>
+        }
+        rail={
+          <>
+            <SectionCard title="Platform posture" subtitle="Enterprise trust signals">
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  Most connectors are healthy and syncing within expected operational windows.
+                </div>
+                <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  Workforce-facing exports should be monitored closely when cadence slips or retries rise.
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Connector ownership, throughput visibility, and sync health are presented as operational controls rather than raw endpoints.
+                </div>
+              </div>
+            </SectionCard>
 
-        <div className="space-y-6">
-          <SectionCard title="Platform posture" subtitle="Enterprise trust signals">
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                Most connectors are healthy and syncing within expected operational windows.
-              </div>
-              <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Workforce-facing exports should be monitored closely when cadence slips or retries rise.
-              </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                Connector ownership, throughput visibility, and sync health are presented as operational controls rather than raw endpoints.
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-      </div>
+            <AssistantPanel context="dashboard" contextData={{ area: 'connected_systems' }} />
+          </>
+        }
+      />
     </AppPage>
   );
 }

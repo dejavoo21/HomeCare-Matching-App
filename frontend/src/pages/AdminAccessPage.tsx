@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { AccessRequestsPanel } from '../components/AccessRequestsPanel';
 import { TotpSettingsPanel } from '../components/TotpSettingsPanel';
 import AppPage from '../components/layout/AppPage';
-import TwoColumnPage from '../components/layout/TwoColumnPage';
+import ContentGrid from '../components/layout/ContentGrid';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import KpiCard from '../components/ui/KpiCard';
 import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
@@ -108,9 +109,9 @@ export function AdminAccessPage() {
         />
       </section>
 
-      <TwoColumnPage
-        left={<AccessRequestsPanel refreshKey={refreshKey} hideSummary />}
-        right={
+      <ContentGrid
+        main={<AccessRequestsPanel refreshKey={refreshKey} hideSummary />}
+        rail={
           <>
             <SectionCard
               title="Queue priorities"
@@ -149,6 +150,7 @@ export function AdminAccessPage() {
               </div>
             </SectionCard>
 
+            <AssistantPanel context="access" contextData={{ totalQueue: stats.total }} />
             <TotpSettingsPanel />
           </>
         }
