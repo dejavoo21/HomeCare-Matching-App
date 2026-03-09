@@ -60,6 +60,13 @@ export function AssistantWidget() {
   }, [messages, open]);
 
   const pageSuggestions = useMemo(() => {
+    if (location.pathname.includes('/admin/dashboard')) {
+      return [
+        'Summarize today’s priorities',
+        'Show open exceptions',
+        'Explain coverage health',
+      ];
+    }
     if (location.pathname.includes('/admin/access')) {
       return [
         'Show blocked onboarding requests',
@@ -144,6 +151,16 @@ export function AssistantWidget() {
 
     if (normalized.includes('critical requests')) {
       navigate('/admin/dispatch');
+      return;
+    }
+
+    if (
+      normalized.includes('today’s priorities') ||
+      normalized.includes("today's priorities") ||
+      normalized.includes('open exceptions') ||
+      normalized.includes('coverage health')
+    ) {
+      navigate('/admin/dashboard');
       return;
     }
 

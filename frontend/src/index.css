@@ -4339,7 +4339,7 @@ html {
 
 .dashboardTopGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 20px;
 }
 
@@ -4426,6 +4426,362 @@ html {
 .dashboardAsideStack {
   display: grid;
   gap: 16px;
+}
+
+.dashboardHeroCard {
+  background: linear-gradient(135deg, #020617 0%, #082f49 45%, #312e81 100%);
+  border-radius: 28px;
+  padding: 24px;
+  color: #fff;
+  box-shadow: 0 24px 54px rgba(15, 23, 42, 0.18);
+}
+
+.dashboardHeroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 24px;
+  align-items: end;
+}
+
+.dashboardHeroEyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.dashboardHeroTitle {
+  margin: 8px 0 0;
+  font-size: 34px;
+  line-height: 1.05;
+  font-weight: 900;
+}
+
+.dashboardHeroText {
+  margin: 12px 0 0;
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.dashboardHeroStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.dashboardHeroStat {
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.dashboardHeroStatLabel {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboardHeroStatValue {
+  display: block;
+  margin-top: 10px;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 900;
+  color: #fff;
+}
+
+.dashboardHeroStatText {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dashboardPriorityCard {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.dashboardPriorityHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.dashboardPriorityTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.dashboardPriorityText {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+}
+
+.dashboardPriorityBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dashboardPriorityList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dashboardPriorityItem {
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.dashboardOperationalStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dashboardOperationalCard {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  padding: 18px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.dashboardOperationalTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dashboardOperationalGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dashboardOperationalMetric {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.dashboardOperationalMetric-success {
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.dashboardOperationalMetric-warning {
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.dashboardOperationalMetric-info {
+  background: rgba(14, 165, 233, 0.12);
+}
+
+.dashboardOperationalLabel {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboardOperationalValue {
+  display: block;
+  margin-top: 8px;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.dashboardOperationalStack {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dashboardOperationalNotice,
+.dashboardOperationalNarrative,
+.dashboardNarrativeItem {
+  padding: 14px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.dashboardOperationalNotice {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.04);
+  color: #334155;
+}
+
+.dashboardOperationalNotice-violet {
+  background: rgba(139, 92, 246, 0.12);
+  color: #6d28d9;
+}
+
+.dashboardOperationalNotice-info {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0369a1;
+}
+
+.dashboardOperationalNarrative {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.dashboardCommandLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+
+.dashboardMainColumn,
+.dashboardAsideRail {
+  display: grid;
+  gap: 18px;
+}
+
+.dashboardExceptionList,
+.dashboardCoverageList,
+.dashboardNarrativeList {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboardExceptionCard,
+.dashboardCoverageCard {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  padding: 16px;
+  background: #fff;
+}
+
+.dashboardExceptionTop,
+.dashboardCoverageTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.dashboardExceptionTitle,
+.dashboardCoverageTitle {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dashboardExceptionDetail,
+.dashboardCoverageMeta {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dashboardExceptionTag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dashboardExceptionTag-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.dashboardExceptionTag-danger {
+  background: rgba(244, 63, 94, 0.12);
+  color: #be123c;
+}
+
+.dashboardExceptionTag-info {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0369a1;
+}
+
+.dashboardExceptionActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dashboardCoverageScore {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.dashboardCoverageScore strong {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.dashboardCoverageScore span {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.dashboardCoverageBar {
+  margin-top: 12px;
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.dashboardCoverageBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0ea5e9 0%, #06b6d4 45%, #10b981 100%);
+}
+
+.dashboardNarrativeItem {
+  background: rgba(15, 23, 42, 0.04);
+  color: #334155;
+  font-weight: 600;
 }
 
 .dispatchHeaderCard {
@@ -4798,6 +5154,16 @@ html {
     grid-template-columns: 1fr;
   }
 
+  .dashboardHeroGrid,
+  .dashboardOperationalStrip,
+  .dashboardCommandLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardHeroStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dispatchCommandLayout {
     grid-template-columns: 1fr;
   }
@@ -4812,7 +5178,10 @@ html {
   .dispatchHeader,
   .dashboardPanelHeader,
   .dispatchExceptionTop,
-  .dispatchWorkHeader {
+  .dispatchWorkHeader,
+  .dashboardExceptionTop,
+  .dashboardCoverageTop,
+  .dashboardPriorityHeader {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -4833,6 +5202,11 @@ html {
 
 @media (max-width: 600px) {
   .dashboardTopGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardHeroStats,
+  .dashboardOperationalGrid {
     grid-template-columns: 1fr;
   }
 }
