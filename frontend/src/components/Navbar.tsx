@@ -1,5 +1,7 @@
 import { useAuth } from '../contexts/AuthContext';
+import { useCommunication } from '../contexts/CommunicationContext';
 import { useRealTime } from '../contexts/RealTimeContext';
+import { CommunicationHub } from './CommunicationHub';
 import '../index.css';
 
 function getConnectionLabel(state: string) {
@@ -17,6 +19,7 @@ function getConnectionClass(state: string) {
 export function Navbar() {
   const { user, logout } = useAuth();
   const { state } = useRealTime();
+  const { summary } = useCommunication();
 
   if (!user) return null;
 
@@ -38,8 +41,15 @@ export function Navbar() {
             </div>
           )}
 
+          <CommunicationHub />
+
           <div className="topbarUser">
             {user.name} ({user.role})
+            {summary.unreadMessages > 0 ? (
+              <span className="topbarInlineBadge" aria-label={`${summary.unreadMessages} unread messages`}>
+                {summary.unreadMessages}
+              </span>
+            ) : null}
           </div>
 
           <button onClick={logout} className="btn btn-topbar" type="button">

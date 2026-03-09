@@ -732,6 +732,10 @@ class ApiClient {
     return this.request('POST', '/workforce/presence', payload);
   }
 
+  async getWorkforceSummary() {
+    return this.request('GET', '/workforce/summary');
+  }
+
   async getDirectConversation(recipientUserId: string) {
     return this.request('POST', '/workforce/chat/direct', { recipientUserId });
   }

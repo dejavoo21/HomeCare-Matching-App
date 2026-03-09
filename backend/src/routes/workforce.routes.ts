@@ -256,6 +256,77 @@ export function createWorkforceRouter(pool: Pool) {
     }
   );
 
+  router.get(
+    '/summary',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.NURSE, UserRole.DOCTOR),
+    async (req: AuthRequest, res: Response) => {
+      const userId = req.user?.userId;
+      const viewerRole = normalizeRole(req.user?.role);
+
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      try {
+        const unreadResult = await pool.query(
+          `SELECT COALESCE(SUM(unread.unread_count), 0)::int AS unread_total
+           FROM (
+             SELECT
+               c.id,
+               COUNT(cm.id)::int AS unread_count
+             FROM conversations c
+             JOIN conversation_participants cp
+               ON cp.conversation_id = c.id
+              AND cp.user_id = $1
+             LEFT JOIN conversation_reads cr
+               ON cr.conversation_id = c.id
+              AND cr.user_id = $1
+             LEFT JOIN chat_messages cm
+               ON cm.conversation_id = c.id
+              AND cm.sender_user_id <> $1
+              AND (
+                cr.last_read_at IS NULL
+                OR cm.created_at > cr.last_read_at
+              )
+             GROUP BY c.id
+           ) unread`,
+          [userId]
+        );
+
+        const presenceResult = await pool.query(
+          `SELECT
+             COUNT(*) FILTER (WHERE presence_status = 'online')::int AS online_count,
+             COUNT(*) FILTER (WHERE presence_status = 'on_shift')::int AS on_shift_count,
+             COUNT(*) FILTER (WHERE presence_status = 'in_visit')::int AS in_visit_count,
+             COUNT(*) FILTER (WHERE presence_status = 'busy')::int AS busy_count
+           FROM user_presence up
+           JOIN users u ON u.id = up.user_id
+           WHERE u.role IN ('nurse', 'doctor')
+             AND COALESCE(u.is_active, true) = true`
+        );
+
+        res.json({
+          success: true,
+          data: {
+            unreadMessages: Number(unreadResult.rows[0]?.unread_total || 0),
+            workforcePresence: {
+              online: Number(presenceResult.rows[0]?.online_count || 0),
+              onShift: Number(presenceResult.rows[0]?.on_shift_count || 0),
+              inVisit: Number(presenceResult.rows[0]?.in_visit_count || 0),
+              busy: Number(presenceResult.rows[0]?.busy_count || 0),
+            },
+            viewerRole,
+          },
+        });
+      } catch (err) {
+        console.error('Workforce summary error:', err);
+        res.status(500).json({ error: 'Failed to load workforce summary' });
+      }
+    }
+  );
+
   router.post(
     '/presence',
     authMiddleware,

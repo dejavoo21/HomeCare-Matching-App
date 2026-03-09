@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X, MessageCircle, Send, Bot, Sparkles } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { useAssistantActions } from "../contexts/AssistantActionsContext";
+import { useCommunication } from "../contexts/CommunicationContext";
+import { ChatDrawer } from "./ChatDrawer";
 import type { AssistantAction } from "../types/assistant";
 
 type Msg = { role: "assistant" | "user"; text: string; ts: number };
@@ -23,9 +26,12 @@ function saveState(state: { open: boolean; dismissed: boolean }) {
 }
 
 export function AssistantWidget() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [input, setInput] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState<Msg[]>(() => [
     {
@@ -37,6 +43,7 @@ export function AssistantWidget() {
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const runActions = useAssistantActions();
+  const { summary } = useCommunication();
 
   useEffect(() => {
     const state = loadState();
@@ -52,10 +59,69 @@ export function AssistantWidget() {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
-  const quickActions = useMemo(
-    () => ["Show queued", "Show offered", "Show completed", "How do I manually offer?"],
-    []
+  const pageSuggestions = useMemo(() => {
+    if (location.pathname.includes('/admin/dispatch')) {
+      return ['Show critical requests', 'Open unread conversations', 'Who is available right now?'];
+    }
+    if (location.pathname.includes('/admin/scheduling')) {
+      return ['Show unassigned visits', 'Who is overloaded today?', 'Open workforce chat'];
+    }
+    return ['Who is on shift now?', 'Open unread conversations', 'Show active clinicians'];
+  }, [location.pathname]);
+
+  const communicationSuggestions = useMemo(
+    () =>
+      [
+        summary.unreadMessages > 0
+          ? `You have ${summary.unreadMessages} unread chat messages`
+          : null,
+        summary.workforcePresence.inVisit > 0
+          ? `${summary.workforcePresence.inVisit} clinicians are currently in visits`
+          : null,
+        summary.workforcePresence.busy > 0
+          ? `${summary.workforcePresence.busy} clinicians are marked busy`
+          : null,
+        summary.workforcePresence.onShift > 0
+          ? `${summary.workforcePresence.onShift} clinicians are on shift`
+          : null,
+      ].filter(Boolean) as string[],
+    [summary]
   );
+
+  const quickActions = useMemo(
+    () => [
+      ...communicationSuggestions.slice(0, 2),
+      ...pageSuggestions,
+      'How do I manually offer?',
+    ].slice(0, 5),
+    [communicationSuggestions, pageSuggestions]
+  );
+
+  const runAssistantShortcut = async (prompt: string) => {
+    const normalized = prompt.toLowerCase();
+
+    if (normalized.includes('unread chat') || normalized.includes('open unread conversations') || normalized.includes('open workforce chat')) {
+      setChatOpen(true);
+      return;
+    }
+
+    if (normalized.includes('on shift') || normalized.includes('available right now') || normalized.includes('active clinicians') || normalized.includes('in visits') || normalized.includes('busy')) {
+      navigate('/admin/team');
+      return;
+    }
+
+    if (normalized.includes('unassigned visits') || normalized.includes('overloaded today')) {
+      navigate('/admin/scheduling');
+      return;
+    }
+
+    if (normalized.includes('critical requests')) {
+      navigate('/admin/dispatch');
+      return;
+    }
+
+    await send(prompt);
+  };
 
   const send = async (text: string) => {
     const query = text.trim();
@@ -130,15 +196,17 @@ export function AssistantWidget() {
 
           <div className="assistantIntro">
             <Sparkles size={14} />
-            <span>Ask about dispatch workflow, requests, offers, or admin actions.</span>
+            <span>Ask about dispatch workflow, unread chats, workforce presence, or admin actions.</span>
           </div>
 
           <div className="assistantQuick">
-            {quickActions.slice(0, 3).map((action) => (
+            {quickActions.map((action) => (
               <button
                 key={action}
                 className="assistantChip"
-                onClick={() => send(action)}
+                onClick={() => {
+                  void runAssistantShortcut(action);
+                }}
                 type="button"
               >
                 {action}
@@ -172,17 +240,21 @@ export function AssistantWidget() {
           <div className="assistantComposer">
             <input
               className="assistantInput"
-              placeholder="Ask about queue status, offers, or a request..."
+              placeholder="Ask about queue status, unread chat, or staff availability..."
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === "Enter") send(input);
+                if (event.key === "Enter") {
+                  void send(input);
+                }
               }}
               disabled={busy}
             />
             <button
               className="assistantSend"
-              onClick={() => send(input)}
+              onClick={() => {
+                void send(input);
+              }}
               disabled={busy}
               type="button"
             >
@@ -196,6 +268,8 @@ export function AssistantWidget() {
           <span>Assistant</span>
         </button>
       )}
+
+      <ChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }

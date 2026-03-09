@@ -57,6 +57,7 @@ export function EvvVisitPanel({ requestId }: { requestId: string }) {
         longitude: location.longitude,
         notes: location.error ? `Location note: ${location.error}` : undefined,
       });
+      await api.updateMyPresence({ presenceStatus: 'in_visit' }).catch(() => {});
       setMessage(
         location.error ? `Checked in. ${location.error}` : 'Checked in successfully with location.'
       );
@@ -81,6 +82,7 @@ export function EvvVisitPanel({ requestId }: { requestId: string }) {
         longitude: location.longitude,
         notes: location.error ? `Location note: ${location.error}` : undefined,
       });
+      await api.updateMyPresence({ presenceStatus: 'on_shift' }).catch(() => {});
       setMessage(
         location.error
           ? `Checked out. ${location.error}`

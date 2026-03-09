@@ -8680,6 +8680,129 @@ html {
   cursor: pointer;
 }
 
+.adminNavBadge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #4338ca;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+.topbarRight {
+  position: relative;
+}
+
+.topbarInlineBadge {
+  margin-left: 8px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+.commHubRoot {
+  position: relative;
+}
+
+.commHubTrigger {
+  position: relative;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.commHubTriggerText {
+  white-space: nowrap;
+}
+
+.commHubBadge {
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  color: #4338ca;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+.commHubPopover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: min(320px, calc(100vw - 24px));
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.14);
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  z-index: 90;
+}
+
+.commHubHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.commHubTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.commHubStats {
+  display: grid;
+  gap: 10px;
+}
+
+.commHubStat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #334155;
+}
+
+.commHubStat strong {
+  margin-left: auto;
+  color: #0f172a;
+}
+
+.commHubActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 @media (max-width: 640px) {
   .assistantRoot {
     left: 12px;
@@ -8695,6 +8818,14 @@ html {
   .assistantFab {
     width: 100%;
     justify-content: center;
+  }
+
+  .commHubTriggerText {
+    display: none;
+  }
+
+  .commHubPopover {
+    right: -12px;
   }
 }
 

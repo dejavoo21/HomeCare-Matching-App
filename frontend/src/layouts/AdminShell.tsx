@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { AssistantWidget } from '../components/AssistantWidget';
+import { useCommunication } from '../contexts/CommunicationContext';
 import '../index.css';
 
 type NavItemProps = {
@@ -23,6 +24,7 @@ type NavItemProps = {
   icon: React.ReactNode;
   label: string;
   end?: boolean;
+  badge?: string;
 };
 
 type NavSection = {
@@ -30,7 +32,7 @@ type NavSection = {
   items: NavItemProps[];
 };
 
-function AdminNavItem({ to, icon, label, end }: NavItemProps) {
+function AdminNavItem({ to, icon, label, end, badge }: NavItemProps) {
   return (
     <NavLink
       to={to}
@@ -43,6 +45,7 @@ function AdminNavItem({ to, icon, label, end }: NavItemProps) {
         {icon}
       </span>
       <span>{label}</span>
+      {badge ? <span className="adminNavBadge">{badge}</span> : null}
     </NavLink>
   );
 }
@@ -87,6 +90,8 @@ const navSections: NavSection[] = [
 ];
 
 export function AdminShell() {
+  const { summary } = useCommunication();
+
   return (
     <div className="adminShell">
       <Navbar />
@@ -112,6 +117,11 @@ export function AdminShell() {
                         icon={item.icon}
                         label={item.label}
                         end={item.end}
+                        badge={
+                          item.to === '/admin/team' && summary.unreadMessages > 0
+                            ? String(summary.unreadMessages)
+                            : undefined
+                        }
                       />
                     ))}
                   </div>
