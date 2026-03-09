@@ -77,8 +77,28 @@ export function createAccessRequestRouter(pool: Pool) {
     async (_req: AuthRequest, res: Response): Promise<void> => {
       try {
         const rows = await pool.query(
-          `SELECT id, requester_name, requester_email, requested_role, reason, status, reviewed_by, reviewed_at, created_at
+          `SELECT
+             ar.id,
+             ar.requester_name,
+             ar.requester_email,
+             ar.requested_role,
+             ar.reason,
+             ar.status,
+             ar.reviewed_by,
+             ar.reviewed_at,
+             ar.review_notes,
+             ar.additional_info_requested,
+             ar.additional_info_note,
+             ar.identity_verified,
+             ar.license_verified,
+             ar.compliance_verified,
+             ar.background_check_verified,
+             ar.verification_completed,
+             ar.created_at,
+             reviewer.email AS reviewer_email
            FROM access_requests
+           ar
+           LEFT JOIN users reviewer ON reviewer.id = ar.reviewed_by
            ORDER BY created_at DESC
            LIMIT 100`
         );
@@ -97,6 +117,88 @@ export function createAccessRequestRouter(pool: Pool) {
    * Body: { decision, notes? }
    */
   router.post(
+    '/admin/:id/verify',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response): Promise<void> => {
+      const requestId = req.params.id;
+      const {
+        additionalInfoRequested,
+        additionalInfoNote,
+        identityVerified,
+        licenseVerified,
+        complianceVerified,
+        backgroundCheckVerified,
+      } = req.body || {};
+
+      try {
+        const existing = await pool.query(
+          `SELECT id, status
+           FROM access_requests
+           WHERE id = $1
+           LIMIT 1`,
+          [requestId]
+        );
+
+        if (existing.rows.length === 0) {
+          res.status(404).json({ error: 'Request not found' });
+          return;
+        }
+
+        const verificationCompleted =
+          !!identityVerified &&
+          !!licenseVerified &&
+          !!complianceVerified &&
+          !!backgroundCheckVerified;
+
+        const updated = await pool.query(
+          `UPDATE access_requests
+           SET additional_info_requested = COALESCE($2, additional_info_requested),
+               additional_info_note = COALESCE($3, additional_info_note),
+               identity_verified = COALESCE($4, identity_verified),
+               license_verified = COALESCE($5, license_verified),
+               compliance_verified = COALESCE($6, compliance_verified),
+               background_check_verified = COALESCE($7, background_check_verified),
+               verification_completed = $8,
+               reviewed_by = $9,
+               reviewed_at = now(),
+               updated_at = now()
+           WHERE id = $1
+           RETURNING *`,
+          [
+            requestId,
+            typeof additionalInfoRequested === 'boolean' ? additionalInfoRequested : null,
+            additionalInfoNote ?? null,
+            typeof identityVerified === 'boolean' ? identityVerified : null,
+            typeof licenseVerified === 'boolean' ? licenseVerified : null,
+            typeof complianceVerified === 'boolean' ? complianceVerified : null,
+            typeof backgroundCheckVerified === 'boolean' ? backgroundCheckVerified : null,
+            verificationCompleted,
+            req.user?.userId || null,
+          ]
+        );
+
+        await logAudit(
+          pool,
+          req.user?.userId || null,
+          'ACCESS_REQUEST_VERIFICATION_UPDATED',
+          'access_requests',
+          requestId,
+          {
+            additionalInfoRequested: !!additionalInfoRequested,
+            verificationCompleted,
+          }
+        );
+
+        res.json({ success: true, data: updated.rows[0] });
+      } catch (err) {
+        console.error('Access request verification error:', err);
+        res.status(500).json({ error: 'Failed to update verification workflow' });
+      }
+    }
+  );
+
+  router.post(
     '/admin/:id/decide',
     authMiddleware,
     requireRole(UserRole.ADMIN),
@@ -111,21 +213,43 @@ export function createAccessRequestRouter(pool: Pool) {
 
       try {
         // Fetch the request
-        const existing = await pool.query(`SELECT id, requester_email FROM access_requests WHERE id = $1`, [requestId]);
+        const existing = await pool.query(
+          `SELECT id, requester_email, requested_role, additional_info_requested, verification_completed
+           FROM access_requests
+           WHERE id = $1`,
+          [requestId]
+        );
 
         if (existing.rows.length === 0) {
           res.status(404).json({ error: 'Request not found' });
           return;
         }
 
-        const email = existing.rows[0].requester_email;
+        const current = existing.rows[0];
+        const email = current.requester_email;
+        const isClientRole = String(current.requested_role || '').toLowerCase() === 'client';
+
+        if (
+          String(decision).toLowerCase() === 'approved' &&
+          (!current.verification_completed || current.additional_info_requested) &&
+          !isClientRole
+        ) {
+          res.status(400).json({
+            error: 'Complete verification and clear any outstanding info request before approving',
+          });
+          return;
+        }
 
         // Update request
         await pool.query(
           `UPDATE access_requests
-           SET status = $2, reviewed_by = $3, reviewed_at = now()
+           SET status = $2,
+               review_notes = COALESCE($4, review_notes),
+               reviewed_by = $3,
+               reviewed_at = now(),
+               updated_at = now()
            WHERE id = $1`,
-          [requestId, String(decision).toLowerCase(), req.user?.userId || null]
+          [requestId, String(decision).toLowerCase(), req.user?.userId || null, notes ?? null]
         );
 
         // Audit log

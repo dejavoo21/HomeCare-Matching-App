@@ -401,6 +401,19 @@ class ApiClient {
     return this.request('GET', '/access/admin/requests');
   }
 
+  async saveAccessVerification(payload: {
+    requestId: string;
+    additionalInfoRequested?: boolean;
+    additionalInfoNote?: string;
+    identityVerified?: boolean;
+    licenseVerified?: boolean;
+    complianceVerified?: boolean;
+    backgroundCheckVerified?: boolean;
+  }) {
+    const { requestId, ...body } = payload;
+    return this.request('POST', `/access/admin/${requestId}/verify`, body);
+  }
+
   async decideAccessRequest(id: string, decision: 'approved' | 'rejected', notes?: string) {
     return this.request('POST', `/access/admin/${id}/decide`, { decision, notes });
   }
