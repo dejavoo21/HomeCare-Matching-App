@@ -2,8 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
-import { DispatchPipeline } from '../components/DispatchPipeline';
-import { AttentionPanel } from '../components/AttentionPanel';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import type { CareRequest } from '../types/index';
@@ -210,10 +208,6 @@ export function AdminDispatchPage() {
         </div>
       </section>
 
-      <section className="pipelineRow" aria-label="Dispatch pipeline">
-        <DispatchPipeline />
-      </section>
-
       <section className="dashboardSection">
         <div className="tabs" role="tablist" aria-label="Dispatch status filters">
           {TABS.map((currentTab) => (
@@ -233,31 +227,23 @@ export function AdminDispatchPage() {
         </div>
       </section>
 
-      <section className="opsMainGrid">
-        <div className="opsPrimary">
-          {isLoading ? (
-            <div className="pageCard">
-              <div className="empty">Loading dispatch queue...</div>
-            </div>
-          ) : (
-            <DispatchQueueTable
-              requests={tabbed as any}
-              onView={setSelectedRequest}
-              onOpenThread={setRequestChatRequestId}
-              onOffer={onOffer}
-              onRequeue={onRequeue}
-              onCancel={onCancel}
-              onSetUrgency={onSetUrgency}
-              search={search}
-              onSearchChange={setSearch}
-            />
-          )}
+      {isLoading ? (
+        <div className="pageCard">
+          <div className="empty">Loading dispatch queue...</div>
         </div>
-
-        <aside className="opsSecondary">
-          <AttentionPanel requests={requests} />
-        </aside>
-      </section>
+      ) : (
+        <DispatchQueueTable
+          requests={tabbed as any}
+          onView={setSelectedRequest}
+          onOpenThread={setRequestChatRequestId}
+          onOffer={onOffer}
+          onRequeue={onRequeue}
+          onCancel={onCancel}
+          onSetUrgency={onSetUrgency}
+          search={search}
+          onSearchChange={setSearch}
+        />
+      )}
 
       <RequestDrawer
         request={selectedRequest}

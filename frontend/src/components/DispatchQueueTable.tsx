@@ -169,7 +169,7 @@ export function DispatchQueueTable({ requests, onView, onOpenThread, onOffer, on
               <th>Scheduled</th>
               <th>Assigned/Offered To</th>
               <th>Offer Expires</th>
-              <th></th>
+              <th className="actionsHeader">Actions</th>
             </tr>
           </thead>
           <tbody>
