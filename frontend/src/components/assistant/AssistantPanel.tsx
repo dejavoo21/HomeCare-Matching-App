@@ -3,6 +3,30 @@ import Button from '../ui/Button';
 
 function getSuggestions(context: string, contextData?: Record<string, any>) {
   if (context === 'dispatch' && contextData?.page === 'request_detail') {
+    if (contextData?.tab === 'thread') {
+      return [
+        'Summarize thread activity',
+        'Draft a coordination update',
+        'Show next communication step',
+      ];
+    }
+
+    if (contextData?.tab === 'timeline') {
+      return [
+        'Summarize timeline',
+        'Highlight latest event',
+        'Explain request progression',
+      ];
+    }
+
+    if (contextData?.tab === 'evv') {
+      return [
+        'Explain EVV posture',
+        'Show visit verification risk',
+        'Recommend next EVV action',
+      ];
+    }
+
     return [
       'Summarize this request',
       'Explain service risk',

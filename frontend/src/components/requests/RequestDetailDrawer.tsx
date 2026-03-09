@@ -3,18 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import SectionCard from '../ui/SectionCard';
 import Button from '../ui/Button';
-import RequestDetailContent from './RequestDetailContent';
-import RequestThreadPanel from './RequestThreadPanel';
+import RequestWorkspaceTabs, { type RequestWorkspaceTabKey } from './RequestWorkspaceTabs';
 import type { CareRequest } from '../../types/index';
 
 export default function RequestDetailDrawer({
   requestId,
   open,
   onClose,
+  initialTab = 'overview',
 }: {
   requestId: string | null;
   open: boolean;
   onClose: () => void;
+  initialTab?: RequestWorkspaceTabKey;
 }) {
   const [request, setRequest] = useState<CareRequest | null>(null);
   const [loading, setLoading] = useState(false);
@@ -91,16 +92,13 @@ export default function RequestDetailDrawer({
               </div>
             </SectionCard>
           ) : request ? (
-            <div className="grid gap-6">
-              <RequestDetailContent
-                request={request}
-                compact
-                onClose={onClose}
-                onOpenFullPage={() => navigate(`/admin/requests/${request.id}`)}
-              />
-
-              <RequestThreadPanel requestId={request.id} compact showComposer />
-            </div>
+            <RequestWorkspaceTabs
+              request={request}
+              compact
+              initialTab={initialTab}
+              onClose={onClose}
+              onOpenFullPage={() => navigate(`/admin/requests/${request.id}`)}
+            />
           ) : null}
         </div>
       </div>

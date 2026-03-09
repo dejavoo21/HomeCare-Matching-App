@@ -5,6 +5,7 @@ import { useRealTime } from '../contexts/RealTimeContext';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import RequestDetailDrawer from '../components/requests/RequestDetailDrawer';
+import type { RequestWorkspaceTabKey } from '../components/requests/RequestWorkspaceTabs';
 import { InsightCard } from '../components/InsightCard';
 import PermissionNotice from '../components/auth/PermissionNotice';
 import ProtectedAction from '../components/auth/ProtectedAction';
@@ -62,6 +63,7 @@ export function AdminDispatchPage() {
   const [selectedRequest, setSelectedRequest] = useState<CareRequest | null>(null);
   const [drawerRequest, setDrawerRequest] = useState<CareRequest | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [detailDrawerTab, setDetailDrawerTab] = useState<RequestWorkspaceTabKey>('overview');
   const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
 
   const loadDispatch = useCallback(async () => {
@@ -493,22 +495,26 @@ export function AdminDispatchPage() {
                 <div className="dispatchActionGrid">
                   <button
                     className="dispatchActionTile dispatchActionTile-info"
-                    onClick={() => setDetailDrawerOpen(true)}
+                    onClick={() => {
+                      setDetailDrawerTab('overview');
+                      setDetailDrawerOpen(true);
+                    }}
                     type="button"
                   >
                     <span className="dispatchActionTitle">Open full request</span>
                     <span className="dispatchActionText">Review offer controls, EVV state, and manual actions.</span>
                   </button>
-                  <ProtectedAction
-                    permission={PERMISSIONS.DISPATCH_READ}
+                  <button
                     className="dispatchActionTile dispatchActionTile-primary"
-                    variant="ghost"
-                    deniedReason="You do not have permission to access request-linked communication."
-                    onClick={() => setRequestChatRequestId(selectedRequest.id)}
+                    onClick={() => {
+                      setDetailDrawerTab('thread');
+                      setDetailDrawerOpen(true);
+                    }}
+                    type="button"
                   >
                     <span className="dispatchActionTitle">Open request thread</span>
                     <span className="dispatchActionText">Continue work-linked communication for this visit.</span>
-                  </ProtectedAction>
+                  </button>
                   <ProtectedAction
                     permission={PERMISSIONS.DISPATCH_MANAGE}
                     className="dispatchActionTile dispatchActionTile-warn"
@@ -675,6 +681,7 @@ export function AdminDispatchPage() {
       <RequestDetailDrawer
         requestId={selectedRequest?.id || null}
         open={detailDrawerOpen}
+        initialTab={detailDrawerTab}
         onClose={() => setDetailDrawerOpen(false)}
       />
 

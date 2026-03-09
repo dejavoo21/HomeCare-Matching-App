@@ -1,21 +1,32 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AppPage from '../components/layout/AppPage';
 import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
 import Button from '../components/ui/Button';
 import AssistantPanel from '../components/assistant/AssistantPanel';
-import RequestDetailContent from '../components/requests/RequestDetailContent';
-import RequestThreadPanel from '../components/requests/RequestThreadPanel';
+import RequestWorkspaceTabs, {
+  type RequestWorkspaceTabKey,
+} from '../components/requests/RequestWorkspaceTabs';
 import { api } from '../services/api';
 import type { CareRequest } from '../types/index';
 
 export function AdminRequestDetailPage() {
   const { requestId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [request, setRequest] = useState<CareRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<RequestWorkspaceTabKey>('overview');
+  const requestedTab = searchParams.get('tab');
+  const initialTab: RequestWorkspaceTabKey =
+    requestedTab === 'thread' ||
+    requestedTab === 'timeline' ||
+    requestedTab === 'notes' ||
+    requestedTab === 'evv'
+      ? requestedTab
+      : 'overview';
 
   useEffect(() => {
     let cancelled = false;
@@ -42,6 +53,10 @@ export function AdminRequestDetailPage() {
       cancelled = true;
     };
   }, [requestId]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   return (
     <AppPage>
@@ -93,26 +108,26 @@ export function AdminRequestDetailPage() {
           </div>
         </SectionCard>
       ) : request ? (
-        <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_420px]">
-          <div className="space-y-6">
-            <RequestDetailContent request={request} />
+        <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
+          <div>
+            <RequestWorkspaceTabs
+              request={request}
+              compact={false}
+              initialTab={initialTab}
+              onTabChange={setActiveTab}
+            />
           </div>
 
           <div className="space-y-6">
-            <RequestThreadPanel requestId={request.id} compact={false} showComposer />
-
             <AssistantPanel
               context="dispatch"
-              contextData={{ page: 'request_detail', requestId: request.id }}
+              contextData={{ page: 'request_detail', requestId: request.id, tab: activeTab }}
             />
 
             <SectionCard title="Workspace guidance">
               <div className="space-y-3">
                 <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  Use this page for deep review, timeline tracing, request-linked communication, and controlled request actions.
-                </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  Keep communication tied to the request so operational decisions remain traceable.
+                  Use Overview for current posture and actions, Thread for coordination, Timeline for traceability, Notes for operational context, and EVV for visit verification posture.
                 </div>
               </div>
             </SectionCard>
