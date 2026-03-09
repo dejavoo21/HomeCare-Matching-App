@@ -73,6 +73,35 @@ async function updatePresence(
   );
 }
 
+async function tableExists(pool: Pool, tableName: string) {
+  const result = await pool.query(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM information_schema.tables
+       WHERE table_schema = 'public'
+         AND table_name = $1
+     ) AS exists`,
+    [tableName]
+  );
+
+  return !!result.rows[0]?.exists;
+}
+
+async function columnExists(pool: Pool, tableName: string, columnName: string) {
+  const result = await pool.query(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = $1
+         AND column_name = $2
+     ) AS exists`,
+    [tableName, columnName]
+  );
+
+  return !!result.rows[0]?.exists;
+}
+
 export function createWorkforceRouter(pool: Pool) {
   const router = Router();
 
@@ -83,9 +112,52 @@ export function createWorkforceRouter(pool: Pool) {
     async (req: AuthRequest, res: Response) => {
       try {
         const requesterRole = normalizeRole(req.user?.role);
-        const result = await pool.query(
-          `WITH visit_workload AS (
-             SELECT
+        const [usersResult, hasVisitsTable, hasVisitAssignmentsTable, hasCareRequestProfessionalId] =
+          await Promise.all([
+            pool.query(
+              `SELECT
+                 u.id,
+                 u.name,
+                 u.email,
+                 u.phone,
+                 u.role,
+                 u.is_active,
+                 up.presence_status,
+                 up.custom_status,
+                 up.current_request_id,
+                 up.current_visit_id,
+                 up.region,
+                 up.last_seen_at
+               FROM users u
+               LEFT JOIN user_presence up ON up.user_id = u.id
+               WHERE u.role IN ('nurse', 'doctor')
+                 AND COALESCE(u.is_active, true) = true
+               ORDER BY u.name ASC`
+            ),
+            tableExists(pool, 'visits'),
+            tableExists(pool, 'visit_assignments'),
+            columnExists(pool, 'care_requests', 'professional_id'),
+          ]);
+
+        const workloadByUserId = new Map<
+          string,
+          { activeVisits: number; queuedAssignments: number; nextVisitAt: string | null }
+        >();
+
+        const ensureWorkload = (userId: string) => {
+          if (!workloadByUserId.has(userId)) {
+            workloadByUserId.set(userId, {
+              activeVisits: 0,
+              queuedAssignments: 0,
+              nextVisitAt: null,
+            });
+          }
+          return workloadByUserId.get(userId)!;
+        };
+
+        if (hasVisitsTable) {
+          const visitsResult = await pool.query(
+            `SELECT
                professional_id,
                COUNT(*) FILTER (
                  WHERE status IN ('assigned', 'accepted', 'enroute')
@@ -94,10 +166,39 @@ export function createWorkforceRouter(pool: Pool) {
                  WHERE scheduled_start >= now()
                ) AS next_visit_at
              FROM visits
-             GROUP BY professional_id
-           ),
-           assignment_workload AS (
-             SELECT
+             GROUP BY professional_id`
+          );
+
+          for (const row of visitsResult.rows) {
+            const workload = ensureWorkload(String(row.professional_id));
+            workload.activeVisits = Number(row.active_visits || 0);
+            workload.nextVisitAt = row.next_visit_at || null;
+          }
+        } else if (hasCareRequestProfessionalId) {
+          const requestsResult = await pool.query(
+            `SELECT
+               professional_id,
+               COUNT(*) FILTER (
+                 WHERE status IN ('assigned', 'accepted', 'en_route', 'enroute')
+               ) AS active_visits,
+               MIN(preferred_start) FILTER (
+                 WHERE preferred_start >= now()
+               ) AS next_visit_at
+             FROM care_requests
+             WHERE professional_id IS NOT NULL
+             GROUP BY professional_id`
+          );
+
+          for (const row of requestsResult.rows) {
+            const workload = ensureWorkload(String(row.professional_id));
+            workload.activeVisits = Number(row.active_visits || 0);
+            workload.nextVisitAt = row.next_visit_at || null;
+          }
+        }
+
+        if (hasVisitAssignmentsTable) {
+          const assignmentsResult = await pool.query(
+            `SELECT
                professional_id,
                COUNT(*) FILTER (
                  WHERE accepted_at IS NULL
@@ -105,57 +206,47 @@ export function createWorkforceRouter(pool: Pool) {
                    AND offer_expires_at >= now()
                ) AS queued_assignments
              FROM visit_assignments
-             GROUP BY professional_id
-           )
-           SELECT
-             u.id,
-             u.name,
-             u.email,
-             u.phone,
-             u.role,
-             u.is_active,
-             COALESCE(up.presence_status, CASE WHEN up.last_seen_at >= now() - interval '5 minutes' THEN 'online' ELSE 'offline' END, 'offline') AS presence_status,
-             up.custom_status,
-             up.current_request_id,
-             up.current_visit_id,
-             up.region,
-             up.last_seen_at,
-             COALESCE(vw.active_visits, 0) AS active_visits,
-             COALESCE(aw.queued_assignments, 0) AS queued_assignments,
-             vw.next_visit_at
-           FROM users u
-           LEFT JOIN user_presence up ON up.user_id = u.id
-           LEFT JOIN visit_workload vw ON vw.professional_id = u.id
-           LEFT JOIN assignment_workload aw ON aw.professional_id = u.id
-           WHERE u.role IN ('nurse', 'doctor')
-             AND COALESCE(u.is_active, true) = true
-           ORDER BY u.name ASC`
-        );
+             GROUP BY professional_id`
+          );
 
-        const data = result.rows.map((row: any) => ({
-          id: row.id,
-          name: row.name,
-          role: row.role,
-          region: row.region || null,
-          email: canViewEmail(requesterRole) ? row.email : null,
-          phone: canViewPhone(requesterRole) ? row.phone : null,
-          presenceStatus: row.presence_status || 'offline',
-          customStatus: row.custom_status || null,
-          lastSeenAt: row.last_seen_at,
-          currentRequestId: row.current_request_id || null,
-          currentVisitId: row.current_visit_id || null,
-          currentWorkload: canViewWorkload(requesterRole)
-            ? {
-                activeVisits: Number(row.active_visits || 0),
-                queuedAssignments: Number(row.queued_assignments || 0),
-                nextVisitAt: row.next_visit_at,
-              }
-            : {
-                activeVisits: 0,
-                queuedAssignments: 0,
-                nextVisitAt: null,
-              },
-        }));
+          for (const row of assignmentsResult.rows) {
+            const workload = ensureWorkload(String(row.professional_id));
+            workload.queuedAssignments = Number(row.queued_assignments || 0);
+          }
+        }
+
+        const data = usersResult.rows.map((row: any) => {
+          const workload = workloadByUserId.get(String(row.id)) || {
+            activeVisits: 0,
+            queuedAssignments: 0,
+            nextVisitAt: null,
+          };
+
+          return {
+            id: row.id,
+            name: row.name,
+            role: row.role,
+            region: row.region || null,
+            email: canViewEmail(requesterRole) ? row.email : null,
+            phone: canViewPhone(requesterRole) ? row.phone : null,
+            presenceStatus:
+              row.presence_status ||
+              (row.last_seen_at && new Date(row.last_seen_at).getTime() >= Date.now() - 5 * 60 * 1000
+                ? 'online'
+                : 'offline'),
+            customStatus: row.custom_status || null,
+            lastSeenAt: row.last_seen_at,
+            currentRequestId: row.current_request_id || null,
+            currentVisitId: row.current_visit_id || null,
+            currentWorkload: canViewWorkload(requesterRole)
+              ? workload
+              : {
+                  activeVisits: 0,
+                  queuedAssignments: 0,
+                  nextVisitAt: null,
+                },
+          };
+        });
 
         res.json({ success: true, data });
       } catch (err) {
