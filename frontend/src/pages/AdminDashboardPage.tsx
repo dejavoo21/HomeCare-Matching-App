@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
-import { StatusTile } from '../components/StatusTile';
 import { AttentionPanel } from '../components/AttentionPanel';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
 import { ActivityFeed } from '../components/ActivityFeed';
@@ -13,10 +12,14 @@ import { AccessSummaryCard } from '../components/AccessSummaryCard';
 import { ReliabilitySummaryCard } from '../components/ReliabilitySummaryCard';
 import { FhirSummaryCard } from '../components/FhirSummaryCard';
 
-type AttentionRequest = {
+type DashboardRequest = {
   urgency?: string;
   status?: string;
   offerExpiresAt?: string | null;
+  followUpRequired?: boolean;
+  follow_up_required?: boolean;
+  adminFollowUpScheduled?: boolean;
+  admin_follow_up_scheduled?: boolean;
 };
 
 type DashboardData = {
@@ -34,7 +37,7 @@ export function AdminDashboardPage() {
   const navigate = useNavigate();
   const { on } = useRealTime();
   const [data, setData] = useState<DashboardData | null>(null);
-  const [requests, setRequests] = useState<AttentionRequest[]>([]);
+  const [requests, setRequests] = useState<DashboardRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activityKey, setActivityKey] = useState(0);
 
@@ -47,7 +50,7 @@ export function AdminDashboardPage() {
       ]);
       setData(dash?.data || null);
       setRequests(reqs?.data || []);
-      setActivityKey((k) => k + 1);
+      setActivityKey((current) => current + 1);
     } catch (err) {
       console.error('Failed to load admin dashboard:', err);
     } finally {
@@ -70,14 +73,14 @@ export function AdminDashboardPage() {
       on('VISIT_STATUS_CHANGED', loadDashboard),
     ];
 
-    return () => unsubs.forEach((u) => u());
+    return () => unsubs.forEach((unsubscribe) => unsubscribe());
   }, [on, loadDashboard]);
 
   if (isLoading || !data) {
     return (
       <div className="pageStack">
         <div className="pageHeaderBlock">
-          <h1 className="pageTitle">Dashboard</h1>
+          <h1 className="pageTitle">Operations Hub</h1>
           <p className="subtitle">Loading operations view...</p>
         </div>
       </div>
@@ -86,89 +89,119 @@ export function AdminDashboardPage() {
 
   const stats = data.stats;
   const activeVisitsCount = stats.acceptedRequests + stats.enRouteRequests;
+  const followUpsPending = requests.filter(
+    (request) =>
+      (request.followUpRequired || request.follow_up_required) &&
+      !(request.adminFollowUpScheduled || request.admin_follow_up_scheduled)
+  ).length;
 
   return (
     <main className="opsDashboard" role="main" aria-label="Operations dashboard">
       <section className="pageHeaderBlock">
         <div className="pageHeaderRow">
           <div>
-            <h1 className="pageTitle">Operations Command Center</h1>
+            <h1 className="pageTitle">Operations Hub</h1>
             <p className="subtitle">
-              Real-time overview of home care operations, dispatch, and system activity.
+              Dispatch, workforce, compliance, and platform activity in one operating surface.
             </p>
           </div>
 
           <div className="pageActions">
             <button className="btn btn-primary" onClick={() => navigate('/admin/dispatch')}>
-              Open Dispatch Board
+              Open Dispatch Center
             </button>
           </div>
         </div>
       </section>
 
-      <section className="statusTilesRow" aria-label="Operations summary">
-        <StatusTile label="Queued Requests" value={stats.queuedRequests} color="indigo" />
-        <StatusTile label="Offers Pending" value={stats.offeredRequests} color="amber" />
-        <StatusTile label="Active Visits" value={activeVisitsCount} color="blue" />
-        <StatusTile label="Completed Today" value={stats.completedRequests} color="green" />
+      <section className="dashboardTopGrid" aria-label="Operations summary">
+        <div className="dashboardMetricCard dashboardMetricCard-indigo">
+          <div className="dashboardMetricLabel">Visits Today</div>
+          <div className="dashboardMetricValue">{stats.completedRequests}</div>
+          <div className="dashboardMetricMeta">Completed and documented field activity</div>
+        </div>
+        <div className="dashboardMetricCard dashboardMetricCard-blue">
+          <div className="dashboardMetricLabel">Active Clinicians</div>
+          <div className="dashboardMetricValue">{activeVisitsCount}</div>
+          <div className="dashboardMetricMeta">Accepted and in-progress assignments</div>
+        </div>
+        <div className="dashboardMetricCard dashboardMetricCard-amber">
+          <div className="dashboardMetricLabel">Open Requests</div>
+          <div className="dashboardMetricValue">{stats.queuedRequests}</div>
+          <div className="dashboardMetricMeta">Queue volume waiting for dispatch action</div>
+        </div>
+        <div className="dashboardMetricCard dashboardMetricCard-green">
+          <div className="dashboardMetricLabel">Follow-ups Pending</div>
+          <div className="dashboardMetricValue">{followUpsPending}</div>
+          <div className="dashboardMetricMeta">Clinician review items still open</div>
+        </div>
       </section>
 
-      <section className="opsMainGrid">
-        <div className="opsPrimary">
-          <div className="dashboardPrimaryStack">
-            <div className="summaryLinkCard">
-              <div className="summaryLinkCardTop">
-                <div>
-                  <div className="summaryLinkEyebrow">Dispatch</div>
-                  <h2 className="summaryLinkTitle">Queue Workbench</h2>
-                </div>
-              </div>
-
-              <p className="summaryLinkText">
-                Open the live dispatch board to work queued requests, monitor expiring offers,
-                update urgency, and assign or requeue visits.
-              </p>
-
-              <div className="settingsOverviewGrid">
-                <div className="settingsOverviewCard">
-                  <div className="settingsOverviewLabel">Queued</div>
-                  <div className="settingsOverviewValue">{stats.queuedRequests}</div>
-                </div>
-                <div className="settingsOverviewCard">
-                  <div className="settingsOverviewLabel">Offered</div>
-                  <div className="settingsOverviewValue">{stats.offeredRequests}</div>
-                </div>
-                <div className="settingsOverviewCard">
-                  <div className="settingsOverviewLabel">En Route</div>
-                  <div className="settingsOverviewValue">{stats.enRouteRequests}</div>
-                </div>
-                <div className="settingsOverviewCard">
-                  <div className="settingsOverviewLabel">Completed</div>
-                  <div className="settingsOverviewValue">{stats.completedRequests}</div>
-                </div>
-              </div>
-
-              <Link to="/admin/dispatch" className="summaryLinkAction">
-                Open Dispatch Workbench →
-              </Link>
+      <section className="dashboardGrid">
+        <div className="dashboardPanel">
+          <div className="dashboardPanelHeader">
+            <div>
+              <div className="summaryLinkEyebrow">Operations Health</div>
+              <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
             </div>
+            <Link to="/admin/scheduling" className="summaryLinkAction">
+              Open Scheduling Board -&gt;
+            </Link>
+          </div>
 
-            <div className="summaryStrip">
-              <IntegrationsSummaryCard />
-              <AuditSummaryCard />
-              <AnalyticsSummaryCard />
-              <AccessSummaryCard />
-              <ReliabilitySummaryCard />
-              <FhirSummaryCard />
+          <p className="summaryLinkText">
+            Balance the queue, monitor live offers, and keep follow-up work moving back into the
+            scheduling board without leaving the operations hub.
+          </p>
+
+          <div className="settingsOverviewGrid">
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">Queued</div>
+              <div className="settingsOverviewValue">{stats.queuedRequests}</div>
             </div>
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">Offered</div>
+              <div className="settingsOverviewValue">{stats.offeredRequests}</div>
+            </div>
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">In Motion</div>
+              <div className="settingsOverviewValue">{activeVisitsCount}</div>
+            </div>
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">Follow-ups</div>
+              <div className="settingsOverviewValue">{followUpsPending}</div>
+            </div>
+          </div>
+
+          <div className="dashboardActionRow">
+            <Link to="/admin/dispatch" className="btn btn-primary">
+              Open Dispatch Center
+            </Link>
+            <Link to="/admin/clinician-review" className="btn">
+              Review Clinician Notes
+            </Link>
           </div>
         </div>
 
-        <aside className="opsSecondary">
-          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
+        <div className="dashboardAsideStack">
           <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
-        </aside>
+        </div>
+      </section>
+
+      <section className="pageGridTwo">
+        <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
+
+        <div className="dashboardPrimaryStack">
+          <div className="summaryStrip">
+            <IntegrationsSummaryCard />
+            <AuditSummaryCard />
+            <AnalyticsSummaryCard />
+            <AccessSummaryCard />
+            <ReliabilitySummaryCard />
+            <FhirSummaryCard />
+          </div>
+        </div>
       </section>
     </main>
   );

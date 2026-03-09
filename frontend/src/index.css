@@ -3711,6 +3711,191 @@ html {
   }
 }
 
+.adminSidebarNav {
+  padding-top: 8px;
+}
+
+.adminNavSection {
+  margin-bottom: 22px;
+}
+
+.adminNavSectionLabel {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+}
+
+.dashboardTopGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.dashboardMetricCard {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.dashboardMetricCard-indigo {
+  background: linear-gradient(180deg, rgba(238, 242, 255, 0.85), #ffffff);
+}
+
+.dashboardMetricCard-blue {
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.9), #ffffff);
+}
+
+.dashboardMetricCard-amber {
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.9), #ffffff);
+}
+
+.dashboardMetricCard-green {
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.9), #ffffff);
+}
+
+.dashboardMetricLabel {
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.dashboardMetricValue {
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dashboardMetricMeta {
+  margin-top: 10px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-top: 6px;
+}
+
+.dashboardPanel {
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.dashboardPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.dashboardPanelTitle {
+  margin: 4px 0 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dashboardActionRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.dashboardAsideStack {
+  display: grid;
+  gap: 16px;
+}
+
+.dispatchHeaderCard {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.dispatchHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.dispatchStats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.dispatchStatPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.08);
+  color: #4338ca;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid rgba(99, 102, 241, 0.14);
+}
+
+.dispatchStatPill-alert {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.18);
+}
+
+@media (max-width: 1100px) {
+  .dashboardTopGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .dispatchHeader,
+  .dashboardPanelHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardGrid,
+  .dispatchGrid,
+  .adminLayoutGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .adminSidebar {
+    position: fixed;
+    z-index: 100;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboardTopGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .panelList {
   display: flex;
   flex-direction: column;

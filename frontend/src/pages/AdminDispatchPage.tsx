@@ -3,13 +3,12 @@ import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { DispatchPipeline } from '../components/DispatchPipeline';
-import { StatusTile } from '../components/StatusTile';
 import { AttentionPanel } from '../components/AttentionPanel';
 import { RequestDrawer } from '../components/RequestDrawer';
 import type { CareRequest } from '../types/index';
 
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
-type TabFilter = typeof TABS[number];
+type TabFilter = (typeof TABS)[number];
 
 export function AdminDispatchPage() {
   const { on } = useRealTime();
@@ -48,7 +47,7 @@ export function AdminDispatchPage() {
       on('VISIT_STATUS_CHANGED', loadDispatch),
     ];
 
-    return () => unsubs.forEach((u) => u());
+    return () => unsubs.forEach((unsubscribe) => unsubscribe());
   }, [on, loadDispatch]);
 
   const tabbed = useMemo(() => {
@@ -160,13 +159,22 @@ export function AdminDispatchPage() {
 
   return (
     <main className="pageStack" role="main" aria-label="Dispatch page">
-      <section className="pageHeaderBlock">
-        <div className="pageHeaderRow">
+      <section className="dispatchHeaderCard">
+        <div className="dispatchHeader">
           <div>
-            <h1 className="pageTitle">Dispatch</h1>
+            <h1 className="pageTitle">Dispatch Center</h1>
             <p className="subtitle">
-              Manage request flow, assign professionals, and monitor active dispatch operations.
+              Mission control for queue movement, expiring offers, and real-time dispatch actions.
             </p>
+
+            <div className="dispatchStats">
+              <span className="dispatchStatPill">{dispatchMetrics.queuedNow} queued</span>
+              <span className="dispatchStatPill">{counts.offered} offered</span>
+              <span className="dispatchStatPill">{counts.accepted + counts.en_route} active</span>
+              <span className="dispatchStatPill dispatchStatPill-alert">
+                {dispatchMetrics.criticalAtRisk} at risk
+              </span>
+            </div>
           </div>
 
           <div className="pageActions">
@@ -177,11 +185,27 @@ export function AdminDispatchPage() {
         </div>
       </section>
 
-      <section className="statusTilesRow" aria-label="Dispatch summary">
-        <StatusTile label="Queued Now" value={dispatchMetrics.queuedNow} color="indigo" />
-        <StatusTile label="Offers Expiring" value={dispatchMetrics.offersExpiring} color="amber" />
-        <StatusTile label="Critical At Risk" value={dispatchMetrics.criticalAtRisk} color="amber" />
-        <StatusTile label="Assigned Today" value={dispatchMetrics.assignedToday} color="blue" />
+      <section className="dashboardTopGrid" aria-label="Dispatch summary">
+        <div className="dashboardMetricCard dashboardMetricCard-indigo">
+          <div className="dashboardMetricLabel">Queued Now</div>
+          <div className="dashboardMetricValue">{dispatchMetrics.queuedNow}</div>
+          <div className="dashboardMetricMeta">Requests waiting for immediate action</div>
+        </div>
+        <div className="dashboardMetricCard dashboardMetricCard-amber">
+          <div className="dashboardMetricLabel">Offers Expiring</div>
+          <div className="dashboardMetricValue">{dispatchMetrics.offersExpiring}</div>
+          <div className="dashboardMetricMeta">Assignments approaching expiry in the next 30 min</div>
+        </div>
+        <div className="dashboardMetricCard dashboardMetricCard-amber">
+          <div className="dashboardMetricLabel">Critical At Risk</div>
+          <div className="dashboardMetricValue">{dispatchMetrics.criticalAtRisk}</div>
+          <div className="dashboardMetricMeta">Critical queue items still unresolved</div>
+        </div>
+        <div className="dashboardMetricCard dashboardMetricCard-blue">
+          <div className="dashboardMetricLabel">Assigned Today</div>
+          <div className="dashboardMetricValue">{dispatchMetrics.assignedToday}</div>
+          <div className="dashboardMetricMeta">Accepted, en route, or completed today</div>
+        </div>
       </section>
 
       <section className="pipelineRow" aria-label="Dispatch pipeline">
