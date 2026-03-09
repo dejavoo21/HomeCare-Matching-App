@@ -84,20 +84,27 @@ export function createWorkforceRouter(pool: Pool) {
       try {
         const requesterRole = normalizeRole(req.user?.role);
         const result = await pool.query(
-          `WITH workload AS (
+          `WITH visit_workload AS (
              SELECT
                professional_id,
                COUNT(*) FILTER (
-                 WHERE status IN ('accepted', 'en_route')
+                 WHERE status IN ('assigned', 'accepted', 'enroute')
                ) AS active_visits,
-               COUNT(*) FILTER (
-                 WHERE status IN ('queued', 'offered')
-               ) AS queued_assignments,
-               MIN(preferred_start) FILTER (
-                 WHERE preferred_start >= now()
+               MIN(scheduled_start) FILTER (
+                 WHERE scheduled_start >= now()
                ) AS next_visit_at
-             FROM care_requests
-             WHERE professional_id IS NOT NULL
+             FROM visits
+             GROUP BY professional_id
+           ),
+           assignment_workload AS (
+             SELECT
+               professional_id,
+               COUNT(*) FILTER (
+                 WHERE accepted_at IS NULL
+                   AND declined_at IS NULL
+                   AND offer_expires_at >= now()
+               ) AS queued_assignments
+             FROM visit_assignments
              GROUP BY professional_id
            )
            SELECT
@@ -106,7 +113,6 @@ export function createWorkforceRouter(pool: Pool) {
              u.email,
              u.phone,
              u.role,
-             u.location,
              u.is_active,
              COALESCE(up.presence_status, CASE WHEN up.last_seen_at >= now() - interval '5 minutes' THEN 'online' ELSE 'offline' END, 'offline') AS presence_status,
              up.custom_status,
@@ -114,12 +120,13 @@ export function createWorkforceRouter(pool: Pool) {
              up.current_visit_id,
              up.region,
              up.last_seen_at,
-             COALESCE(w.active_visits, 0) AS active_visits,
-             COALESCE(w.queued_assignments, 0) AS queued_assignments,
-             w.next_visit_at
+             COALESCE(vw.active_visits, 0) AS active_visits,
+             COALESCE(aw.queued_assignments, 0) AS queued_assignments,
+             vw.next_visit_at
            FROM users u
            LEFT JOIN user_presence up ON up.user_id = u.id
-           LEFT JOIN workload w ON w.professional_id = u.id
+           LEFT JOIN visit_workload vw ON vw.professional_id = u.id
+           LEFT JOIN assignment_workload aw ON aw.professional_id = u.id
            WHERE u.role IN ('nurse', 'doctor')
              AND COALESCE(u.is_active, true) = true
            ORDER BY u.name ASC`
@@ -129,7 +136,7 @@ export function createWorkforceRouter(pool: Pool) {
           id: row.id,
           name: row.name,
           role: row.role,
-          region: row.region || row.location || null,
+          region: row.region || null,
           email: canViewEmail(requesterRole) ? row.email : null,
           phone: canViewPhone(requesterRole) ? row.phone : null,
           presenceStatus: row.presence_status || 'offline',
@@ -174,7 +181,7 @@ export function createWorkforceRouter(pool: Pool) {
 
       try {
         const userResult = await pool.query(
-          `SELECT id, name, role, phone, email, location
+          `SELECT id, name, role, phone, email
            FROM users
            WHERE id = $1
            LIMIT 1`,
@@ -192,7 +199,6 @@ export function createWorkforceRouter(pool: Pool) {
           userId,
           presenceStatus: requestedStatus,
           customStatus,
-          region: user.location || null,
         });
 
         const presenceResult = await pool.query(
@@ -219,7 +225,7 @@ export function createWorkforceRouter(pool: Pool) {
             userId,
             name: user.name,
             role: user.role,
-            region: presence?.region || user.location || null,
+            region: presence?.region || null,
             presenceStatus: presence?.presence_status || requestedStatus,
             customStatus: presence?.custom_status || null,
             lastSeenAt: presence?.last_seen_at || new Date().toISOString(),
@@ -232,7 +238,7 @@ export function createWorkforceRouter(pool: Pool) {
             userId,
             presenceStatus: presence?.presence_status || requestedStatus,
             customStatus: presence?.custom_status || null,
-            region: presence?.region || user.location || null,
+            region: presence?.region || null,
             lastSeenAt: presence?.last_seen_at || new Date().toISOString(),
           },
         });
