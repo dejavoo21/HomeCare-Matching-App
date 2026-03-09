@@ -721,6 +721,17 @@ class ApiClient {
     return this.request('POST', '/clinician/create-follow-up', payload);
   }
 
+  async getWorkforceDirectory() {
+    return this.request('GET', '/workforce/directory');
+  }
+
+  async updateMyPresence(payload: {
+    presenceStatus: 'offline' | 'online' | 'on_shift' | 'in_visit' | 'busy';
+    customStatus?: string;
+  }) {
+    return this.request('POST', '/workforce/presence', payload);
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {

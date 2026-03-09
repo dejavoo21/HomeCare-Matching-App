@@ -13,6 +13,7 @@ export type RealtimeEventType =
   | 'VISIT_STATUS_CHANGED'
   | 'NOTIFICATION_SENT'
   | 'ADMIN_ASSIGNED'
+  | 'PRESENCE_UPDATED'
   | 'HEARTBEAT';
 
 export interface RealtimeEvent {

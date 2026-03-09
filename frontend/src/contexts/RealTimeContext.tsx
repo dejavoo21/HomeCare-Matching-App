@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
+import { api } from "../services/api";
 
 type ConnectionState = "connected" | "reconnecting" | "disconnected";
 type Handler = (event: any) => void;
@@ -18,6 +19,7 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
   const handlersRef = useRef<Map<string, Set<Handler>>>(new Map());
   const esRef = useRef<EventSource | null>(null);
   const offlineTimerRef = useRef<number | null>(null);
+  const presenceHeartbeatRef = useRef<number | null>(null);
 
   const on = (eventType: string, handler: Handler) => {
     const map = handlersRef.current;
@@ -34,6 +36,13 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const clearPresenceHeartbeat = () => {
+    if (presenceHeartbeatRef.current) {
+      window.clearInterval(presenceHeartbeatRef.current);
+      presenceHeartbeatRef.current = null;
+    }
+  };
+
   const armOfflineTimer = () => {
     clearOfflineTimer();
     offlineTimerRef.current = window.setTimeout(() => {
@@ -46,12 +55,14 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
       esRef.current?.close();
       esRef.current = null;
       clearOfflineTimer();
+      clearPresenceHeartbeat();
       setState("disconnected");
       return;
     }
 
     esRef.current?.close();
     clearOfflineTimer();
+    clearPresenceHeartbeat();
 
     const baseUrl = (import.meta as any).env.VITE_API_URL || 'http://localhost:6005';
 
@@ -80,6 +91,7 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
       "VISIT_CREATED",
       "VISIT_STATUS_CHANGED",
       "ADMIN_ASSIGNED",
+      "PRESENCE_UPDATED",
       "HEARTBEAT",
     ];
 
@@ -107,10 +119,17 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
       armOfflineTimer();
     };
 
+    void api.updateMyPresence({ presenceStatus: "online" }).catch(() => {});
+    presenceHeartbeatRef.current = window.setInterval(() => {
+      void api.updateMyPresence({ presenceStatus: "online" }).catch(() => {});
+    }, 60_000);
+
     return () => {
       clearOfflineTimer();
+      clearPresenceHeartbeat();
       listeners.forEach(({ type, fn }) => es.removeEventListener(type, fn));
       es.close();
+      void api.updateMyPresence({ presenceStatus: "offline" }).catch(() => {});
     };
   }, [isAuthenticated]);
 
