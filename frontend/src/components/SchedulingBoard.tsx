@@ -8,6 +8,7 @@ type Professional = {
   email: string;
   role: string;
   is_active?: boolean;
+  location?: string;
 };
 
 type Visit = {
@@ -82,6 +83,19 @@ function formatTime(dateStr: string) {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+function cleanLabel(value?: string | null) {
+  return String(value || '')
+    .replace(/Â·/g, '·')
+    .trim();
+}
+
+function headlineCase(value?: string | null) {
+  return cleanLabel(value)
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function sameDay(a: string, b: Date) {
@@ -196,8 +210,10 @@ export function SchedulingBoard() {
   const [weekStart, setWeekStart] = useState<Date>(() => mondayOf(new Date()));
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [dragging, setDragging] = useState<DragPayload | null>(null);
+  const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
   const [dropBusy, setDropBusy] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [quickCreate, setQuickCreate] = useState<QuickCreateState | null>(null);
   const [quickCreateBusy, setQuickCreateBusy] = useState(false);
@@ -305,6 +321,40 @@ export function SchedulingBoard() {
     );
   }, [visitsByProfessional]);
 
+  const boardSummary = useMemo(() => {
+    const visits = board?.visits || [];
+    return {
+      scheduled: visits.length,
+      unassigned: visits.filter((visit) => !visit.professional_id).length,
+      conflicts: visits.filter((visit) => visit.hasConflict).length,
+      authorizationWarnings: visits.filter((visit) =>
+        ['warning', 'missing', 'expired', 'exhausted'].includes(String(visit.authorizationStatus || ''))
+      ).length,
+      overtimeRisk: visits.filter((visit) => visit.hasOvertimeRisk).length,
+    };
+  }, [board]);
+
+  const schedulePriorities = useMemo(() => {
+    const priorities: string[] = [];
+
+    if (boardSummary.unassigned > 0) {
+      priorities.push(`${boardSummary.unassigned} visit${boardSummary.unassigned === 1 ? '' : 's'} still need assignment`);
+    }
+    if (boardSummary.conflicts > 0) {
+      priorities.push(`${boardSummary.conflicts} conflict signal${boardSummary.conflicts === 1 ? '' : 's'} require review`);
+    }
+    if (boardSummary.authorizationWarnings > 0) {
+      priorities.push(
+        `${boardSummary.authorizationWarnings} authorization warning${boardSummary.authorizationWarnings === 1 ? '' : 's'} detected`
+      );
+    }
+    if (boardSummary.overtimeRisk > 0) {
+      priorities.push(`${boardSummary.overtimeRisk} visit${boardSummary.overtimeRisk === 1 ? '' : 's'} carry overtime risk`);
+    }
+
+    return priorities.slice(0, 4);
+  }, [boardSummary]);
+
   const onDragStart = (event: DragEvent<HTMLDivElement>, visit: Visit) => {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', visit.id);
@@ -318,6 +368,7 @@ export function SchedulingBoard() {
 
   const onDragEnd = () => {
     setDragging(null);
+    setDropTargetKey(null);
   };
 
   const onDropVisit = async (professionalId: string, day: Date) => {
@@ -338,6 +389,7 @@ export function SchedulingBoard() {
 
     try {
       setDropBusy(dropKey);
+      setDropTargetKey(dropKey);
       setMessage('');
       await api.reassignSchedule({
         requestId: dragging.requestId,
@@ -352,6 +404,7 @@ export function SchedulingBoard() {
     } finally {
       setDropBusy(null);
       setDragging(null);
+      setDropTargetKey(null);
     }
   };
 
@@ -479,56 +532,78 @@ export function SchedulingBoard() {
 
   return (
     <main className="scheduleBoardWrap" role="main" aria-label="Scheduling board">
-      <section className="pageHeaderBlock">
-        <div className="pageHeaderRow">
+      <section className="scheduleHeroCard">
+        <div className="scheduleHeroGrid">
           <div>
-            <h1 className="pageTitle">Scheduling Board</h1>
-            <p className="subtitle">
-              Weekly dispatch planning, assignment visibility, and unassigned visit coverage.
+            <div className="scheduleHeroEyebrow">Scheduling Operations</div>
+            <h1 className="scheduleHeroTitle">Care delivery board</h1>
+            <p className="scheduleHeroText">
+              Assign visits, close coverage gaps, manage recurrence, and respond to
+              conflicts from one live scheduling surface.
             </p>
           </div>
 
-          <div className="scheduleBoardControls">
-            <div className="scheduleViewToggle" role="tablist" aria-label="Scheduling view mode">
-              <button
-                type="button"
-                className={viewMode === 'day' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
-                onClick={() => handleViewModeChange('day')}
-                role="tab"
-                aria-selected={viewMode === 'day'}
+          <div className="scheduleHeroControls">
+            <div className="scheduleHeroControlsTitle">Board controls</div>
+
+            <div className="scheduleBoardControls">
+              <div className="scheduleViewToggle" role="tablist" aria-label="Scheduling view mode">
+                <button
+                  type="button"
+                  className={viewMode === 'day' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
+                  onClick={() => handleViewModeChange('day')}
+                  role="tab"
+                  aria-selected={viewMode === 'day'}
+                >
+                  Day
+                </button>
+                <button
+                  type="button"
+                  className={viewMode === 'week' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
+                  onClick={() => handleViewModeChange('week')}
+                  role="tab"
+                  aria-selected={viewMode === 'week'}
+                >
+                  Week
+                </button>
+              </div>
+
+              <div className="scheduleHeroNav">
+                <button className="btn" onClick={moveBackward}>
+                  Previous
+                </button>
+                <div className="scheduleRangePill">{rangeLabel}</div>
+                <button className="btn" onClick={moveForward}>
+                  Next
+                </button>
+              </div>
+
+              <select
+                className="select scheduleRoleSelect"
+                value={role}
+                onChange={(event) => setRole(event.target.value as 'all' | 'nurse' | 'doctor')}
               >
-                Day
-              </button>
-              <button
-                type="button"
-                className={viewMode === 'week' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
-                onClick={() => handleViewModeChange('week')}
-                role="tab"
-                aria-selected={viewMode === 'week'}
-              >
-                Week
-              </button>
+                <option value="all">All professionals</option>
+                <option value="nurse">Nurses only</option>
+                <option value="doctor">Doctors only</option>
+              </select>
+
+              <div className="scheduleHeroActionRow">
+                <button className="btn btn-primary" onClick={openUnassignedQuickCreate} type="button">
+                  Quick create
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    openUnassignedQuickCreate();
+                    setQuickCreateMode('recurring');
+                  }}
+                  type="button"
+                >
+                  Repeat from board
+                </button>
+              </div>
             </div>
-
-            <button className="btn" onClick={moveBackward}>
-              &larr; Previous
-            </button>
-
-            <div className="scheduleRangePill">{rangeLabel}</div>
-
-            <button className="btn" onClick={moveForward}>
-              Next &rarr;
-            </button>
-
-            <select
-              className="select scheduleRoleSelect"
-              value={role}
-              onChange={(event) => setRole(event.target.value as 'all' | 'nurse' | 'doctor')}
-            >
-              <option value="all">All professionals</option>
-              <option value="nurse">Nurses only</option>
-              <option value="doctor">Doctors only</option>
-            </select>
           </div>
         </div>
       </section>
@@ -577,6 +652,36 @@ export function SchedulingBoard() {
         </section>
       ) : (
         <>
+          <section className="scheduleSummaryGrid" aria-label="Scheduling summary">
+            <div className="scheduleSummaryCard scheduleSummaryCard-success">
+              <div className="scheduleSummaryLabel">Scheduled visits</div>
+              <div className="scheduleSummaryValue">{boardSummary.scheduled}</div>
+              <div className="scheduleSummaryText">Visits currently placed on the board</div>
+            </div>
+            <div className="scheduleSummaryCard scheduleSummaryCard-warning">
+              <div className="scheduleSummaryLabel">Unassigned</div>
+              <div className="scheduleSummaryValue">{boardSummary.unassigned}</div>
+              <div className="scheduleSummaryText">Coverage gaps awaiting assignment</div>
+            </div>
+            <div className="scheduleSummaryCard scheduleSummaryCard-danger">
+              <div className="scheduleSummaryLabel">Conflicts</div>
+              <div className="scheduleSummaryValue">{boardSummary.conflicts}</div>
+              <div className="scheduleSummaryText">Overlaps or timing collisions to resolve</div>
+            </div>
+            <div className="scheduleSummaryCard scheduleSummaryCard-info">
+              <div className="scheduleSummaryLabel">Authorization warnings</div>
+              <div className="scheduleSummaryValue">{boardSummary.authorizationWarnings}</div>
+              <div className="scheduleSummaryText">Potential payer or authorization issues</div>
+            </div>
+            <div className="scheduleSummaryCard">
+              <div className="scheduleSummaryLabel">Overtime risk</div>
+              <div className="scheduleSummaryValue">{boardSummary.overtimeRisk}</div>
+              <div className="scheduleSummaryText">Visits tied to overloaded clinician days</div>
+            </div>
+          </section>
+
+          <section className="scheduleCommandLayout">
+            <div className="scheduleMainColumn">
           <section className="scheduleUnassignedCard">
             <div className="scheduleUnassignedHeader">
               <div>
@@ -608,28 +713,40 @@ export function SchedulingBoard() {
                         {formatDay(new Date(visit.preferred_start))} - {formatTime(visit.preferred_start)}
                       </span>
                       <span className="scheduleVisitStatus">
-                        {String(visit.status).replace('_', ' ')}
+                        {headlineCase(String(visit.status))}
                       </span>
                     </div>
 
                     <div className="scheduleVisitTitle">{visit.client_name || 'Client'}</div>
                     <VisitFlags visit={visit} />
-                    <div className="scheduleVisitMeta">{visit.service_type}</div>
+                    <div className="scheduleVisitMeta">{headlineCase(visit.service_type)}</div>
 
                     {visit.address_text ? (
                       <div className="scheduleVisitMeta">{visit.address_text}</div>
                     ) : null}
 
-                    <button
-                      type="button"
-                      className="scheduleVisitThreadBtn"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setRequestChatRequestId(visit.id);
-                      }}
-                    >
-                      Thread
-                    </button>
+                    <div className="scheduleVisitActions">
+                      <button
+                        type="button"
+                        className="scheduleVisitGhostBtn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSelectedVisit(visit);
+                        }}
+                      >
+                        Open
+                      </button>
+                      <button
+                        type="button"
+                        className="scheduleVisitThreadBtn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setRequestChatRequestId(visit.id);
+                        }}
+                      >
+                        Thread
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -674,17 +791,27 @@ export function SchedulingBoard() {
 
                         const dropKey = `${professional.id}-${day.toISOString()}`;
                         const isBusy = dropBusy === dropKey;
+                        const isDropActive = dropTargetKey === dropKey;
 
                         return (
                           <div
                             key={`${professional.id}-${day.toISOString()}`}
                             className={
                               dragging
-                                ? 'scheduleBoardDayCell scheduleBoardDayCell-droppable'
+                                ? isDropActive
+                                  ? 'scheduleBoardDayCell scheduleBoardDayCell-droppable scheduleBoardDayCell-active'
+                                  : 'scheduleBoardDayCell scheduleBoardDayCell-droppable'
                                 : 'scheduleBoardDayCell'
                             }
                             onDragOver={(event) => {
                               event.preventDefault();
+                              setDropTargetKey(dropKey);
+                            }}
+                            onDragEnter={() => setDropTargetKey(dropKey)}
+                            onDragLeave={() => {
+                              if (dropTargetKey === dropKey) {
+                                setDropTargetKey(null);
+                              }
                             }}
                             onDrop={(event) => {
                               event.preventDefault();
@@ -726,7 +853,7 @@ export function SchedulingBoard() {
                                         {formatTime(visit.preferred_start)}
                                       </span>
                                       <span className="scheduleVisitStatus">
-                                        {String(visit.status).replace('_', ' ')}
+                                        {headlineCase(String(visit.status))}
                                       </span>
                                     </div>
 
@@ -734,22 +861,34 @@ export function SchedulingBoard() {
                                       {visit.client_name || 'Client'}
                                     </div>
                                     <VisitFlags visit={visit} />
-                                    <div className="scheduleVisitMeta">{visit.service_type}</div>
+                                    <div className="scheduleVisitMeta">{headlineCase(visit.service_type)}</div>
 
                                     {visit.address_text ? (
                                       <div className="scheduleVisitMeta">{visit.address_text}</div>
                                     ) : null}
 
-                                    <button
-                                      type="button"
-                                      className="scheduleVisitThreadBtn"
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        setRequestChatRequestId(visit.id);
-                                      }}
-                                    >
-                                      Thread
-                                    </button>
+                                    <div className="scheduleVisitActions">
+                                      <button
+                                        type="button"
+                                        className="scheduleVisitGhostBtn"
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          setSelectedVisit(visit);
+                                        }}
+                                      >
+                                        Open
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="scheduleVisitThreadBtn"
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          setRequestChatRequestId(visit.id);
+                                        }}
+                                      >
+                                        Thread
+                                      </button>
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -763,8 +902,135 @@ export function SchedulingBoard() {
               </div>
             </div>
           </section>
+            </div>
+
+            <aside className="scheduleAsideStack">
+              <section className="scheduleAsideCard">
+                <div className="scheduleAsideTitle">Board priorities</div>
+                <p className="scheduleAsideText">
+                  Immediate scheduling issues requiring action in this view.
+                </p>
+
+                <div className="schedulePriorityList">
+                  {schedulePriorities.length === 0 ? (
+                    <div className="schedulePriorityItem schedulePriorityItem-clear">
+                      No urgent scheduling priorities right now.
+                    </div>
+                  ) : (
+                    schedulePriorities.map((item, index) => (
+                      <div key={item} className={`schedulePriorityItem schedulePriorityItem-${index % 3}`}>
+                        {item}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <section className="scheduleAsideCard">
+                <div className="scheduleAsideTitle">Recommended actions</div>
+                <p className="scheduleAsideText">
+                  Use the board to assign coverage, rebalance load, and open request-linked threads.
+                </p>
+
+                <div className="scheduleActionList">
+                  <button className="scheduleActionBtn" type="button" onClick={openUnassignedQuickCreate}>
+                    Quick create one-time visit
+                  </button>
+                  <button
+                    className="scheduleActionBtn"
+                    type="button"
+                    onClick={() => {
+                      openUnassignedQuickCreate();
+                      setQuickCreateMode('recurring');
+                    }}
+                  >
+                    Create recurring schedule
+                  </button>
+                  <button
+                    className="scheduleActionBtn"
+                    type="button"
+                    onClick={() => {
+                      if (unassignedVisits[0]) {
+                        setSelectedVisit(unassignedVisits[0]);
+                      }
+                    }}
+                  >
+                    Review next unassigned visit
+                  </button>
+                </div>
+              </section>
+            </aside>
+          </section>
         </>
       )}
+
+      {selectedVisit ? (
+        <div className="scheduleVisitDetailOverlay" onClick={() => setSelectedVisit(null)}>
+          <section
+            className="scheduleVisitDetailCard"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="scheduleVisitDetailTitle"
+          >
+            <div className="scheduleVisitDetailHeader">
+              <div>
+                <div className="scheduleVisitDetailEyebrow">Visit detail</div>
+                <h3 id="scheduleVisitDetailTitle" className="scheduleVisitDetailTitle">
+                  {selectedVisit.client_name || 'Client'}
+                </h3>
+                <p className="scheduleVisitDetailMeta">
+                  {formatTime(selectedVisit.preferred_start)} | {headlineCase(selectedVisit.service_type)}
+                </p>
+              </div>
+
+              <button type="button" className="btn btn-small" onClick={() => setSelectedVisit(null)}>
+                Close
+              </button>
+            </div>
+
+            <div className="scheduleVisitDetailGrid">
+              <div className="scheduleVisitDetailBox">
+                <span className="scheduleVisitDetailLabel">Assigned clinician</span>
+                <strong>{selectedVisit.professional_name || 'Unassigned'}</strong>
+              </div>
+              <div className="scheduleVisitDetailBox">
+                <span className="scheduleVisitDetailLabel">Visit status</span>
+                <strong>{headlineCase(selectedVisit.status)}</strong>
+              </div>
+              <div className="scheduleVisitDetailBox">
+                <span className="scheduleVisitDetailLabel">Address</span>
+                <strong>{selectedVisit.address_text || 'Address not set'}</strong>
+              </div>
+              <div className="scheduleVisitDetailBox">
+                <span className="scheduleVisitDetailLabel">Risk signal</span>
+                <strong>
+                  {selectedVisit.hasConflict
+                    ? 'Conflict'
+                    : selectedVisit.authorizationStatus && selectedVisit.authorizationStatus !== 'ok'
+                      ? cleanLabel(selectedVisit.authorizationLabel) || 'Authorization warning'
+                      : selectedVisit.workloadLabel
+                        ? cleanLabel(selectedVisit.workloadLabel)
+                        : 'Normal'}
+                </strong>
+              </div>
+            </div>
+
+            <div className="scheduleVisitDetailFlags">
+              <VisitFlags visit={selectedVisit} />
+            </div>
+
+            <div className="scheduleVisitDetailActions">
+              <button type="button" className="btn btn-primary" onClick={() => setRequestChatRequestId(selectedVisit.id)}>
+                Open request thread
+              </button>
+              <button type="button" className="btn" onClick={() => setSelectedVisit(null)}>
+                Back to board
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {quickCreate ? (
         <div className="scheduleQuickCreateOverlay" onClick={closeQuickCreate}>

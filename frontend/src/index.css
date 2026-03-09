@@ -9516,7 +9516,67 @@ html {
   gap: 18px;
 }
 
+.scheduleHeroCard {
+  background: linear-gradient(135deg, #0f172a 0%, #0f3a68 45%, #312e81 100%);
+  border-radius: 28px;
+  padding: 24px;
+  color: #fff;
+  box-shadow: 0 24px 54px rgba(15, 23, 42, 0.2);
+}
+
+.scheduleHeroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 24px;
+  align-items: end;
+}
+
+.scheduleHeroEyebrow,
+.scheduleVisitDetailEyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.scheduleHeroTitle {
+  margin: 8px 0 0;
+  font-size: 34px;
+  line-height: 1.05;
+  font-weight: 900;
+}
+
+.scheduleHeroText {
+  margin: 12px 0 0;
+  max-width: 720px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.scheduleHeroControls {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.scheduleHeroControlsTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 14px;
+}
+
 .scheduleBoardControls {
+  display: grid;
+  gap: 12px;
+}
+
+.scheduleHeroNav,
+.scheduleHeroActionRow {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -9555,8 +9615,8 @@ html {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #4338ca;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
   font-weight: 700;
 }
 
@@ -9564,20 +9624,165 @@ html {
   min-width: 180px;
 }
 
+.scheduleSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.scheduleSummaryCard {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  padding: 18px;
+  background: linear-gradient(180deg, #fff 0%, #fbfcff 100%);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.scheduleSummaryCard-success {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.12) 0%, #ffffff 100%);
+  border-color: rgba(16, 185, 129, 0.16);
+}
+
+.scheduleSummaryCard-warning {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, #ffffff 100%);
+  border-color: rgba(245, 158, 11, 0.16);
+}
+
+.scheduleSummaryCard-danger {
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.12) 0%, #ffffff 100%);
+  border-color: rgba(244, 63, 94, 0.16);
+}
+
+.scheduleSummaryCard-info {
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.12) 0%, #ffffff 100%);
+  border-color: rgba(14, 165, 233, 0.16);
+}
+
+.scheduleSummaryLabel {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scheduleSummaryValue {
+  margin-top: 10px;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.scheduleSummaryText {
+  margin-top: 10px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.scheduleCommandLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: start;
+}
+
+.scheduleMainColumn,
+.scheduleAsideStack {
+  display: grid;
+  gap: 18px;
+}
+
+.scheduleAsideCard {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+}
+
+.scheduleAsideTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.scheduleAsideText {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.schedulePriorityList,
+.scheduleActionList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.schedulePriorityItem {
+  padding: 14px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.schedulePriorityItem-0 {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.schedulePriorityItem-1 {
+  background: rgba(244, 63, 94, 0.12);
+  color: #be123c;
+}
+
+.schedulePriorityItem-2 {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0369a1;
+}
+
+.schedulePriorityItem-clear {
+  background: rgba(15, 23, 42, 0.04);
+  color: #475569;
+}
+
+.scheduleActionBtn {
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #fff;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.scheduleActionBtn:hover {
+  border-color: rgba(79, 70, 229, 0.2);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  transform: translateY(-1px);
+}
+
 .scheduleBoardCard {
   background: #fff;
   border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 18px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  border-radius: 22px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
   overflow: hidden;
 }
 
 .scheduleUnassignedCard {
-  background: #fff;
+  background: linear-gradient(180deg, #fff 0%, #fbfcff 100%);
   border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 18px;
+  border-radius: 22px;
   padding: 18px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
 .scheduleUnassignedHeader {
@@ -9607,8 +9812,8 @@ html {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #4338ca;
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -9671,6 +9876,7 @@ html {
   min-height: 140px;
   padding: 12px;
   border-right: 1px solid rgba(15, 23, 42, 0.06);
+  transition: background 0.18s ease, box-shadow 0.18s ease;
 }
 
 .scheduleBoardDayCell-droppable {
@@ -9686,11 +9892,20 @@ html {
   font-weight: 700;
 }
 
+.scheduleBoardDayCell-active {
+  background: rgba(14, 165, 233, 0.08);
+  box-shadow: inset 0 0 0 2px rgba(14, 165, 233, 0.24);
+}
+
 .scheduleEmptyCell {
-  color: #cbd5e1;
-  font-size: 18px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 700;
   text-align: center;
-  padding-top: 30px;
+  padding: 28px 12px;
+  border: 2px dashed rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .scheduleVisitList {
@@ -9699,11 +9914,11 @@ html {
 }
 
 .scheduleVisitCard {
-  border-radius: 14px;
-  padding: 12px;
+  border-radius: 22px;
+  padding: 14px;
   border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #fff;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
   cursor: grab;
   transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
@@ -9734,7 +9949,28 @@ html {
 }
 
 .scheduleVisitCard-unassigned {
-  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  background: linear-gradient(180deg, #fffdf7 0%, #ffffff 100%);
+}
+
+.scheduleVisitActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.scheduleVisitGhostBtn,
+.scheduleVisitThreadBtn {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.scheduleVisitGhostBtn {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #fff;
+  color: #334155;
 }
 
 .visitFlags {
@@ -9809,14 +10045,14 @@ html {
 
 .scheduleCreateButton {
   align-self: flex-end;
-  min-height: 28px;
-  padding: 0 10px;
+  min-height: 32px;
+  padding: 0 12px;
   margin-bottom: 8px;
   border: 1px solid rgba(99, 102, 241, 0.18);
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(99, 102, 241, 0.1);
   color: #4338ca;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -9828,7 +10064,7 @@ html {
 .scheduleQuickCreateOverlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 220;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10314,10 +10550,106 @@ html {
   font-weight: 600;
 }
 
+.scheduleVisitDetailOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.scheduleVisitDetailCard {
+  width: min(520px, 100%);
+  height: 100%;
+  overflow: auto;
+  background: #fff;
+  border-left: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: -18px 0 50px rgba(15, 23, 42, 0.18);
+  padding: 24px;
+}
+
+.scheduleVisitDetailHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.scheduleVisitDetailTitle {
+  margin: 8px 0 0;
+  font-size: 24px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.scheduleVisitDetailMeta {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.scheduleVisitDetailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.scheduleVisitDetailBox {
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.scheduleVisitDetailLabel {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scheduleVisitDetailFlags {
+  margin-top: 18px;
+}
+
+.scheduleVisitDetailActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
 @media (max-width: 1100px) {
-  .scheduleBoardControls {
-    width: 100%;
-    justify-content: flex-start;
+  .scheduleHeroGrid,
+  .scheduleCommandLayout,
+  .scheduleVisitDetailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .scheduleSummaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .scheduleHeroNav,
+  .scheduleHeroActionRow,
+  .scheduleVisitDetailActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 700px) {
+  .scheduleSummaryGrid,
+  .scheduleVisitDetailGrid {
+    grid-template-columns: 1fr;
   }
 }
 
