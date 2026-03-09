@@ -8739,6 +8739,98 @@ html {
   position: relative;
 }
 
+.presenceMenuRoot {
+  position: relative;
+}
+
+.presenceMenuTrigger {
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.presenceMenuTrigger .presencePill {
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+.presenceMenuChevron {
+  color: rgba(255, 255, 255, 0.82);
+  transition: transform 0.18s ease;
+}
+
+.presenceMenuChevron-open {
+  transform: rotate(180deg);
+}
+
+.presenceMenuPopover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: min(320px, calc(100vw - 24px));
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.14);
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  z-index: 90;
+}
+
+.presenceMenuHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.presenceMenuTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.presenceMenuSubtitle {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.presenceMenuOptions {
+  display: grid;
+  gap: 8px;
+}
+
+.presenceMenuOption {
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.presenceMenuOption-active {
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.16);
+}
+
+.presenceMenuOption .presencePill {
+  width: fit-content;
+}
+
+.presenceMenuNote {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
 .commHubTrigger {
   position: relative;
   min-height: 40px;
@@ -8845,7 +8937,8 @@ html {
     display: none;
   }
 
-  .commHubPopover {
+  .commHubPopover,
+  .presenceMenuPopover {
     right: -12px;
   }
 }
@@ -10780,6 +10873,10 @@ textarea.input:focus {
   .topbarRight {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .topbarUser {
+    white-space: normal;
   }
 
   .topbarBrandText,

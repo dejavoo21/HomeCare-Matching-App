@@ -2,6 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCommunication } from '../contexts/CommunicationContext';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { CommunicationHub } from './CommunicationHub';
+import { PresenceMenu } from './PresenceMenu';
 import '../index.css';
 
 function getConnectionLabel(state: string) {
@@ -42,6 +43,7 @@ export function Navbar() {
           )}
 
           <CommunicationHub />
+          <PresenceMenu />
 
           <div className="topbarUser">
             {user.name} ({user.role})

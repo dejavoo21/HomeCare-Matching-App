@@ -106,6 +106,55 @@ export function createWorkforceRouter(pool: Pool) {
   const router = Router();
 
   router.get(
+    '/me/presence',
+    authMiddleware,
+    requireRole(UserRole.ADMIN, UserRole.NURSE, UserRole.DOCTOR),
+    async (req: AuthRequest, res: Response) => {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      try {
+        const presenceResult = await pool.query(
+          `SELECT
+             user_id,
+             presence_status,
+             custom_status,
+             current_request_id,
+             current_visit_id,
+             region,
+             last_seen_at
+           FROM user_presence
+           WHERE user_id = $1
+           LIMIT 1`,
+          [userId]
+        );
+
+        const presence = presenceResult.rows[0];
+
+        res.json({
+          success: true,
+          data: {
+            userId,
+            presenceStatus: presence?.presence_status || 'online',
+            customStatus: presence?.custom_status || null,
+            currentRequestId: presence?.current_request_id || null,
+            currentVisitId: presence?.current_visit_id || null,
+            region: presence?.region || null,
+            lastSeenAt: presence?.last_seen_at || null,
+          },
+        });
+      } catch (err) {
+        console.error('Workforce self presence error:', err);
+        res.status(500).json({ error: 'Failed to load presence state' });
+      }
+    }
+  );
+
+  router.get(
     '/directory',
     authMiddleware,
     requireRole(UserRole.ADMIN, UserRole.NURSE, UserRole.DOCTOR),

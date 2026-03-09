@@ -745,6 +745,10 @@ class ApiClient {
     return this.request('POST', '/workforce/presence', payload);
   }
 
+  async getMyPresence() {
+    return this.request('GET', '/workforce/me/presence');
+  }
+
   async getWorkforceSummary() {
     return this.request('GET', '/workforce/summary');
   }
