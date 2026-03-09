@@ -12461,3 +12461,89 @@ textarea.input:focus {
     bottom: 12px;
   }
 }
+
+/* ============================================================================
+   LAYOUT DENSITY PASS
+   ============================================================================ */
+
+.dashboardHeroCard,
+.scheduleHeroCard {
+  padding: 20px;
+}
+
+.dashboardHeroGrid,
+.scheduleHeroGrid,
+.dashboardCommandLayout,
+.dispatchCommandLayout {
+  align-items: start;
+}
+
+.dashboardPriorityCard,
+.scheduleHeroControls,
+.dashboardAsideRail,
+.dispatchRail,
+.scheduleAsideStack {
+  align-self: start;
+}
+
+.dashboardHeroGrid {
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+}
+
+.dashboardHeroStats {
+  margin-top: 20px;
+}
+
+.dashboardMainColumn,
+.dashboardAsideRail,
+.dispatchCenterColumn,
+.dispatchRail {
+  gap: 16px;
+}
+
+.dashboardMainColumn {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboardExceptionList,
+.dashboardCoverageList {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dispatchCommandLayout {
+  grid-template-columns: 300px minmax(0, 1fr) 280px;
+}
+
+.scheduleHeroGrid {
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+}
+
+.scheduleHeroControls {
+  padding: 16px;
+}
+
+.scheduleHeroText {
+  max-width: 680px;
+}
+
+@media (max-width: 1400px) {
+  .dashboardMainColumn {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardExceptionList,
+  .dashboardCoverageList {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboardHeroGrid,
+  .scheduleHeroGrid,
+  .dispatchCommandLayout {
+    grid-template-columns: 1fr;
+  }
+}

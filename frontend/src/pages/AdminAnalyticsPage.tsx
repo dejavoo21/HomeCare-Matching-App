@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import AppPage from '../components/layout/AppPage';
+import ContentGrid from '../components/layout/ContentGrid';
 import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
 import KpiCard from '../components/ui/KpiCard';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import { AnalyticsDashboardPanel } from '../components/AnalyticsDashboardPanel';
 
 export function AdminAnalyticsPage() {
@@ -50,29 +52,32 @@ export function AdminAnalyticsPage() {
         <KpiCard title="Review backlog" value="11" subtitle="Pending clinician note reviews" trend="-2" trendTone="success" accent="default" />
       </div>
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-6">
+      <ContentGrid
+        main={
           <SectionCard title="Operational analytics surface" subtitle="Delivery, dispatch, and workload visibility">
             <AnalyticsDashboardPanel refreshKey={refreshKey} />
           </SectionCard>
-        </div>
+        }
+        rail={
+          <>
+            <SectionCard title="Analytics interpretation" subtitle="Executive-friendly story">
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  Completion performance is strong and trending positively.
+                </div>
+                <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  EVV and review-related exceptions still create operational drag.
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Regional and workload analytics should guide staffing, dispatch, and follow-up decisions.
+                </div>
+              </div>
+            </SectionCard>
 
-        <div className="space-y-6">
-          <SectionCard title="Analytics interpretation" subtitle="Executive-friendly story">
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                Completion performance is strong and trending positively.
-              </div>
-              <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                EVV and review-related exceptions still create operational drag.
-              </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                Regional and workload analytics should guide staffing, dispatch, and follow-up decisions.
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-      </div>
+            <AssistantPanel context="dashboard" contextData={{ area: 'analytics' }} />
+          </>
+        }
+      />
     </AppPage>
   );
 }

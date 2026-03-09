@@ -6,7 +6,9 @@ import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import PageHero from '../components/ui/PageHero';
 import AppPage from '../components/layout/AppPage';
+import ContentGrid from '../components/layout/ContentGrid';
 import SectionCard from '../components/ui/SectionCard';
+import KpiCard from '../components/ui/KpiCard';
 import AssistantPanel from '../components/assistant/AssistantPanel';
 import type { CareRequest } from '../types/index';
 
@@ -129,13 +131,14 @@ export function AdminRequestQueuePage() {
         eyebrow="Request operations"
         title="Request queue"
         description="Review queued and in-flight requests, filter operational backlog, and take structured request actions outside the live dispatch center."
-        stats={[
-          { label: 'Queued', value: counts.queued, subtitle: 'Waiting for matching or action' },
-          { label: 'Offered', value: counts.offered, subtitle: 'Offer workflow in progress' },
-          { label: 'Accepted', value: counts.accepted, subtitle: 'Clinician has accepted' },
-          { label: 'Completed', value: counts.completed, subtitle: 'Closed successfully' },
-        ]}
       />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <KpiCard title="Queued" value={counts.queued} subtitle="Waiting for matching or action" accent="warning" />
+        <KpiCard title="Offered" value={counts.offered} subtitle="Offer workflow in progress" accent="info" />
+        <KpiCard title="Accepted" value={counts.accepted} subtitle="Clinician has accepted" accent="success" />
+        <KpiCard title="Completed" value={counts.completed} subtitle="Closed successfully" accent="default" />
+      </div>
 
       <SectionCard title="Queue status" subtitle="Full request management across statuses and urgency">
         <div className="tabs" role="tablist" aria-label="Request queue status filters">
@@ -176,9 +179,8 @@ export function AdminRequestQueuePage() {
         </div>
       </SectionCard>
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div />
-        <div className="space-y-6">
+      <ContentGrid
+        main={
           <SectionCard title="Queue guidance">
             <div className="space-y-3">
               <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
@@ -189,10 +191,9 @@ export function AdminRequestQueuePage() {
               </div>
             </div>
           </SectionCard>
-
-          <AssistantPanel context="dispatch" contextData={{ page: 'request_queue', activeTab: tab }} />
-        </div>
-      </div>
+        }
+        rail={<AssistantPanel context="dispatch" contextData={{ page: 'request_queue', activeTab: tab }} />}
+      />
 
       <RequestChatDrawer
         open={!!requestChatRequestId}

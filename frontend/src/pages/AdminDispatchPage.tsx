@@ -582,33 +582,6 @@ export function AdminDispatchPage() {
               </>
             )}
           </div>
-
-          <div className="dispatchCommandCard">
-            <div className="dispatchCommandCardHeader">
-              <div>
-                <h2 className="dispatchCommandTitle">Request Queue</h2>
-                <p className="muted">
-                  Open the full queue workspace for search, filters, status review, and structured request management.
-                </p>
-              </div>
-            </div>
-
-            <div className="dispatchPriorityList">
-              <button
-                className="dispatchPriorityItem dispatchPriorityItem-soft"
-                onClick={() => navigate('/admin/requests')}
-                type="button"
-              >
-                Open Request Queue
-              </button>
-              <div className="dispatchPriorityItem dispatchPriorityItem-1">
-                Use Dispatch Center for live coordination and immediate exception handling.
-              </div>
-              <div className="dispatchPriorityItem dispatchPriorityItem-2">
-                Use Request Queue for full backlog search, filter control, and status-based administration.
-              </div>
-            </div>
-          </div>
         </section>
 
         <aside className="dispatchRail">
@@ -667,6 +640,31 @@ export function AdminDispatchPage() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+
+          <div className="dispatchCommandCard">
+            <div className="dispatchCommandCardHeader">
+              <div>
+                <h2 className="dispatchCommandTitle">Queue handoff</h2>
+                <p className="muted">Use the right workspace for live coordination versus backlog management.</p>
+              </div>
+            </div>
+
+            <div className="dispatchPriorityList">
+              <button
+                className="dispatchPriorityItem dispatchPriorityItem-soft"
+                onClick={() => navigate('/admin/requests')}
+                type="button"
+              >
+                Open Request Queue
+              </button>
+              <div className="dispatchPriorityItem dispatchPriorityItem-1">
+                Use Dispatch Center for live coordination and immediate exception handling.
+              </div>
+              <div className="dispatchPriorityItem dispatchPriorityItem-2">
+                Use Request Queue for full backlog search, filters, and status-based administration.
+              </div>
             </div>
           </div>
         </aside>
