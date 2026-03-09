@@ -711,6 +711,16 @@ class ApiClient {
     return this.request('POST', '/clinician/admin-action', payload);
   }
 
+  async createFollowUpFromReview(payload: {
+    sourceRequestId: string;
+    preferredStart: string;
+    professionalId?: string;
+    urgency?: string;
+    description?: string;
+  }) {
+    return this.request('POST', '/clinician/create-follow-up', payload);
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {

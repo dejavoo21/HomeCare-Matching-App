@@ -365,5 +365,98 @@ export function createClinicianRouter(pool: Pool) {
     }
   );
 
+  router.post(
+    '/create-follow-up',
+    authMiddleware,
+    requireRole(UserRole.ADMIN),
+    async (req: AuthRequest, res: Response) => {
+      const {
+        sourceRequestId,
+        preferredStart,
+        professionalId,
+        urgency,
+        description,
+      } = req.body || {};
+
+      if (!sourceRequestId || !preferredStart) {
+        res.status(400).json({ error: 'sourceRequestId and preferredStart are required' });
+        return;
+      }
+
+      try {
+        const sourceResult = await pool.query(
+          `SELECT
+             id,
+             client_id,
+             professional_id,
+             service_type,
+             address_text,
+             urgency,
+             description
+           FROM care_requests
+           WHERE id = $1
+           LIMIT 1`,
+          [sourceRequestId]
+        );
+
+        if (sourceResult.rows.length === 0) {
+          res.status(404).json({ error: 'Source visit not found' });
+          return;
+        }
+
+        const source = sourceResult.rows[0];
+        const assignedProfessionalId = professionalId || source.professional_id || null;
+        const nextUrgency = urgency || source.urgency || 'medium';
+
+        const inserted = await pool.query(
+          `INSERT INTO care_requests
+           (client_id, professional_id, service_type, address_text, preferred_start, urgency, status, description, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, 'queued', $7, now(), now())
+           RETURNING *`,
+          [
+            source.client_id,
+            assignedProfessionalId,
+            source.service_type,
+            source.address_text,
+            new Date(preferredStart).toISOString(),
+            nextUrgency,
+            description || `Follow-up: ${source.description || source.service_type}`,
+          ]
+        );
+
+        await pool.query(
+          `UPDATE care_requests
+           SET admin_follow_up_scheduled = true,
+               admin_reviewed_at = now(),
+               admin_reviewed_by = $2,
+               updated_at = now()
+           WHERE id = $1`,
+          [sourceRequestId, req.user?.userId || null]
+        );
+
+        await logAudit(
+          pool,
+          req.user?.userId || null,
+          'ADMIN_FOLLOW_UP_CREATED',
+          'care_request',
+          inserted.rows[0].id,
+          {
+            sourceRequestId,
+            preferredStart,
+            professionalId: assignedProfessionalId,
+          }
+        );
+
+        res.json({
+          success: true,
+          data: inserted.rows[0],
+        });
+      } catch (err) {
+        console.error('Create follow-up error:', err);
+        res.status(500).json({ error: 'Failed to create follow-up visit' });
+      }
+    }
+  );
+
   return router;
 }

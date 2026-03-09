@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AdminClinicianReviewActions } from './AdminClinicianReviewActions';
+import { AdminFollowUpCreateBox } from './AdminFollowUpCreateBox';
 import { api } from '../services/api';
 
 type ReviewItem = {
   id: string;
+  professional_id?: string;
   client_name?: string;
   professional_name?: string;
   professional_role?: string;
@@ -12,6 +14,7 @@ type ReviewItem = {
   preferred_start?: string;
   urgency?: string;
   status?: string;
+  description?: string;
   evv_status?: string;
   visit_notes?: string;
   visit_outcome?: string;
@@ -235,6 +238,16 @@ export function AdminClinicianNotesReview() {
                   initialReviewNotes={item.admin_review_notes || ''}
                   onSaved={load}
                 />
+
+                {item.follow_up_required && !item.admin_follow_up_scheduled ? (
+                  <AdminFollowUpCreateBox
+                    sourceRequestId={item.id}
+                    defaultProfessionalId={item.professional_id || ''}
+                    defaultUrgency={item.urgency || 'medium'}
+                    defaultDescription={item.description || item.service_type || 'Follow-up visit'}
+                    onCreated={load}
+                  />
+                ) : null}
 
                 <div className="reviewFoot">
                   <span>EVV: {item.evv_status || 'not_started'}</span>
