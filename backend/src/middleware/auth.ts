@@ -29,7 +29,9 @@ export function authMiddleware(
     return;
   }
 
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const token =
+    req.headers.authorization?.replace('Bearer ', '') ||
+    req.cookies?.accessToken;
 
   if (!token) {
     res.status(401).json({ error: 'No token provided' });
