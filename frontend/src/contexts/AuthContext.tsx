@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { User, UserRole } from '../types/index';
 import { api } from '../services/api';
+import { getDefaultPermissionsForRole } from '../lib/auth/permissions';
 
 interface AuthContextType {
   user: User | null;
@@ -23,11 +24,18 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function normalizeUser(raw: any): User {
+  const role = raw.role;
+  const permissions =
+    Array.isArray(raw.permissions) && raw.permissions.length > 0
+      ? raw.permissions
+      : getDefaultPermissionsForRole(role);
+
   return {
     id: raw.id || raw.userId,
     name: raw.name || raw.email || 'User',
     email: raw.email,
-    role: raw.role,
+    role,
+    permissions,
     location: raw.location || '',
     isActive: raw.isActive ?? true,
     createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
@@ -64,11 +72,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshMe = useCallback(async () => {
     try {
-      const response = (await api.getMe()) as any;
+      const [response, roleResponse] = await Promise.all([
+        api.getMe() as any,
+        api.getUserRoles().catch(() => null) as any,
+      ]);
       const rawUser = response?.data?.user ?? response?.data;
+      const permissions = roleResponse?.data?.permissions || [];
 
       if (rawUser) {
-        persistUser(normalizeUser(rawUser));
+        persistUser(normalizeUser({ ...rawUser, permissions }));
       } else {
         persistUser(null);
       }
@@ -83,13 +95,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        const response = (await api.getMe()) as any;
+        const [response, roleResponse] = await Promise.all([
+          api.getMe() as any,
+          api.getUserRoles().catch(() => null) as any,
+        ]);
         const rawUser = response?.data?.user ?? response?.data;
+        const permissions = roleResponse?.data?.permissions || [];
 
         if (!mounted) return;
 
         if (rawUser) {
-          persistUser(normalizeUser(rawUser));
+          persistUser(normalizeUser({ ...rawUser, permissions }));
         } else {
           persistUser(null);
         }
@@ -138,14 +154,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Cookies are now set by backend; fetch current user
-      const userResponse = (await api.getMe()) as any;
+      const [userResponse, roleResponse] = await Promise.all([
+        api.getMe() as any,
+        api.getUserRoles().catch(() => null) as any,
+      ]);
       const rawUser = userResponse?.data?.user ?? userResponse?.data;
+      const permissions = roleResponse?.data?.permissions || [];
 
       if (!rawUser) {
         throw new Error('Login succeeded but user profile could not be loaded');
       }
 
-      persistUser(normalizeUser(rawUser));
+      persistUser(normalizeUser({ ...rawUser, permissions }));
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types/index';
+import RequirePermission from '../components/auth/RequirePermission';
+import { PERMISSIONS } from '../lib/auth/permissions';
 
 import { AdminShell } from '../layouts/AdminShell';
 import { LoginPage } from '../pages/LoginPage';
@@ -42,6 +44,16 @@ function ProtectedRoute({
   return element;
 }
 
+function WithPermission({
+  permission,
+  element,
+}: {
+  permission: string;
+  element: React.ReactElement;
+}) {
+  return <RequirePermission permission={permission}>{element}</RequirePermission>;
+}
+
 function DashboardRouter() {
   const { user } = useAuth();
 
@@ -81,18 +93,73 @@ export function AppRoutes() {
         }
       >
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboardPage />} />
-        <Route path="dispatch" element={<AdminDispatchPage />} />
-        <Route path="scheduling" element={<AdminSchedulingPage />} />
-        <Route path="team" element={<AdminTeamPage />} />
-        <Route path="access" element={<AdminAccessPage />} />
+        <Route
+          path="dashboard"
+          element={<WithPermission permission={PERMISSIONS.DASHBOARD_READ} element={<AdminDashboardPage />} />}
+        />
+        <Route
+          path="dispatch"
+          element={<WithPermission permission={PERMISSIONS.DISPATCH_READ} element={<AdminDispatchPage />} />}
+        />
+        <Route
+          path="scheduling"
+          element={<WithPermission permission={PERMISSIONS.SCHEDULING_READ} element={<AdminSchedulingPage />} />}
+        />
+        <Route
+          path="team"
+          element={<WithPermission permission={PERMISSIONS.TEAM_READ} element={<AdminTeamPage />} />}
+        />
+        <Route
+          path="access"
+          element={
+            <WithPermission
+              permission={PERMISSIONS.ACCESS_REQUESTS_READ}
+              element={<AdminAccessPage />}
+            />
+          }
+        />
         <Route path="access-requests" element={<Navigate to="/admin/access" replace />} />
-        <Route path="audit" element={<AdminAuditPage />} />
-        <Route path="clinician-review" element={<AdminClinicianReviewPage />} />
-        <Route path="analytics" element={<AdminAnalyticsPage />} />
-        <Route path="integrations" element={<AdminConnectedSystemsPage />} />
-        <Route path="integrations/reliability" element={<AdminReliabilityPage />} />
-        <Route path="integrations/fhir" element={<AdminFhirPage />} />
+        <Route
+          path="audit"
+          element={<WithPermission permission={PERMISSIONS.AUDIT_READ} element={<AdminAuditPage />} />}
+        />
+        <Route
+          path="clinician-review"
+          element={
+            <WithPermission
+              permission={PERMISSIONS.NOTES_REVIEW}
+              element={<AdminClinicianReviewPage />}
+            />
+          }
+        />
+        <Route
+          path="analytics"
+          element={
+            <WithPermission permission={PERMISSIONS.ANALYTICS_READ} element={<AdminAnalyticsPage />} />
+          }
+        />
+        <Route
+          path="integrations"
+          element={
+            <WithPermission
+              permission={PERMISSIONS.CONNECTED_SYSTEMS_READ}
+              element={<AdminConnectedSystemsPage />}
+            />
+          }
+        />
+        <Route
+          path="integrations/reliability"
+          element={
+            <WithPermission
+              permission={PERMISSIONS.RELIABILITY_READ}
+              element={<AdminReliabilityPage />}
+            />
+          }
+        />
+        <Route
+          path="integrations/fhir"
+          element={<WithPermission permission={PERMISSIONS.FHIR_READ} element={<AdminFhirPage />} />}
+        />
         <Route path="settings" element={<AdminSettingsPage />} />
       </Route>
 

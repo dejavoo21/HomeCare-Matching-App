@@ -39,6 +39,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  permissions?: string[];
   location: string;
   phone?: string;
   isActive: boolean;

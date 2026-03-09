@@ -5,6 +5,11 @@ import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import { InsightCard } from '../components/InsightCard';
+import PermissionNotice from '../components/auth/PermissionNotice';
+import ProtectedAction from '../components/auth/ProtectedAction';
+import { hasPermission } from '../lib/auth/access';
+import { PERMISSIONS } from '../lib/auth/permissions';
+import { useAuth } from '../contexts/AuthContext';
 import type { CareRequest } from '../types/index';
 
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
@@ -51,6 +56,7 @@ function formatServiceType(value?: string) {
 
 export function AdminDispatchPage() {
   const { on } = useRealTime();
+  const { user } = useAuth();
 
   const [requests, setRequests] = useState<CareRequest[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
@@ -326,6 +332,7 @@ export function AdminDispatchPage() {
   const selectedAssignedProfessional = selectedRequest?.assignedProfessionalId
     ? professionalMap.get(selectedRequest.assignedProfessionalId)
     : null;
+  const canManageDispatch = hasPermission(user, PERMISSIONS.DISPATCH_MANAGE);
 
   return (
     <main className="pageStack" role="main" aria-label="Dispatch page">
@@ -528,6 +535,10 @@ export function AdminDispatchPage() {
                   </div>
                 </div>
 
+                {!canManageDispatch ? (
+                  <PermissionNotice description="You can view dispatch details, but reassignment and cancellation actions are restricted to dispatch coordinators." />
+                ) : null}
+
                 <div className="dispatchActionGrid">
                   <button
                     className="dispatchActionTile dispatchActionTile-info"
@@ -537,30 +548,36 @@ export function AdminDispatchPage() {
                     <span className="dispatchActionTitle">Open full request</span>
                     <span className="dispatchActionText">Review offer controls, EVV state, and manual actions.</span>
                   </button>
-                  <button
+                  <ProtectedAction
+                    permission={PERMISSIONS.DISPATCH_READ}
                     className="dispatchActionTile dispatchActionTile-primary"
+                    variant="ghost"
+                    deniedReason="You do not have permission to access request-linked communication."
                     onClick={() => setRequestChatRequestId(selectedRequest.id)}
-                    type="button"
                   >
                     <span className="dispatchActionTitle">Open request thread</span>
                     <span className="dispatchActionText">Continue work-linked communication for this visit.</span>
-                  </button>
-                  <button
+                  </ProtectedAction>
+                  <ProtectedAction
+                    permission={PERMISSIONS.DISPATCH_MANAGE}
                     className="dispatchActionTile dispatchActionTile-warn"
+                    variant="ghost"
+                    deniedReason="Only dispatch coordinators can reassign live coverage."
                     onClick={() => void onRequeue(selectedRequest.id)}
-                    type="button"
                   >
                     <span className="dispatchActionTitle">Reassign coverage</span>
                     <span className="dispatchActionText">Requeue the request and re-open matching.</span>
-                  </button>
-                  <button
+                  </ProtectedAction>
+                  <ProtectedAction
+                    permission={PERMISSIONS.DISPATCH_MANAGE}
                     className="dispatchActionTile dispatchActionTile-danger"
+                    variant="ghost"
+                    deniedReason="Only dispatch coordinators can cancel active requests."
                     onClick={() => void onCancel(selectedRequest.id)}
-                    type="button"
                   >
                     <span className="dispatchActionTitle">Cancel request</span>
                     <span className="dispatchActionText">Stop dispatching and remove it from active queue flow.</span>
-                  </button>
+                  </ProtectedAction>
                 </div>
 
                 <div className="dispatchWorkGrid">

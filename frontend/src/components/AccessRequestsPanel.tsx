@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission, hasPermission } from '../lib/auth/access';
+import { PERMISSIONS } from '../lib/auth/permissions';
 import { verificationBadgeVariant } from '../lib/ui/statusMaps';
+import { api } from '../services/api';
+import LockedField from './auth/LockedField';
+import PermissionNotice from './auth/PermissionNotice';
+import ProtectedAction from './auth/ProtectedAction';
 import Badge from './ui/Badge';
 import Button from './ui/Button';
 import EmptyState from './ui/states/EmptyState';
@@ -68,6 +74,7 @@ export function AccessRequestsPanel({
   refreshKey?: number;
   hideSummary?: boolean;
 }) {
+  const { user } = useAuth();
   const [items, setItems] = useState<AccessRequestRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -182,6 +189,13 @@ export function AccessRequestsPanel({
     }
   };
 
+  const canReview = hasPermission(user, PERMISSIONS.ACCESS_REQUESTS_REVIEW);
+  const reviewOnly = !hasAnyPermission(user, [
+    PERMISSIONS.ACCESS_REQUESTS_REVIEW,
+    PERMISSIONS.ACCESS_REQUESTS_VERIFY,
+    PERMISSIONS.ACCESS_REQUESTS_REQUEST_INFO,
+  ]);
+
   return (
     <div className="sideCard accessWorkflowCard" aria-label="Access requests">
       <div className="sideHeader">
@@ -233,6 +247,8 @@ export function AccessRequestsPanel({
                 draft.licenseVerified &&
                 draft.complianceVerified &&
                 draft.backgroundCheckVerified;
+              const clientRequest = String(item.requested_role).toLowerCase() === 'client';
+
               return (
                 <article key={item.id} className="accessWorkflowItem">
                   <div className="accessTop">
@@ -266,12 +282,8 @@ export function AccessRequestsPanel({
                   </div>
 
                   <div className="accessWorkflowChecks">
-                    <Badge variant={draft.identityVerified ? 'success' : 'neutral'}>
-                      Identity
-                    </Badge>
-                    <Badge variant={draft.licenseVerified ? 'success' : 'neutral'}>
-                      License
-                    </Badge>
+                    <Badge variant={draft.identityVerified ? 'success' : 'neutral'}>Identity</Badge>
+                    <Badge variant={draft.licenseVerified ? 'success' : 'neutral'}>License</Badge>
                     <Badge variant={draft.complianceVerified ? 'success' : 'neutral'}>
                       Compliance
                     </Badge>
@@ -283,6 +295,10 @@ export function AccessRequestsPanel({
                   <div className="verificationPanel">
                     <div className="verificationTitle">Verification</div>
 
+                    {reviewOnly ? (
+                      <PermissionNotice description="You can view this verification record, but approval, rejection, and information-request actions are restricted to authorized reviewers." />
+                    ) : null}
+
                     <div className="documentationChecks">
                       <label className="checkRow">
                         <input
@@ -291,6 +307,7 @@ export function AccessRequestsPanel({
                           onChange={(event) =>
                             updateDraft(item.id, { identityVerified: event.target.checked })
                           }
+                          disabled={!canReview}
                         />
                         <span>Identity verified</span>
                       </label>
@@ -302,6 +319,7 @@ export function AccessRequestsPanel({
                           onChange={(event) =>
                             updateDraft(item.id, { licenseVerified: event.target.checked })
                           }
+                          disabled={!canReview}
                         />
                         <span>License verified</span>
                       </label>
@@ -313,6 +331,7 @@ export function AccessRequestsPanel({
                           onChange={(event) =>
                             updateDraft(item.id, { complianceVerified: event.target.checked })
                           }
+                          disabled={!canReview}
                         />
                         <span>Compliance documents verified</span>
                       </label>
@@ -324,46 +343,68 @@ export function AccessRequestsPanel({
                           onChange={(event) =>
                             updateDraft(item.id, { backgroundCheckVerified: event.target.checked })
                           }
+                          disabled={!canReview}
                         />
                         <span>Background check verified</span>
                       </label>
                     </div>
 
                     <div className="accessVerificationGrid">
-                      <label className="checkRow">
-                        <input
-                          type="checkbox"
-                          checked={draft.additionalInfoRequested}
+                      <LockedField
+                        permission={PERMISSIONS.ACCESS_REQUESTS_REQUEST_INFO}
+                        label="Additional information request"
+                        deniedReason="Review only"
+                        readOnlyValue={
+                          draft.additionalInfoRequested
+                            ? draft.additionalInfoNote || 'Additional information has been requested.'
+                            : 'No additional information request has been raised.'
+                        }
+                      >
+                        <div className="space-y-3">
+                          <label className="checkRow">
+                            <input
+                              type="checkbox"
+                              checked={draft.additionalInfoRequested}
+                              onChange={(event) =>
+                                updateDraft(item.id, {
+                                  additionalInfoRequested: event.target.checked,
+                                })
+                              }
+                            />
+                            <span>Request additional information</span>
+                          </label>
+
+                          <textarea
+                            className="input accessTextarea"
+                            rows={3}
+                            value={draft.additionalInfoNote}
+                            onChange={(event) =>
+                              updateDraft(item.id, { additionalInfoNote: event.target.value })
+                            }
+                            placeholder="List missing documents, certifications, or identity proof..."
+                          />
+                        </div>
+                      </LockedField>
+
+                      <LockedField
+                        permission={PERMISSIONS.ACCESS_REQUESTS_REVIEW}
+                        label="Verification note"
+                        deniedReason="Review only"
+                        readOnlyValue={draft.reviewNotes || 'No internal review note available.'}
+                      >
+                        <textarea
+                          className="input accessTextarea"
+                          rows={3}
+                          value={draft.reviewNotes}
                           onChange={(event) =>
-                            updateDraft(item.id, { additionalInfoRequested: event.target.checked })
+                            updateDraft(item.id, { reviewNotes: event.target.value })
                           }
+                          placeholder="Add internal review notes or onboarding comments..."
                         />
-                        <span>Request additional information</span>
-                      </label>
-
-                      <textarea
-                        className="input accessTextarea"
-                        rows={3}
-                        value={draft.additionalInfoNote}
-                        onChange={(event) =>
-                          updateDraft(item.id, { additionalInfoNote: event.target.value })
-                        }
-                        placeholder="List missing documents, certifications, or identity proof..."
-                      />
-
-                      <textarea
-                        className="input accessTextarea"
-                        rows={3}
-                        value={draft.reviewNotes}
-                        onChange={(event) =>
-                          updateDraft(item.id, { reviewNotes: event.target.value })
-                        }
-                        placeholder="Add internal review notes or onboarding comments..."
-                      />
+                      </LockedField>
                     </div>
 
-                    {!verificationCompleted &&
-                    String(item.requested_role).toLowerCase() !== 'client' ? (
+                    {!verificationCompleted && !clientRequest ? (
                       <div className="accessBlockedNote">
                         Onboarding remains blocked until identity, license, compliance, and
                         background checks are complete.
@@ -380,33 +421,28 @@ export function AccessRequestsPanel({
                       <Button
                         variant="secondary"
                         type="button"
-                        disabled={busyId === item.id}
+                        disabled={busyId === item.id || !canReview}
                         onClick={() => saveVerification(item)}
+                        title={!canReview ? 'You can view this request, but only reviewers can save verification changes.' : undefined}
                       >
                         Save Verification
                       </Button>
-                      <Button
+                      <ProtectedAction
+                        permission={PERMISSIONS.ACCESS_REQUESTS_VERIFY}
                         variant="success"
-                        type="button"
-                        disabled={
-                          busyId === item.id ||
-                          item.status === 'approved' ||
-                          (!verificationCompleted &&
-                            String(item.requested_role).toLowerCase() !== 'client') ||
-                          draft.additionalInfoRequested
-                        }
+                        deniedReason="You do not have verification authority to unlock onboarding."
                         onClick={() => decide(item, 'approved')}
                       >
                         Verify & Unlock Onboarding
-                      </Button>
-                      <Button
+                      </ProtectedAction>
+                      <ProtectedAction
+                        permission={PERMISSIONS.ACCESS_REQUESTS_REVIEW}
                         variant="danger"
-                        type="button"
-                        disabled={busyId === item.id || item.status === 'rejected'}
+                        deniedReason="You do not have review authority to reject access requests."
                         onClick={() => decide(item, 'rejected')}
                       >
                         Reject
-                      </Button>
+                      </ProtectedAction>
                     </div>
                   </div>
                 </article>

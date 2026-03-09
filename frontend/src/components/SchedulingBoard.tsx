@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState, type DragEvent } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { hasPermission } from '../lib/auth/access';
+import { PERMISSIONS } from '../lib/auth/permissions';
 import { api } from '../services/api';
+import PermissionNotice from './auth/PermissionNotice';
+import ProtectedAction from './auth/ProtectedAction';
 import { RequestChatDrawer } from './RequestChatDrawer';
 
 type Professional = {
@@ -203,6 +208,7 @@ function VisitFlags({ visit }: { visit: Visit }) {
 }
 
 export function SchedulingBoard() {
+  const { user } = useAuth();
   const [board, setBoard] = useState<BoardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -529,6 +535,8 @@ export function SchedulingBoard() {
 
   const boardColumns = `220px repeat(${weekDays.length}, minmax(${viewMode === 'day' ? 280 : 180}px, 1fr))`;
   const boardMinWidth = viewMode === 'day' ? '500px' : '1480px';
+  const canCreateSchedule = hasPermission(user, PERMISSIONS.SCHEDULING_CREATE);
+  const canAssignSchedule = hasPermission(user, PERMISSIONS.SCHEDULING_ASSIGN);
 
   return (
     <main className="scheduleBoardWrap" role="main" aria-label="Scheduling board">
@@ -589,19 +597,25 @@ export function SchedulingBoard() {
               </select>
 
               <div className="scheduleHeroActionRow">
-                <button className="btn btn-primary" onClick={openUnassignedQuickCreate} type="button">
+                <ProtectedAction
+                  permission={PERMISSIONS.SCHEDULING_CREATE}
+                  variant="primary"
+                  deniedReason="You can view the board, but only schedulers can create visits."
+                  onClick={openUnassignedQuickCreate}
+                >
                   Quick create
-                </button>
-                <button
-                  className="btn"
+                </ProtectedAction>
+                <ProtectedAction
+                  permission={PERMISSIONS.SCHEDULING_CREATE}
+                  variant="secondary"
+                  deniedReason="You do not have permission to create recurring scheduling instances."
                   onClick={() => {
                     openUnassignedQuickCreate();
                     setQuickCreateMode('recurring');
                   }}
-                  type="button"
                 >
                   Repeat from board
-                </button>
+                </ProtectedAction>
               </div>
             </div>
           </div>
@@ -822,6 +836,12 @@ export function SchedulingBoard() {
                               type="button"
                               className="scheduleCreateButton"
                               onClick={() => openQuickCreate(professional, day)}
+                              disabled={!canCreateSchedule}
+                              title={
+                                !canCreateSchedule
+                                  ? 'You can view this lane, but only schedulers can create visits.'
+                                  : undefined
+                              }
                             >
                               + Create
                             </button>
@@ -932,8 +952,18 @@ export function SchedulingBoard() {
                   Use the board to assign coverage, rebalance load, and open request-linked threads.
                 </p>
 
+                {!canCreateSchedule || !canAssignSchedule ? (
+                  <PermissionNotice description="You can view this scheduling board, but creation and reassignment controls are restricted by role." />
+                ) : null}
+
                 <div className="scheduleActionList">
-                  <button className="scheduleActionBtn" type="button" onClick={openUnassignedQuickCreate}>
+                  <button
+                    className="scheduleActionBtn"
+                    type="button"
+                    onClick={openUnassignedQuickCreate}
+                    disabled={!canCreateSchedule}
+                    title={!canCreateSchedule ? 'You can view the board, but only schedulers can create visits.' : undefined}
+                  >
                     Quick create one-time visit
                   </button>
                   <button
@@ -943,6 +973,8 @@ export function SchedulingBoard() {
                       openUnassignedQuickCreate();
                       setQuickCreateMode('recurring');
                     }}
+                    disabled={!canCreateSchedule}
+                    title={!canCreateSchedule ? 'You do not have permission to create recurring scheduling instances.' : undefined}
                   >
                     Create recurring schedule
                   </button>
@@ -1021,9 +1053,14 @@ export function SchedulingBoard() {
             </div>
 
             <div className="scheduleVisitDetailActions">
-              <button type="button" className="btn btn-primary" onClick={() => setRequestChatRequestId(selectedVisit.id)}>
+              <ProtectedAction
+                permission={PERMISSIONS.SCHEDULING_READ}
+                variant="primary"
+                deniedReason="You do not have permission to access request-linked communication."
+                onClick={() => setRequestChatRequestId(selectedVisit.id)}
+              >
                 Open request thread
-              </button>
+              </ProtectedAction>
               <button type="button" className="btn" onClick={() => setSelectedVisit(null)}>
                 Back to board
               </button>
