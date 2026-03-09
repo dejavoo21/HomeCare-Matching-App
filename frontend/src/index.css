@@ -10421,6 +10421,75 @@ textarea.input:focus {
   text-decoration: underline;
 }
 
+.teamAvailabilitySummary {
+  gap: 14px;
+}
+
+.teamAvailabilityMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.teamAvailabilityPreview {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.teamAvailabilityPreviewLabel {
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.teamAvailabilityPreviewList {
+  display: grid;
+  gap: 10px;
+}
+
+.teamAvailabilityPreviewItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.teamAvailabilityPreviewIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.teamAvailabilityPreviewAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+  color: #312e81;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.teamAvailabilityPreviewName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .teamSummaryGrid,
 .settingsOverviewGrid {
   display: grid;
@@ -10665,6 +10734,10 @@ textarea.input:focus {
 
   .summaryStrip {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .teamAvailabilityMetrics {
+    grid-template-columns: 1fr;
   }
 }
 

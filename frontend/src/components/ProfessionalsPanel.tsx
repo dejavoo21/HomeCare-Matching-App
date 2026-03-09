@@ -80,6 +80,7 @@ export function ProfessionalsPanel({
     (p) => String(p.role).toLowerCase() === "doctor" && (p.isActive ?? true)
   ).length;
   const activeCount = (pros || []).filter((p) => (p.isActive ?? p.is_active ?? true) === true).length;
+  const summaryPreview = filtered.slice(0, 3);
 
   return (
     <div className="sideCard">
@@ -96,8 +97,8 @@ export function ProfessionalsPanel({
       </div>
 
       {summaryOnly ? (
-        <div className="rowGap">
-          <div className="settingsOverviewGrid">
+        <div className="rowGap teamAvailabilitySummary">
+          <div className="teamAvailabilityMetrics">
             <div className="settingsOverviewCard">
               <div className="settingsOverviewLabel">Active</div>
               <div className="settingsOverviewValue">{activeCount}</div>
@@ -112,59 +113,86 @@ export function ProfessionalsPanel({
             </div>
           </div>
 
+          <div className="teamAvailabilityPreview">
+            <div className="teamAvailabilityPreviewLabel">Available roster preview</div>
+            {summaryPreview.length === 0 ? (
+              <div className="muted tiny">No active clinicians available right now.</div>
+            ) : (
+              <div className="teamAvailabilityPreviewList">
+                {summaryPreview.map((professional) => (
+                  <div key={professional.id} className="teamAvailabilityPreviewItem">
+                    <div className="teamAvailabilityPreviewIdentity">
+                      <span className="teamAvailabilityPreviewAvatar">{initials(professional.name)}</span>
+                      <span className="teamAvailabilityPreviewName">{professional.name}</span>
+                    </div>
+                    <span
+                      className={
+                        String(professional.role).toLowerCase() === "doctor"
+                          ? "roleBadge roleDoctor"
+                          : "roleBadge roleNurse"
+                      }
+                    >
+                      {String(professional.role).toUpperCase()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <Link to="/admin/team" className="summaryLinkAction">
             Open Team Roster →
           </Link>
         </div>
       ) : (
-      <div className="rowGap">
-        <input
-          className="input"
-          placeholder="Search team..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
+        <div className="rowGap">
+          <input
+            className="input"
+            placeholder="Search team..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
 
-        <div className="chips">
-          <button className={role === "all" ? "chip chip-active" : "chip"} onClick={() => setRole("all")}>All</button>
-          <button className={role === "nurse" ? "chip chip-active" : "chip"} onClick={() => setRole("nurse")}>Nurses</button>
-          <button className={role === "doctor" ? "chip chip-active" : "chip"} onClick={() => setRole("doctor")}>Doctors</button>
-        </div>
-
-        {loading ? (
-          <div className="skeletonList">
-            <div className="skRow" />
-            <div className="skRow" />
-            <div className="skRow" />
+          <div className="chips">
+            <button className={role === "all" ? "chip chip-active" : "chip"} onClick={() => setRole("all")}>All</button>
+            <button className={role === "nurse" ? "chip chip-active" : "chip"} onClick={() => setRole("nurse")}>Nurses</button>
+            <button className={role === "doctor" ? "chip chip-active" : "chip"} onClick={() => setRole("doctor")}>Doctors</button>
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="emptyState">
-            <div className="emptyTitle">No active professionals</div>
-            <p className="muted">Check roles, active status, or admin permissions.</p>
-          </div>
-        ) : (
-          <div className="proList">
-            {filtered.map((p) => (
-              <div key={p.id} className="proRow">
-                <div className="proAvatar">{initials(p.name)}</div>
 
-                <div className="proMeta">
-                  <div className="proName">{p.name}</div>
-                  <div className="muted proSub">{p.email}</div>
+          {loading ? (
+            <div className="skeletonList">
+              <div className="skRow" />
+              <div className="skRow" />
+              <div className="skRow" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="emptyState">
+              <div className="emptyTitle">No active professionals</div>
+              <p className="muted">Check roles, active status, or admin permissions.</p>
+            </div>
+          ) : (
+            <div className="proList">
+              {filtered.map((p) => (
+                <div key={p.id} className="proRow">
+                  <div className="proAvatar">{initials(p.name)}</div>
+
+                  <div className="proMeta">
+                    <div className="proName">{p.name}</div>
+                    <div className="muted proSub">{p.email}</div>
+                  </div>
+
+                  <span className={String(p.role).toLowerCase() === "doctor" ? "roleBadge roleDoctor" : "roleBadge roleNurse"}>
+                    {String(p.role).toUpperCase()}
+                  </span>
                 </div>
+              ))}
+            </div>
+          )}
 
-                <span className={String(p.role).toLowerCase() === "doctor" ? "roleBadge roleDoctor" : "roleBadge roleNurse"}>
-                  {String(p.role).toUpperCase()}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {filtered.length > 8 && (
-          <div className="muted tiny">Showing 8 of {filtered.length}</div>
-        )}
-      </div>
+          {filtered.length > 8 && (
+            <div className="muted tiny">Showing 8 of {filtered.length}</div>
+          )}
+        </div>
       )}
     </div>
   );
