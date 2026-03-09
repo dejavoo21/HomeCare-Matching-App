@@ -60,6 +60,14 @@ export function AssistantWidget() {
   }, [messages, open]);
 
   const pageSuggestions = useMemo(() => {
+    if (location.pathname.includes('/admin/requests')) {
+      return [
+        'Summarize queued requests',
+        'Show critical items',
+        'Explain queue backlog',
+        'Recommend next queue actions',
+      ];
+    }
     if (location.pathname.includes('/admin/integrations') && !location.pathname.includes('/admin/integrations/reliability') && !location.pathname.includes('/admin/integrations/fhir')) {
       return [
         'Summarize connector health',
@@ -181,6 +189,16 @@ export function AssistantWidget() {
 
     if (normalized.includes('unassigned visits') || normalized.includes('overloaded today')) {
       navigate('/admin/scheduling');
+      return;
+    }
+
+    if (
+      normalized.includes('queued requests') ||
+      normalized.includes('critical items') ||
+      normalized.includes('queue backlog') ||
+      normalized.includes('queue actions')
+    ) {
+      navigate('/admin/requests');
       return;
     }
 

@@ -59,7 +59,8 @@ const navSections: NavSection[] = [
     label: 'Operations',
     items: [
       { to: '/admin/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard', permission: PERMISSIONS.DASHBOARD_READ },
-      { to: '/admin/dispatch', icon: <Ambulance size={18} />, label: 'Dispatch', permission: PERMISSIONS.DISPATCH_READ },
+      { to: '/admin/dispatch', icon: <Ambulance size={18} />, label: 'Dispatch Center', permission: PERMISSIONS.DISPATCH_READ },
+      { to: '/admin/requests', icon: <ClipboardList size={18} />, label: 'Request Queue', permission: PERMISSIONS.DISPATCH_READ },
       { to: '/admin/scheduling', icon: <Calendar size={18} />, label: 'Scheduling Board', permission: PERMISSIONS.SCHEDULING_READ },
       { to: '/admin/analytics', icon: <BarChart3 size={18} />, label: 'Analytics', permission: PERMISSIONS.ANALYTICS_READ },
     ],

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
-import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestDrawer } from '../components/RequestDrawer';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import { InsightCard } from '../components/InsightCard';
@@ -11,9 +11,6 @@ import { hasPermission } from '../lib/auth/access';
 import { PERMISSIONS } from '../lib/auth/permissions';
 import { useAuth } from '../contexts/AuthContext';
 import type { CareRequest } from '../types/index';
-
-const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
-type TabFilter = (typeof TABS)[number];
 type Professional = {
   id: string;
   name: string;
@@ -55,28 +52,23 @@ function formatServiceType(value?: string) {
 }
 
 export function AdminDispatchPage() {
+  const navigate = useNavigate();
   const { on } = useRealTime();
   const { user } = useAuth();
 
   const [requests, setRequests] = useState<CareRequest[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<CareRequest | null>(null);
   const [drawerRequest, setDrawerRequest] = useState<CareRequest | null>(null);
   const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
-  const [tab, setTab] = useState<TabFilter>('queued');
-  const [search, setSearch] = useState('');
 
   const loadDispatch = useCallback(async () => {
     try {
-      setIsLoading(true);
       const reqs = (await api.getAllRequests()) as any;
       setRequests(reqs?.data || []);
     } catch (err) {
       console.error('Failed to load dispatch page:', err);
       setRequests([]);
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -119,32 +111,6 @@ export function AdminDispatchPage() {
 
     return () => unsubs.forEach((unsubscribe) => unsubscribe());
   }, [on, loadDispatch]);
-
-  const tabbed = useMemo(() => {
-    return requests
-      .filter((request) => String(request.status).toLowerCase() === tab)
-      .sort((a, b) => {
-        if (tab === 'offered') {
-          const aExpires = a.offerExpiresAt
-            ? new Date(a.offerExpiresAt).getTime()
-            : Number.POSITIVE_INFINITY;
-          const bExpires = b.offerExpiresAt
-            ? new Date(b.offerExpiresAt).getTime()
-            : Number.POSITIVE_INFINITY;
-          return aExpires - bExpires;
-        }
-
-        const rank = (urgency: string) =>
-          ({ critical: 0, high: 1, medium: 2, low: 3 }[String(urgency).toLowerCase()] ?? 9);
-
-        const urgencyDiff = rank(a.urgency) - rank(b.urgency);
-        if (urgencyDiff !== 0) {
-          return urgencyDiff;
-        }
-
-        return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
-      });
-  }, [requests, tab]);
 
   const counts = useMemo(
     () => ({
@@ -294,14 +260,6 @@ export function AdminDispatchPage() {
     return items.slice(0, 4);
   }, [counts.en_route, counts.queued, dispatchMetrics.criticalAtRisk, dispatchMetrics.offersExpiring]);
 
-  const onOffer = async (requestId: string) => {
-    const request = requests.find((item) => item.id === requestId);
-    if (request) {
-      setSelectedRequest(request);
-      setDrawerRequest(request);
-    }
-  };
-
   const onRequeue = async (id: string) => {
     try {
       await api.requeueRequest(id);
@@ -317,15 +275,6 @@ export function AdminDispatchPage() {
       await loadDispatch();
     } catch (err) {
       console.error('Failed to cancel request:', err);
-    }
-  };
-
-  const onSetUrgency = async (id: string, urgency: string) => {
-    try {
-      await api.setUrgency(id, urgency);
-      await loadDispatch();
-    } catch (err) {
-      console.error('Failed to set urgency:', err);
     }
   };
 
@@ -625,6 +574,33 @@ export function AdminDispatchPage() {
               </>
             )}
           </div>
+
+          <div className="dispatchCommandCard">
+            <div className="dispatchCommandCardHeader">
+              <div>
+                <h2 className="dispatchCommandTitle">Request Queue</h2>
+                <p className="muted">
+                  Open the full queue workspace for search, filters, status review, and structured request management.
+                </p>
+              </div>
+            </div>
+
+            <div className="dispatchPriorityList">
+              <button
+                className="dispatchPriorityItem dispatchPriorityItem-soft"
+                onClick={() => navigate('/admin/requests')}
+                type="button"
+              >
+                Open Request Queue
+              </button>
+              <div className="dispatchPriorityItem dispatchPriorityItem-1">
+                Use Dispatch Center for live coordination and immediate exception handling.
+              </div>
+              <div className="dispatchPriorityItem dispatchPriorityItem-2">
+                Use Request Queue for full backlog search, filter control, and status-based administration.
+              </div>
+            </div>
+          </div>
         </section>
 
         <aside className="dispatchRail">
@@ -687,46 +663,6 @@ export function AdminDispatchPage() {
           </div>
         </aside>
       </section>
-
-      <section className="dashboardSection">
-        <div className="tabs" role="tablist" aria-label="Dispatch status filters">
-          {TABS.map((currentTab) => (
-            <button
-              key={currentTab}
-              className={tab === currentTab ? 'tab tab-active' : 'tab'}
-              onClick={() => setTab(currentTab)}
-              role="tab"
-              aria-selected={tab === currentTab}
-            >
-              {currentTab.replace('_', ' ').toUpperCase()}
-              <span className="tabCount">
-                {requests.filter((request) => String(request.status).toLowerCase() === currentTab).length}
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {isLoading ? (
-        <div className="pageCard">
-          <div className="empty">Loading dispatch queue...</div>
-        </div>
-      ) : (
-        <DispatchQueueTable
-          requests={tabbed as any}
-          onView={(request) => {
-            setSelectedRequest(request);
-            setDrawerRequest(request);
-          }}
-          onOpenThread={setRequestChatRequestId}
-          onOffer={onOffer}
-          onRequeue={onRequeue}
-          onCancel={onCancel}
-          onSetUrgency={onSetUrgency}
-          search={search}
-          onSearchChange={setSearch}
-        />
-      )}
 
       <RequestDrawer
         request={drawerRequest}
