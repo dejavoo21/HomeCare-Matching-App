@@ -12,6 +12,21 @@ function canUseRequestChat(role?: string) {
   return ['admin', 'doctor', 'nurse'].includes(normalizeRole(role));
 }
 
+async function columnExists(pool: Pool, tableName: string, columnName: string) {
+  const result = await pool.query(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = $1
+         AND column_name = $2
+     ) AS exists`,
+    [tableName, columnName]
+  );
+
+  return !!result.rows[0]?.exists;
+}
+
 async function logAudit(
   pool: Pool,
   actorUserId: string | null,
@@ -61,21 +76,22 @@ export function createRequestChatRouter(pool: Pool) {
       }
 
       try {
+        const hasProfessionalId = await columnExists(pool, 'care_requests', 'professional_id');
         const requestResult = await pool.query(
           `SELECT
              cr.id,
              cr.client_id,
-             cr.professional_id,
              cr.service_type,
              cr.status,
              cr.urgency,
              cr.address_text,
              cr.preferred_start,
              c.name AS client_name,
-             p.name AS professional_name
+             ${hasProfessionalId ? 'cr.professional_id,' : 'NULL::uuid AS professional_id,'}
+             ${hasProfessionalId ? 'p.name AS professional_name' : 'NULL::text AS professional_name'}
            FROM care_requests cr
            LEFT JOIN users c ON c.id = cr.client_id
-           LEFT JOIN users p ON p.id = cr.professional_id
+           ${hasProfessionalId ? 'LEFT JOIN users p ON p.id = cr.professional_id' : ''}
            WHERE cr.id = $1
            LIMIT 1`,
           [requestId]
@@ -243,6 +259,7 @@ export function createRequestChatRouter(pool: Pool) {
       }
 
       try {
+        const hasProfessionalId = await columnExists(pool, 'care_requests', 'professional_id');
         const result = await pool.query(
           `SELECT
              c.id AS conversation_id,
@@ -253,11 +270,11 @@ export function createRequestChatRouter(pool: Pool) {
              cr.address_text,
              cr.preferred_start,
              client_user.name AS client_name,
-             pro_user.name AS professional_name
+             ${hasProfessionalId ? 'pro_user.name AS professional_name' : 'NULL::text AS professional_name'}
            FROM conversations c
            JOIN care_requests cr ON cr.id = c.request_id
            LEFT JOIN users client_user ON client_user.id = cr.client_id
-           LEFT JOIN users pro_user ON pro_user.id = cr.professional_id
+           ${hasProfessionalId ? 'LEFT JOIN users pro_user ON pro_user.id = cr.professional_id' : ''}
            JOIN conversation_participants cp
              ON cp.conversation_id = c.id
             AND cp.user_id = $2
