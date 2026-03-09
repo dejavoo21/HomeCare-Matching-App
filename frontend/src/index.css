@@ -10308,6 +10308,11 @@ textarea.input:focus {
   padding: 22px 18px;
 }
 
+.premiumEmptyState-danger {
+  border-color: rgba(239, 68, 68, 0.18);
+  background: linear-gradient(180deg, rgba(255, 248, 248, 0.98), #ffffff);
+}
+
 .premiumEmptyTitle {
   font-size: 20px;
   font-weight: 800;
@@ -10764,6 +10769,55 @@ textarea.input:focus {
   min-width: 0;
 }
 
+.scheduleStateCard {
+  min-height: 220px;
+  display: grid;
+  align-items: center;
+}
+
+.accessWorkflowSummary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.accessWorkflowMetric {
+  border-radius: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  display: grid;
+  gap: 8px;
+}
+
+.accessWorkflowMetric-neutral {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), #ffffff);
+}
+
+.accessWorkflowMetric-warn {
+  border-color: rgba(245, 158, 11, 0.18);
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.92), #ffffff);
+}
+
+.accessWorkflowMetric-good {
+  border-color: rgba(16, 185, 129, 0.18);
+  background: linear-gradient(180deg, rgba(236, 253, 245, 0.92), #ffffff);
+}
+
+.accessWorkflowMetricLabel {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.accessWorkflowMetricValue {
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
 .accessWorkflowItem {
   display: grid;
   gap: 14px;
@@ -10784,6 +10838,12 @@ textarea.input:focus {
 .accessVerificationGrid {
   display: grid;
   gap: 12px;
+}
+
+.accessWorkflowChecks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .accessTextarea {
@@ -10851,6 +10911,10 @@ textarea.input:focus {
   .settingsGrid,
   .pageGridTwo,
   .teamToolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .accessWorkflowSummary {
     grid-template-columns: 1fr;
   }
 

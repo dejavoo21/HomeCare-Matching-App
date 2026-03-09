@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 
 type AccessRequestRow = {
@@ -81,6 +81,15 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
   useEffect(() => {
     load();
   }, [refreshKey]);
+
+  const summary = useMemo(
+    () => ({
+      pending: items.filter((item) => item.status === 'pending').length,
+      infoRequested: items.filter((item) => item.additional_info_requested).length,
+      verified: items.filter((item) => item.verification_completed).length,
+    }),
+    [items]
+  );
 
   const updateDraft = (id: string, patch: Partial<VerificationDraft>) => {
     setDrafts((prev) => ({
@@ -168,6 +177,23 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
       </div>
 
       <div className="rowGap">
+        {!loading ? (
+          <div className="accessWorkflowSummary">
+            <div className="accessWorkflowMetric accessWorkflowMetric-neutral">
+              <span className="accessWorkflowMetricLabel">Pending</span>
+              <strong className="accessWorkflowMetricValue">{summary.pending}</strong>
+            </div>
+            <div className="accessWorkflowMetric accessWorkflowMetric-warn">
+              <span className="accessWorkflowMetricLabel">Info Requested</span>
+              <strong className="accessWorkflowMetricValue">{summary.infoRequested}</strong>
+            </div>
+            <div className="accessWorkflowMetric accessWorkflowMetric-good">
+              <span className="accessWorkflowMetricLabel">Verified</span>
+              <strong className="accessWorkflowMetricValue">{summary.verified}</strong>
+            </div>
+          </div>
+        ) : null}
+
         {message ? (
           <div className="recurringMessage" role="status" aria-live="polite">
             {message}
@@ -226,6 +252,21 @@ export function AccessRequestsPanel({ refreshKey }: { refreshKey?: number }) {
                     Requested: {formatDate(item.created_at)}
                     {item.reviewed_at ? ` • Reviewed: ${formatDate(item.reviewed_at)}` : ''}
                     {item.reviewer_email ? ` • Reviewer: ${item.reviewer_email}` : ''}
+                  </div>
+
+                  <div className="accessWorkflowChecks">
+                    <span className={draft.identityVerified ? 'pill pill-approved' : 'pill pill-info'}>
+                      Identity
+                    </span>
+                    <span className={draft.licenseVerified ? 'pill pill-approved' : 'pill pill-info'}>
+                      License
+                    </span>
+                    <span className={draft.complianceVerified ? 'pill pill-approved' : 'pill pill-info'}>
+                      Compliance
+                    </span>
+                    <span className={draft.backgroundCheckVerified ? 'pill pill-approved' : 'pill pill-info'}>
+                      Background
+                    </span>
                   </div>
 
                   <div className="verificationPanel">

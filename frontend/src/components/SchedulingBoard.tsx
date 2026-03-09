@@ -191,6 +191,7 @@ function VisitFlags({ visit }: { visit: Visit }) {
 export function SchedulingBoard() {
   const [board, setBoard] = useState<BoardResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [role, setRole] = useState<'all' | 'nurse' | 'doctor'>('all');
   const [weekStart, setWeekStart] = useState<Date>(() => mondayOf(new Date()));
   const [viewMode, setViewMode] = useState<ViewMode>('week');
@@ -218,6 +219,7 @@ export function SchedulingBoard() {
   const load = async () => {
     try {
       setLoading(true);
+      setLoadError('');
       setMessage('');
       const start = weekStart.toISOString().slice(0, 10);
       const days = viewMode === 'day' ? 1 : 7;
@@ -235,7 +237,7 @@ export function SchedulingBoard() {
         professionals: [],
         visits: [],
       });
-      setMessage(err?.message || 'Unable to load scheduling board right now.');
+      setLoadError(err?.message || 'Unable to load scheduling board right now.');
     } finally {
       setLoading(false);
     }
@@ -538,8 +540,25 @@ export function SchedulingBoard() {
       ) : null}
 
       {loading ? (
-        <section className="pageCard">
-          <div className="empty">Loading scheduling board...</div>
+        <section className="pageCard scheduleStateCard">
+          <div className="premiumEmptyState premiumEmptyState-compact">
+            <div className="premiumEmptyTitle">Loading scheduling board</div>
+            <div className="premiumEmptyText">
+              Pulling assignments, professionals, and visit coverage for this date range.
+            </div>
+          </div>
+        </section>
+      ) : loadError ? (
+        <section className="pageCard scheduleStateCard">
+          <div className="premiumEmptyState premiumEmptyState-compact premiumEmptyState-danger">
+            <div className="premiumEmptyTitle">Failed to load scheduling board</div>
+            <div className="premiumEmptyText">{loadError}</div>
+            <div className="premiumEmptyActions">
+              <button className="btn btn-primary" onClick={load}>
+                Retry board
+              </button>
+            </div>
+          </div>
         </section>
       ) : !board || ((board.professionals || []).length === 0 && (board.visits || []).length === 0) ? (
         <section className="pageCard">
