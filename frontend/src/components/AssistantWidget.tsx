@@ -60,6 +60,41 @@ export function AssistantWidget() {
   }, [messages, open]);
 
   const pageSuggestions = useMemo(() => {
+    if (location.pathname.includes('/admin/integrations') && !location.pathname.includes('/admin/integrations/reliability') && !location.pathname.includes('/admin/integrations/fhir')) {
+      return [
+        'Summarize connector health',
+        'Show systems with warnings',
+        'Explain sync posture',
+      ];
+    }
+    if (location.pathname.includes('/admin/integrations/reliability')) {
+      return [
+        'Summarize service health',
+        'Explain queue backlog',
+        'Show reliability concerns',
+      ];
+    }
+    if (location.pathname.includes('/admin/integrations/fhir')) {
+      return [
+        'Summarize FHIR readiness',
+        'Show supported resources',
+        'Explain interoperability posture',
+      ];
+    }
+    if (location.pathname.includes('/admin/analytics')) {
+      return [
+        'Summarize operational trends',
+        'Explain performance risks',
+        'Recommend actions from analytics',
+      ];
+    }
+    if (location.pathname.includes('/admin/audit')) {
+      return [
+        'Summarize recent audit events',
+        'Explain traceability posture',
+        'Show controlled workflow actions',
+      ];
+    }
     if (location.pathname.includes('/admin/dashboard')) {
       return [
         "Summarize today's priorities",
@@ -146,6 +181,51 @@ export function AssistantWidget() {
 
     if (normalized.includes('unassigned visits') || normalized.includes('overloaded today')) {
       navigate('/admin/scheduling');
+      return;
+    }
+
+    if (
+      normalized.includes('connector health') ||
+      normalized.includes('systems with warnings') ||
+      normalized.includes('sync posture')
+    ) {
+      navigate('/admin/integrations');
+      return;
+    }
+
+    if (
+      normalized.includes('service health') ||
+      normalized.includes('queue backlog') ||
+      normalized.includes('reliability concerns')
+    ) {
+      navigate('/admin/integrations/reliability');
+      return;
+    }
+
+    if (
+      normalized.includes('fhir readiness') ||
+      normalized.includes('supported resources') ||
+      normalized.includes('interoperability posture')
+    ) {
+      navigate('/admin/integrations/fhir');
+      return;
+    }
+
+    if (
+      normalized.includes('operational trends') ||
+      normalized.includes('performance risks') ||
+      normalized.includes('actions from analytics')
+    ) {
+      navigate('/admin/analytics');
+      return;
+    }
+
+    if (
+      normalized.includes('recent audit events') ||
+      normalized.includes('traceability posture') ||
+      normalized.includes('controlled workflow actions')
+    ) {
+      navigate('/admin/audit');
       return;
     }
 
