@@ -68,6 +68,17 @@ class SSEHub {
    * Role-based filtering
    */
   private isEligible(client: SSEClient, event: RealtimeEvent): boolean {
+    const participantUserIds = Array.isArray(event.data?.participantUserIds)
+      ? (event.data?.participantUserIds as string[])
+      : [];
+
+    if (
+      (event.type === 'CHAT_MESSAGE_CREATED' || event.type === 'CHAT_READ_UPDATED') &&
+      participantUserIds.includes(client.userId)
+    ) {
+      return true;
+    }
+
     // Admin sees all
     if (client.role === 'admin') return true;
 

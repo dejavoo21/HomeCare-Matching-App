@@ -92,6 +92,8 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
       "VISIT_STATUS_CHANGED",
       "ADMIN_ASSIGNED",
       "PRESENCE_UPDATED",
+      "CHAT_MESSAGE_CREATED",
+      "CHAT_READ_UPDATED",
       "HEARTBEAT",
     ];
 

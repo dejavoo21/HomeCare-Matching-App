@@ -732,6 +732,28 @@ class ApiClient {
     return this.request('POST', '/workforce/presence', payload);
   }
 
+  async getDirectConversation(recipientUserId: string) {
+    return this.request('POST', '/workforce/chat/direct', { recipientUserId });
+  }
+
+  async getChatConversations() {
+    return this.request('GET', '/workforce/chat/conversations');
+  }
+
+  async getConversationMessages(conversationId: string) {
+    return this.request('GET', `/workforce/chat/conversations/${conversationId}/messages`);
+  }
+
+  async sendConversationMessage(conversationId: string, messageText: string) {
+    return this.request('POST', `/workforce/chat/conversations/${conversationId}/messages`, {
+      messageText,
+    });
+  }
+
+  async markConversationRead(conversationId: string) {
+    return this.request('POST', `/workforce/chat/conversations/${conversationId}/read`, {});
+  }
+
   // Missing method stubs for backward compatibility
   setRefreshToken(token: string): void {
     if (token && token !== 'active') {

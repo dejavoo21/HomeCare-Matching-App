@@ -14,6 +14,8 @@ export type RealtimeEventType =
   | 'NOTIFICATION_SENT'
   | 'ADMIN_ASSIGNED'
   | 'PRESENCE_UPDATED'
+  | 'CHAT_MESSAGE_CREATED'
+  | 'CHAT_READ_UPDATED'
   | 'HEARTBEAT';
 
 export interface RealtimeEvent {

@@ -41,9 +41,13 @@ function formatNextVisit(value?: string | null) {
 export function WorkforceCard({
   person,
   onViewProfile,
+  onMessage,
+  onCall,
 }: {
   person: WorkforcePerson;
   onViewProfile: () => void;
+  onMessage: () => void;
+  onCall: () => void;
 }) {
   return (
     <article className="workforceCard">
@@ -93,10 +97,10 @@ export function WorkforceCard({
       </div>
 
       <div className="workforceActions">
-        <button className="btn btn-secondary" type="button" disabled>
+        <button className="btn btn-secondary" type="button" onClick={onMessage}>
           Message
         </button>
-        <button className="btn btn-secondary" type="button" disabled>
+        <button className="btn btn-secondary" type="button" onClick={onCall}>
           Call
         </button>
         <button className="btn btn-primary" type="button" onClick={onViewProfile}>

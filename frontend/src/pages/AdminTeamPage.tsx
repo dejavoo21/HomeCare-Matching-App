@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ChatDrawer } from '../components/ChatDrawer';
 import { WorkforceCard, type WorkforcePerson } from '../components/WorkforceCard';
 import { WorkforceProfileDrawer } from '../components/WorkforceProfileDrawer';
 import { useRealTime } from '../contexts/RealTimeContext';
@@ -27,6 +28,8 @@ export function AdminTeamPage() {
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
   const [selected, setSelected] = useState<WorkforcePerson | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatRecipientUserId, setChatRecipientUserId] = useState<string | null>(null);
   const { on } = useRealTime();
 
   const load = async () => {
@@ -198,6 +201,11 @@ export function AdminTeamPage() {
                 key={person.id}
                 person={person}
                 onViewProfile={() => setSelected(person)}
+                onMessage={() => {
+                  setChatRecipientUserId(person.id);
+                  setChatOpen(true);
+                }}
+                onCall={() => setSelected(person)}
               />
             ))}
           </div>
@@ -205,6 +213,14 @@ export function AdminTeamPage() {
       </section>
 
       <WorkforceProfileDrawer person={selected} onClose={() => setSelected(null)} />
+      <ChatDrawer
+        open={chatOpen}
+        initialRecipientUserId={chatRecipientUserId}
+        onClose={() => {
+          setChatOpen(false);
+          setChatRecipientUserId(null);
+        }}
+      />
     </main>
   );
 }
