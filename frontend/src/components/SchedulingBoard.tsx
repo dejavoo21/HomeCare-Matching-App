@@ -41,7 +41,7 @@ type BoardResponse = {
     start: string;
     end: string;
     days: number;
-  };
+  } | null;
   professionals: Professional[];
   visits: Visit[];
 };
@@ -216,14 +216,24 @@ export function SchedulingBoard() {
   const load = async () => {
     try {
       setLoading(true);
+      setMessage('');
       const start = weekStart.toISOString().slice(0, 10);
       const days = viewMode === 'day' ? 1 : 7;
       const response = (await api.getScheduleBoard(start, days, role)) as any;
-      setBoard(response?.data || null);
+      const payload = response?.data || {};
+      setBoard({
+        range: payload.range || null,
+        professionals: Array.isArray(payload.professionals) ? payload.professionals : [],
+        visits: Array.isArray(payload.visits) ? payload.visits : [],
+      });
     } catch (err: any) {
       console.error('Failed to load scheduling board:', err);
-      setBoard(null);
-      setMessage(err?.message || 'Failed to load scheduling board');
+      setBoard({
+        range: null,
+        professionals: [],
+        visits: [],
+      });
+      setMessage(err?.message || 'Unable to load scheduling board right now.');
     } finally {
       setLoading(false);
     }
@@ -357,6 +367,29 @@ export function SchedulingBoard() {
     setQuickCreateForm((current) => ({
       ...current,
       professionalId: professional.id,
+      preferredStart,
+    }));
+    setMessage('');
+  };
+
+  const openUnassignedQuickCreate = () => {
+    const localDefault = new Date(weekStart);
+    localDefault.setHours(9, 0, 0, 0);
+    const preferredStart = new Date(
+      localDefault.getTime() - localDefault.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .slice(0, 16);
+
+    setQuickCreate({
+      professionalId: '',
+      professionalName: 'Unassigned visit',
+      day: localDefault.toISOString(),
+    });
+    setQuickCreateMode('single');
+    setQuickCreateForm((current) => ({
+      ...current,
+      professionalId: '',
       preferredStart,
     }));
     setMessage('');
@@ -506,9 +539,20 @@ export function SchedulingBoard() {
         <section className="pageCard">
           <div className="empty">Loading scheduling board...</div>
         </section>
-      ) : !board ? (
+      ) : !board || ((board.professionals || []).length === 0 && (board.visits || []).length === 0) ? (
         <section className="pageCard">
-          <div className="empty">No scheduling data available.</div>
+          <div className="premiumEmptyState">
+            <div className="premiumEmptyTitle">No visits in this date range yet</div>
+            <div className="premiumEmptyText">
+              Create a one-time or recurring visit, or drag unassigned work into the board once
+              requests exist.
+            </div>
+            <div className="premiumEmptyActions">
+              <button className="btn btn-primary" onClick={openUnassignedQuickCreate}>
+                Create Visit
+              </button>
+            </div>
+          </div>
         </section>
       ) : (
         <>

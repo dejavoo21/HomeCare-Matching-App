@@ -33,11 +33,11 @@ type TimeseriesRow = {
 };
 
 function formatSeconds(total: number) {
-  const s = Number(total || 0);
-  if (s < 60) return `${s}s`;
-  const min = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${min}m ${sec}s`;
+  const seconds = Number(total || 0);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}m ${remainingSeconds}s`;
 }
 
 export function AnalyticsDashboardPanel({ refreshKey }: { refreshKey?: number }) {
@@ -70,13 +70,19 @@ export function AnalyticsDashboardPanel({ refreshKey }: { refreshKey?: number })
   }, [refreshKey, days]);
 
   const chartMax = useMemo(() => {
-    const values = series.flatMap((r) => [
-      Number(r.created_count || 0),
-      Number(r.completed_count || 0),
-      Number(r.cancelled_count || 0),
+    const values = series.flatMap((row) => [
+      Number(row.created_count || 0),
+      Number(row.completed_count || 0),
+      Number(row.cancelled_count || 0),
     ]);
     return Math.max(...values, 1);
   }, [series]);
+
+  const hasSummaryData =
+    Boolean(summary) &&
+    (Object.values(summary?.totals || {}).some((value) => Number(value || 0) > 0) ||
+      Object.values(summary?.performance || {}).some((value) => Number(value || 0) > 0) ||
+      (summary?.professionalLoad || []).length > 0);
 
   return (
     <div className="analyticsCard" aria-label="Analytics dashboard">
@@ -89,7 +95,7 @@ export function AnalyticsDashboardPanel({ refreshKey }: { refreshKey?: number })
         <select
           className="select analyticsRange"
           value={days}
-          onChange={(e) => setDays(Number(e.target.value))}
+          onChange={(event) => setDays(Number(event.target.value))}
           aria-label="Analytics time range"
         >
           <option value={7}>Last 7 days</option>
@@ -99,9 +105,20 @@ export function AnalyticsDashboardPanel({ refreshKey }: { refreshKey?: number })
       </div>
 
       {loading ? (
-        <div className="empty">Loading analytics…</div>
-      ) : !summary ? (
-        <div className="empty">No analytics available.</div>
+        <div className="empty">Loading analytics...</div>
+      ) : !summary || !hasSummaryData ? (
+        <div className="premiumEmptyState">
+          <div className="premiumEmptyTitle">No analytics yet</div>
+          <div className="premiumEmptyText">
+            Create requests, move work through dispatch, or complete visits to start building an
+            operational performance story here.
+          </div>
+          <div className="premiumEmptyActions">
+            <button className="btn btn-primary" onClick={() => setDays(7)}>
+              Refresh last 7 days
+            </button>
+          </div>
+        </div>
       ) : (
         <>
           <div className="analyticsStatsGrid">
@@ -127,7 +144,9 @@ export function AnalyticsDashboardPanel({ refreshKey }: { refreshKey?: number })
 
             <div className="analyticsStat">
               <div className="analyticsStatLabel">Avg Dispatch Time</div>
-              <div className="analyticsStatValue">{formatSeconds(summary.performance.avgDispatchSeconds)}</div>
+              <div className="analyticsStatValue">
+                {formatSeconds(summary.performance.avgDispatchSeconds)}
+              </div>
             </div>
 
             <div className="analyticsStat">
@@ -140,7 +159,12 @@ export function AnalyticsDashboardPanel({ refreshKey }: { refreshKey?: number })
             <div className="analyticsSectionTitle">Request Trend</div>
 
             {series.length === 0 ? (
-              <div className="empty">No trend data found.</div>
+              <div className="premiumEmptyState premiumEmptyState-compact">
+                <div className="premiumEmptyTitle">No trend data for this range</div>
+                <div className="premiumEmptyText">
+                  Expand the date range or generate more request activity to see dispatch movement.
+                </div>
+              </div>
             ) : (
               <div className="trendChart">
                 {series.map((row) => {
@@ -184,7 +208,12 @@ export function AnalyticsDashboardPanel({ refreshKey }: { refreshKey?: number })
             <div className="analyticsSectionTitle">Professional Workload</div>
 
             {summary.professionalLoad.length === 0 ? (
-              <div className="empty">No professional workload data found.</div>
+              <div className="premiumEmptyState premiumEmptyState-compact">
+                <div className="premiumEmptyTitle">No workload distribution yet</div>
+                <div className="premiumEmptyText">
+                  Assign work to clinicians to unlock active workload balance visibility.
+                </div>
+              </div>
             ) : (
               <div className="workloadList">
                 {summary.professionalLoad.map((pro) => (
