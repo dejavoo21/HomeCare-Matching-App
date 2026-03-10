@@ -217,23 +217,23 @@ export function AdminDashboardPage() {
 
         <div className="dashboardAsideStack">
           <AttentionPanel requests={requests} />
-          <ActivityFeed refreshKey={activityKey} />
         </div>
       </section>
 
-      <section className="pageGridTwo">
-        <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
-
-        <div className="dashboardPrimaryStack">
-          <div className="summaryStrip">
-            <IntegrationsSummaryCard />
-            <AuditSummaryCard />
-            <AnalyticsSummaryCard />
-            <AccessSummaryCard />
-            <ReliabilitySummaryCard />
-            <FhirSummaryCard />
-          </div>
+      <section className="dashboardSummarySection">
+        <div className="summaryStrip">
+          <IntegrationsSummaryCard />
+          <AuditSummaryCard />
+          <AnalyticsSummaryCard />
+          <AccessSummaryCard />
+          <ReliabilitySummaryCard />
+          <FhirSummaryCard />
         </div>
+      </section>
+
+      <section className="pageGridTwo dashboardLowerGrid">
+        <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
+        <ActivityFeed refreshKey={activityKey} />
       </section>
     </main>
   );

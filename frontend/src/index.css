@@ -13112,6 +13112,15 @@ textarea.input:focus {
   align-self: start;
 }
 
+.dashboardSummarySection {
+  display: grid;
+  gap: 18px;
+}
+
+.dashboardLowerGrid {
+  align-items: start;
+}
+
 .assistantFab,
 button[aria-label='Open assistant'] {
   box-shadow: 0 16px 32px rgba(79, 70, 229, 0.22);
