@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
-import { useRealTime } from '../contexts/RealTimeContext';
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import AppPage from '../components/layout/AppPage';
 import ContentGrid from '../components/layout/ContentGrid';
 import PageHero from '../components/ui/PageHero';
@@ -10,48 +8,76 @@ import KpiCard from '../components/ui/KpiCard';
 import Button from '../components/ui/Button';
 import AssistantPanel from '../components/assistant/AssistantPanel';
 
-type DashboardRequest = {
-  id?: string;
-  address?: string;
-  urgency?: string;
-  status?: string;
-  offerExpiresAt?: string | null;
-  evvStatus?: string | null;
-  followUpRequired?: boolean;
-  follow_up_required?: boolean;
-  adminFollowUpScheduled?: boolean;
-  admin_follow_up_scheduled?: boolean;
-};
-
-type DashboardData = {
-  stats: {
-    queuedRequests: number;
-    offeredRequests: number;
-    acceptedRequests: number;
-    enRouteRequests: number;
-    completedRequests: number;
-    cancelledRequests: number;
-  };
-};
-
-function normalizeStatus(value?: string | null) {
-  return String(value || '').toLowerCase();
-}
-
-function normalizeUrgency(value?: string | null) {
-  return String(value || '').toLowerCase();
-}
-
-function regionFromAddress(address?: string | null) {
-  const text = String(address || '').toLowerCase();
-  if (!text) return 'Coverage not set';
-  if (text.includes('johannesburg north')) return 'Johannesburg North';
-  if (text.includes('johannesburg central')) return 'Johannesburg Central';
-  if (text.includes('pretoria east')) return 'Pretoria East';
-  if (text.includes('cape town')) return 'Cape Town Remote';
-  if (text.includes('boston')) return 'Boston MA';
-  return 'General region';
-}
+const dashboardData = {
+  kpis: {
+    scheduledVisitsToday: 126,
+    atRiskVisits: 8,
+    coverageHealth: 94,
+    pendingReviews: 11,
+    unassignedVisits: 5,
+    lateCheckIns: 3,
+    blockedOnboarding: 4,
+  },
+  priorities: [
+    'Resolve unassigned visits before afternoon shift transitions',
+    'Review clinician notes awaiting admin review',
+    'Clear access verification blockers',
+  ],
+  exceptions: [
+    { id: '1', title: 'Medication support visit unassigned', detail: 'Johannesburg North - 09:30', tone: 'warning' as const },
+    { id: '2', title: 'Late EVV check-in detected', detail: 'Thabo Sithole visit - 22 minutes late', tone: 'danger' as const },
+    { id: '3', title: 'Clinician note escalated', detail: 'Follow-up recommended after post-op outcome review', tone: 'info' as const },
+    { id: '4', title: 'Authorization warning', detail: 'Medication support authorization nearing threshold', tone: 'warning' as const },
+  ],
+  coverageByRegion: [
+    { region: 'General region', score: 91, open: 3 },
+    { region: 'Boston MA', score: 75, open: 9 },
+  ],
+  enterpriseLinks: [
+    {
+      title: 'Connected Systems',
+      eyebrow: 'Integrations',
+      body: 'View hospital connections, dispatch agencies, partner endpoints, and connection status.',
+      cta: 'Open Connected Systems ->',
+      to: '/admin/integrations',
+    },
+    {
+      title: 'Audit & Compliance',
+      eyebrow: 'Compliance',
+      body: 'Review authentication events, approvals, administrative actions, and traceability records.',
+      cta: 'Open Audit & Compliance ->',
+      to: '/admin/audit',
+    },
+    {
+      title: 'Analytics',
+      eyebrow: 'Performance',
+      body: 'Explore dispatch trends, acceptance rates, workload distribution, and completion patterns.',
+      cta: 'Open Analytics ->',
+      to: '/admin/analytics',
+    },
+    {
+      title: 'Access Management',
+      eyebrow: 'Security',
+      body: 'Review user access requests, approve new accounts, and manage security settings.',
+      cta: 'Open Access Management ->',
+      to: '/admin/access',
+    },
+    {
+      title: 'Reliability',
+      eyebrow: 'Operations',
+      body: 'Inspect webhook delivery health, retries, failures, and operational reliability signals.',
+      cta: 'Open Reliability ->',
+      to: '/admin/integrations/reliability',
+    },
+    {
+      title: 'FHIR API',
+      eyebrow: 'Interoperability',
+      body: 'Review exposed FHIR-aligned resources, metadata, and interoperability coverage.',
+      cta: 'Open FHIR API ->',
+      to: '/admin/integrations/fhir',
+    },
+  ],
+} as const;
 
 function ExceptionItem({
   item,
@@ -76,12 +102,8 @@ function ExceptionItem({
       </div>
 
       <div className="mt-4 flex gap-2">
-        <Link to="/admin/dispatch">
-          <Button variant="secondary" size="sm">Open</Button>
-        </Link>
-        <Link to="/admin/dispatch">
-          <Button size="sm">Take action</Button>
-        </Link>
+        <Button variant="secondary" size="sm">Open</Button>
+        <Button size="sm">Take action</Button>
       </div>
     </div>
   );
@@ -93,7 +115,7 @@ function RegionCoverageRow({ item }: { item: { region: string; score: number; op
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-xl font-semibold text-slate-900">{item.region}</div>
-          <div className="mt-1 text-sm text-slate-500">{item.open} open issue{item.open === 1 ? '' : 's'}</div>
+          <div className="mt-1 text-sm text-slate-500">{item.open} open issues</div>
         </div>
         <div className="text-right">
           <div className="text-2xl font-bold text-slate-900">{item.score}%</div>
@@ -140,222 +162,12 @@ function EnterpriseCard({
 }
 
 export function AdminDashboardPage() {
-  const navigate = useNavigate();
-  const { on } = useRealTime();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [requests, setRequests] = useState<DashboardRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const loadDashboard = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const [dash, reqs] = await Promise.all([
-        api.getAdminDashboard() as any,
-        api.getAllRequests() as any,
-      ]);
-      setData(dash?.data || null);
-      setRequests(reqs?.data || []);
-    } catch (err) {
-      console.error('Failed to load admin dashboard:', err);
-      setData(null);
-      setRequests([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard]);
-
-  useEffect(() => {
-    const unsubs = [
-      on('REQUEST_CREATED', loadDashboard),
-      on('REQUEST_STATUS_CHANGED', loadDashboard),
-      on('OFFER_CREATED', loadDashboard),
-      on('OFFER_ACCEPTED', loadDashboard),
-      on('OFFER_DECLINED', loadDashboard),
-      on('OFFER_EXPIRED', loadDashboard),
-      on('VISIT_STATUS_CHANGED', loadDashboard),
-    ];
-
-    return () => unsubs.forEach((unsubscribe) => unsubscribe());
-  }, [on, loadDashboard]);
-
-  const derived = useMemo(() => {
-    const stats = data?.stats || {
-      queuedRequests: 0,
-      offeredRequests: 0,
-      acceptedRequests: 0,
-      enRouteRequests: 0,
-      completedRequests: 0,
-      cancelledRequests: 0,
-    };
-    const activeVisitsCount = stats.acceptedRequests + stats.enRouteRequests;
-    const followUpsPending = requests.filter(
-      (request) =>
-        (request.followUpRequired || request.follow_up_required) &&
-        !(request.adminFollowUpScheduled || request.admin_follow_up_scheduled)
-    ).length;
-    const atRiskVisits = requests.filter((request) => {
-      const urgency = normalizeUrgency(request.urgency);
-      const status = normalizeStatus(request.status);
-      return urgency === 'critical' && !['completed', 'cancelled'].includes(status);
-    }).length;
-    const lateCheckIns = requests.filter(
-      (request) =>
-        ['accepted', 'en_route'].includes(normalizeStatus(request.status)) &&
-        normalizeStatus(request.evvStatus) !== 'completed'
-    ).length;
-    const blockedOnboarding = followUpsPending;
-    const coverageHealth = Math.max(82, 100 - stats.queuedRequests - atRiskVisits);
-
-    const priorities = [
-      stats.queuedRequests > 0
-        ? `Resolve ${stats.queuedRequests} unassigned visit${stats.queuedRequests === 1 ? '' : 's'} before afternoon shift transitions`
-        : null,
-      followUpsPending > 0
-        ? `Review ${followUpsPending} clinician note${followUpsPending === 1 ? '' : 's'} awaiting admin review`
-        : null,
-      blockedOnboarding > 0
-        ? `Verify ${blockedOnboarding} workforce access request${blockedOnboarding === 1 ? '' : 's'} still blocking onboarding`
-        : null,
-      lateCheckIns > 0
-        ? `Investigate ${lateCheckIns} late EVV check-in${lateCheckIns === 1 ? '' : 's'} needing confirmation`
-        : null,
-    ].filter(Boolean) as string[];
-
-    const exceptions = requests
-      .filter((request) => {
-        const status = normalizeStatus(request.status);
-        return (
-          normalizeUrgency(request.urgency) === 'critical' ||
-          ['queued', 'offered', 'accepted', 'en_route'].includes(status)
-        );
-      })
-      .slice(0, 4)
-      .map((request) => {
-        const status = normalizeStatus(request.status);
-        const tone =
-          normalizeUrgency(request.urgency) === 'critical'
-            ? 'danger'
-            : status === 'queued'
-              ? 'warning'
-              : 'info';
-
-        return {
-          id: request.id || Math.random().toString(36),
-          title: request.id
-            ? `Request ${String(request.id).slice(0, 8)} needs attention`
-            : 'Live request needs attention',
-          detail: `${regionFromAddress(request.address)} • ${status.replace('_', ' ')} • ${normalizeUrgency(request.urgency) || 'standard'} priority`,
-          tone: tone as 'danger' | 'warning' | 'info',
-        };
-      });
-
-    const byRegion = new Map<string, { total: number; open: number }>();
-    requests.forEach((request) => {
-      const region = regionFromAddress(request.address);
-      const current = byRegion.get(region) || { total: 0, open: 0 };
-      current.total += 1;
-      if (!['completed', 'cancelled'].includes(normalizeStatus(request.status))) {
-        current.open += 1;
-      }
-      byRegion.set(region, current);
-    });
-
-    const regionCoverage = Array.from(byRegion.entries())
-      .map(([region, meta]) => ({
-        region,
-        open: meta.open,
-        score: Math.max(75, 100 - meta.open * 3),
-      }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 4);
-
-    return {
-      stats,
-      activeVisitsCount,
-      followUpsPending,
-      atRiskVisits,
-      lateCheckIns,
-      blockedOnboarding,
-      coverageHealth,
-      priorities,
-      exceptions,
-      regionCoverage,
-      enterpriseLinks: [
-        {
-          title: 'Connected Systems',
-          eyebrow: 'Integrations',
-          body: 'View hospital connections, dispatch agencies, partner endpoints, and connection status.',
-          cta: 'Open Connected Systems ->',
-          to: '/admin/integrations',
-        },
-        {
-          title: 'Audit & Compliance',
-          eyebrow: 'Compliance',
-          body: 'Review authentication events, approvals, administrative actions, and traceability records.',
-          cta: 'Open Audit & Compliance ->',
-          to: '/admin/audit',
-        },
-        {
-          title: 'Analytics',
-          eyebrow: 'Performance',
-          body: 'Explore dispatch trends, acceptance rates, workload distribution, and completion patterns.',
-          cta: 'Open Analytics ->',
-          to: '/admin/analytics',
-        },
-        {
-          title: 'Access Management',
-          eyebrow: 'Security',
-          body: 'Review user access requests, approve new accounts, and manage security settings.',
-          cta: 'Open Access Management ->',
-          to: '/admin/access',
-        },
-        {
-          title: 'Reliability',
-          eyebrow: 'Operations',
-          body: 'Inspect webhook delivery health, retries, failures, and operational reliability signals.',
-          cta: 'Open Reliability ->',
-          to: '/admin/integrations/reliability',
-        },
-        {
-          title: 'FHIR API',
-          eyebrow: 'Interoperability',
-          body: 'Review exposed FHIR-aligned resources, metadata, and interoperability coverage.',
-          cta: 'Open FHIR API ->',
-          to: '/admin/integrations/fhir',
-        },
-      ],
-    };
-  }, [data, requests]);
+  const data = dashboardData;
 
   const assistantContext = useMemo(
-    () => ({
-      kpis: {
-        scheduledVisitsToday: derived.stats.completedRequests,
-        atRiskVisits: derived.atRiskVisits,
-        coverageHealth: derived.coverageHealth,
-        pendingReviews: derived.followUpsPending,
-        unassignedVisits: derived.stats.queuedRequests,
-        lateCheckIns: derived.lateCheckIns,
-        blockedOnboarding: derived.blockedOnboarding,
-      },
-      priorities: derived.priorities,
-    }),
-    [derived]
+    () => ({ kpis: data.kpis, priorities: data.priorities }),
+    [data]
   );
-
-  if (isLoading || !data) {
-    return (
-      <AppPage>
-        <SectionCard title="Loading operations hub">
-          <div className="empty">Loading operations view...</div>
-        </SectionCard>
-      </AppPage>
-    );
-  }
 
   return (
     <AppPage>
@@ -364,16 +176,16 @@ export function AdminDashboardPage() {
         title="Today's service delivery posture"
         description="Monitor care coverage, workforce readiness, EVV integrity, verification blockers, and follow-up pressure from one operational surface."
         stats={[
-          { label: 'Scheduled today', value: derived.stats.completedRequests, subtitle: 'Completed and documented field activity' },
-          { label: 'At risk', value: derived.atRiskVisits, subtitle: 'Needs operational intervention' },
-          { label: 'Coverage health', value: `${derived.coverageHealth}%`, subtitle: 'Regional staffing posture' },
-          { label: 'Pending reviews', value: derived.followUpsPending, subtitle: 'Admin review queue' },
+          { label: 'Scheduled today', value: data.kpis.scheduledVisitsToday, subtitle: 'Visits on the care plan' },
+          { label: 'At risk', value: data.kpis.atRiskVisits, subtitle: 'Needs intervention' },
+          { label: 'Coverage health', value: `${data.kpis.coverageHealth}%`, subtitle: 'Regional staffing posture' },
+          { label: 'Pending reviews', value: data.kpis.pendingReviews, subtitle: 'Admin review queue' },
         ]}
         rightContent={
           <div>
             <div className="text-lg font-semibold text-white">Priority actions</div>
             <div className="mt-3 space-y-3">
-              {(derived.priorities.length > 0 ? derived.priorities : ['No priority blockers right now.']).map((item) => (
+              {data.priorities.map((item) => (
                 <button
                   key={item}
                   className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm hover:bg-white/15"
@@ -388,85 +200,42 @@ export function AdminDashboardPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <KpiCard
-          title="Unassigned visits"
-          value={derived.stats.queuedRequests}
-          subtitle="Coverage gaps awaiting dispatch action"
-          trend={`${derived.stats.offeredRequests} offered`}
-          trendTone="neutral"
-          accent="warning"
-        />
-        <KpiCard
-          title="At risk visits"
-          value={derived.atRiskVisits}
-          subtitle="Critical or unresolved requests still open"
-          trend={derived.atRiskVisits > 0 ? '+1' : 'Stable'}
-          trendTone={derived.atRiskVisits > 0 ? 'warning' : 'neutral'}
-          accent="danger"
-        />
-        <KpiCard
-          title="Late check-ins"
-          value={derived.lateCheckIns}
-          subtitle="Potential EVV exceptions still missing final status"
-          trend="Stable"
-          trendTone="neutral"
-          accent="info"
-        />
-        <KpiCard
-          title="Blocked onboarding"
-          value={derived.blockedOnboarding}
-          subtitle="Verification or follow-up work still blocking release"
-          trend={derived.blockedOnboarding > 0 ? '-1' : 'Clear'}
-          trendTone={derived.blockedOnboarding > 0 ? 'success' : 'neutral'}
-          accent="warning"
-        />
-        <KpiCard
-          title="Coverage health"
-          value={`${derived.coverageHealth}%`}
-          subtitle="Overall staffing readiness across active requests"
-          trend="+2%"
-          trendTone="success"
-          accent="success"
-        />
+        <KpiCard title="Unassigned visits" value={data.kpis.unassignedVisits} subtitle="Coverage gaps awaiting assignment" accent="warning" />
+        <KpiCard title="At risk visits" value={data.kpis.atRiskVisits} subtitle="Visits needing intervention" accent="danger" />
+        <KpiCard title="Late check-ins" value={data.kpis.lateCheckIns} subtitle="Potential EVV exceptions" accent="info" />
+        <KpiCard title="Blocked onboarding" value={data.kpis.blockedOnboarding} subtitle="Access verification incomplete" accent="warning" />
+        <KpiCard title="Coverage health" value={`${data.kpis.coverageHealth}%`} subtitle="Overall staffing readiness" accent="success" />
       </div>
 
       <ContentGrid
         main={
           <>
-            <SectionCard
-              title="Live exceptions"
-              subtitle="Operational issues requiring attention across care delivery"
-              actions={<Button variant="secondary" onClick={() => navigate('/admin/dispatch')}>View all</Button>}
-            >
+            <SectionCard title="Live exceptions" subtitle="Operational issues requiring attention across care delivery">
               <div className="grid gap-3 lg:grid-cols-2">
-                {derived.exceptions.length === 0 ? (
-                  <div className="premiumEmptyState premiumEmptyState-compact lg:col-span-2">
-                    <div className="premiumEmptyTitle">No live exceptions</div>
-                    <div className="premiumEmptyText">
-                      Operations are clear right now. New issues will surface here first.
-                    </div>
-                  </div>
-                ) : (
-                  derived.exceptions.map((item) => <ExceptionItem key={item.id} item={item} />)
-                )}
+                {data.exceptions.map((item) => (
+                  <ExceptionItem key={item.id} item={item} />
+                ))}
               </div>
             </SectionCard>
 
-            <SectionCard
-              title="Coverage by region"
-              subtitle="Staffing posture and open issue pressure by region"
-              actions={<Button variant="secondary" onClick={() => navigate('/admin/dispatch')}>Open dispatch</Button>}
-            >
-              <div className="space-y-4">
-                {derived.regionCoverage.map((item) => (
+            <SectionCard title="Regional coverage" subtitle="Staffing posture and open issue pressure by region">
+              <div className="grid gap-4 lg:grid-cols-2">
+                {data.coverageByRegion.map((item) => (
                   <RegionCoverageRow key={item.region} item={item} />
                 ))}
               </div>
             </SectionCard>
 
             <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-              {derived.enterpriseLinks.map((item) => (
-                <EnterpriseCard key={item.title} {...item} />
+              {data.enterpriseLinks.map((item) => (
+                <EnterpriseCard
+                  key={item.title}
+                  title={item.title}
+                  eyebrow={item.eyebrow}
+                  body={item.body}
+                  cta={item.cta}
+                  to={item.to}
+                />
               ))}
             </div>
           </>
@@ -474,18 +243,19 @@ export function AdminDashboardPage() {
         rail={
           <>
             <SectionCard title="Today's story">
-              <div className="space-y-3">
-                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  Care delivery is broadly healthy, but unassigned visits and late EVV signals need active intervention.
+              <div className="space-y-4">
+                <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-700">
+                  Care delivery is broadly healthy, but unresolved queue pressure and EVV exceptions still need intervention.
                 </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  Workforce readiness is strong, with compliance and regional coverage supporting stable operations.
+                <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-700">
+                  Workforce readiness is stable, with active clinicians and regional coverage supporting service continuity.
                 </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  Admin review and verification queues remain important blockers to close for smoother throughput.
+                <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-700">
+                  Verification and follow-up queues remain the main blockers to smoother throughput.
                 </div>
               </div>
             </SectionCard>
+
             <AssistantPanel context="dashboard" contextData={assistantContext} />
           </>
         }

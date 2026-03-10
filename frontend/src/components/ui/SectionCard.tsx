@@ -1,5 +1,3 @@
-import { cn } from '../../lib/ui/cn';
-
 export default function SectionCard({
   title,
   subtitle,
@@ -14,7 +12,7 @@ export default function SectionCard({
   className?: string;
 }) {
   return (
-    <div className={cn('rounded-3xl border border-slate-200 bg-white p-5 shadow-sm', className)}>
+    <div className={`rounded-3xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}>
       {(title || subtitle || actions) && (
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

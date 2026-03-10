@@ -1,5 +1,3 @@
-import { cn } from '../../lib/ui/cn';
-
 const variants = {
   primary: 'bg-sky-600 text-white hover:bg-sky-700',
   secondary: 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
@@ -32,12 +30,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={cn(
-        'transition disabled:cursor-not-allowed disabled:opacity-60',
-        variants[variant],
-        sizes[size],
-        className
-      )}
+      className={`transition disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}
