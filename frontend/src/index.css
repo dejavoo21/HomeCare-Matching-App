@@ -12651,3 +12651,274 @@ textarea.input:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final dashboard shell overrides */
+.opsDashboard {
+  display: grid;
+  gap: 18px;
+}
+
+.opsDashboard .pageHeaderBlock {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.opsDashboard .pageHeaderRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.opsDashboard .pageTitle {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.opsDashboard .subtitle {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.opsDashboard .pageActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.opsDashboard .dashboardTopGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.opsDashboard .dashboardMetricCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.opsDashboard .dashboardMetricCard-indigo {
+  background: linear-gradient(180deg, rgba(238, 242, 255, 0.9), #ffffff);
+}
+
+.opsDashboard .dashboardMetricCard-blue {
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.92), #ffffff);
+}
+
+.opsDashboard .dashboardMetricCard-amber {
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.95), #ffffff);
+}
+
+.opsDashboard .dashboardMetricCard-green {
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.95), #ffffff);
+}
+
+.opsDashboard .dashboardGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.opsDashboard .dashboardPanel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.opsDashboard .dashboardPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.opsDashboard .dashboardPanelTitle {
+  margin: 4px 0 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.opsDashboard .summaryLinkEyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.opsDashboard .summaryLinkText {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.opsDashboard .summaryLinkAction {
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.opsDashboard .summaryLinkAction:hover {
+  color: #4338ca;
+}
+
+.opsDashboard .settingsOverviewGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.opsDashboard .settingsOverviewCard {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.opsDashboard .settingsOverviewLabel {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.opsDashboard .settingsOverviewValue {
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.opsDashboard .dashboardActionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.opsDashboard .dashboardAsideStack {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.opsDashboard .pageGridTwo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.opsDashboard .summaryStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.opsDashboard .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.opsDashboard .btn:hover {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.18);
+  transform: none;
+  box-shadow: none;
+}
+
+.opsDashboard .btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.18);
+}
+
+.opsDashboard .btn-primary:hover {
+  background: linear-gradient(135deg, #4338ca, #3730a3);
+}
+
+@media (max-width: 1280px) {
+  .opsDashboard .dashboardTopGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opsDashboard .dashboardGrid,
+  .opsDashboard .pageGridTwo {
+    grid-template-columns: 1fr;
+  }
+
+  .opsDashboard .summaryStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .opsDashboard .pageHeaderRow {
+    flex-direction: column;
+  }
+
+  .opsDashboard .settingsOverviewGrid,
+  .opsDashboard .statusTilesRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opsDashboard .summaryStrip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .opsDashboard .dashboardTopGrid,
+  .opsDashboard .settingsOverviewGrid,
+  .opsDashboard .statusTilesRow {
+    grid-template-columns: 1fr;
+  }
+
+  .opsDashboard .pageHeaderBlock,
+  .opsDashboard .dashboardPanel,
+  .opsDashboard .dashboardMetricCard,
+  .opsDashboard .pipelineRow {
+    padding: 18px;
+  }
+
+  .opsDashboard .pageTitle,
+  .opsDashboard .dashboardPanelTitle {
+    font-size: 22px;
+  }
+}
