@@ -2,20 +2,17 @@ import { Link } from 'react-router-dom';
 
 export function IntegrationsSummaryCard() {
   return (
-    <div className="summaryLinkCard">
-      <div className="summaryLinkCardTop">
-        <div>
-          <div className="summaryLinkEyebrow">Integrations</div>
-          <h3 className="summaryLinkTitle">Connected Systems</h3>
-        </div>
+    <div className="summaryCard summaryCard-sky">
+      <div>
+        <div className="summaryCardEyebrow">Integrations</div>
+        <h3 className="summaryCardTitle">Connected Systems</h3>
+        <p className="summaryCardBody">
+          View hospital connections, dispatch agencies, partner endpoints, and connection status.
+        </p>
       </div>
 
-      <p className="summaryLinkText">
-        View hospital connections, dispatch agencies, partner endpoints, and connection status.
-      </p>
-
-      <Link to="/admin/integrations" className="summaryLinkAction">
-        Open Connected Systems →
+      <Link to="/admin/integrations" className="summaryCardAction">
+        Open Connected Systems <span aria-hidden="true">→</span>
       </Link>
     </div>
   );

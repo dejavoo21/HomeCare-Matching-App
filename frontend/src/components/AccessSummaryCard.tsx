@@ -2,20 +2,17 @@ import { Link } from 'react-router-dom';
 
 export function AccessSummaryCard() {
   return (
-    <div className="summaryLinkCard">
-      <div className="summaryLinkCardTop">
-        <div>
-          <div className="summaryLinkEyebrow">Security</div>
-          <h3 className="summaryLinkTitle">Access Management</h3>
-        </div>
+    <div className="summaryCard summaryCard-amber">
+      <div>
+        <div className="summaryCardEyebrow">Security</div>
+        <h3 className="summaryCardTitle">Access Management</h3>
+        <p className="summaryCardBody">
+          Review user access requests, approve new accounts, and manage security settings.
+        </p>
       </div>
 
-      <p className="summaryLinkText">
-        Review user access requests, approve new accounts, and manage security settings.
-      </p>
-
-      <Link to="/admin/access" className="summaryLinkAction">
-        Open Access Management -&gt;
+      <Link to="/admin/access" className="summaryCardAction">
+        Open Access Management <span aria-hidden="true">→</span>
       </Link>
     </div>
   );

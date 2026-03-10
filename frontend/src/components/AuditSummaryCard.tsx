@@ -2,20 +2,17 @@ import { Link } from 'react-router-dom';
 
 export function AuditSummaryCard() {
   return (
-    <div className="summaryLinkCard">
-      <div className="summaryLinkCardTop">
-        <div>
-          <div className="summaryLinkEyebrow">Compliance</div>
-          <h3 className="summaryLinkTitle">Audit & Compliance</h3>
-        </div>
+    <div className="summaryCard summaryCard-violet">
+      <div>
+        <div className="summaryCardEyebrow">Compliance</div>
+        <h3 className="summaryCardTitle">Audit & Compliance</h3>
+        <p className="summaryCardBody">
+          Review authentication events, approvals, administrative actions, and traceability records.
+        </p>
       </div>
 
-      <p className="summaryLinkText">
-        Review authentication events, approvals, administrative actions, and traceability records.
-      </p>
-
-      <Link to="/admin/audit" className="summaryLinkAction">
-        Open Audit & Compliance →
+      <Link to="/admin/audit" className="summaryCardAction">
+        Open Audit & Compliance <span aria-hidden="true">→</span>
       </Link>
     </div>
   );
