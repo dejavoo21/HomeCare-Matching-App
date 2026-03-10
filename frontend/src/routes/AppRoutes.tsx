@@ -25,6 +25,7 @@ import { AdminReliabilityPage } from '../pages/AdminReliabilityPage';
 import { AdminFhirPage } from '../pages/AdminFhirPage';
 import { AdminSettingsPage } from '../pages/AdminSettingsPage';
 import { AdminClinicianReviewPage } from '../pages/AdminClinicianReviewPage';
+import { UnresolvedItemsPage } from '../pages/UnresolvedItemsPage';
 
 function ProtectedRoute({
   element,
@@ -147,6 +148,10 @@ export function AppRoutes() {
           element={
             <WithPermission permission={PERMISSIONS.ANALYTICS_READ} element={<AdminAnalyticsPage />} />
           }
+        />
+        <Route
+          path="unresolved-items"
+          element={<WithPermission permission={PERMISSIONS.DASHBOARD_READ} element={<UnresolvedItemsPage />} />}
         />
         <Route
           path="integrations"

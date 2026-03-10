@@ -111,6 +111,9 @@ export function AdminDashboardPage() {
               <button className="btn btn-primary" onClick={() => navigate('/admin/dispatch')}>
                 Open Live Dispatch
               </button>
+              <Link to="/admin/unresolved-items" className="btn">
+                Open Unresolved Items
+              </Link>
               <Link to="/admin/scheduling" className="btn">
                 Open Scheduling
               </Link>

@@ -104,6 +104,13 @@ export function AssistantWidget() {
         'Recommend actions from analytics',
       ];
     }
+    if (location.pathname.includes('/admin/unresolved-items')) {
+      return [
+        'Show critical unresolved items',
+        'Which items have no owner?',
+        'Show oldest blockers',
+      ];
+    }
     if (location.pathname.includes('/admin/audit')) {
       return [
         'Summarize recent audit events',
@@ -252,6 +259,15 @@ export function AssistantWidget() {
       normalized.includes('actions from analytics')
     ) {
       navigate('/admin/analytics');
+      return;
+    }
+
+    if (
+      normalized.includes('critical unresolved items') ||
+      normalized.includes('no owner') ||
+      normalized.includes('oldest blockers')
+    ) {
+      navigate('/admin/unresolved-items');
       return;
     }
 

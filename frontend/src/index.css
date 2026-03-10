@@ -14196,6 +14196,125 @@ button[aria-label='Open assistant'] {
   }
 }
 
+.unresolvedPage .dashboardGrid {
+  align-items: start;
+}
+
+.unresolvedMainStack {
+  display: grid;
+  gap: 18px;
+}
+
+.unresolvedPanelTitle {
+  font-size: 24px;
+}
+
+.unresolvedList {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.unresolvedRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  border-radius: 18px;
+  padding: 16px 18px;
+}
+
+.unresolvedRowMain {
+  min-width: 0;
+}
+
+.unresolvedRowTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.unresolvedRowTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.unresolvedRowMeta {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.unresolvedBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.unresolvedBadge-critical {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid rgba(244, 63, 94, 0.18);
+}
+
+.unresolvedBadge-high {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+.unresolvedBadge-medium {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.18);
+}
+
+.unresolvedFocusStack {
+  display: grid;
+  gap: 12px;
+}
+
+.unresolvedFocus {
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.unresolvedFocus-critical {
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.unresolvedFocus-warning {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.unresolvedFocus-neutral {
+  background: #f8fafc;
+  color: #475569;
+}
+
+@media (max-width: 640px) {
+  .unresolvedRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 /* =========================
    Compact dashboard rail
    ========================= */

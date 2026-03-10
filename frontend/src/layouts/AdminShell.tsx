@@ -13,6 +13,7 @@ import {
   UserCheck,
   BarChart3,
   Files,
+  AlertTriangle,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { AssistantWidget } from '../components/AssistantWidget';
@@ -59,6 +60,7 @@ const navSections: NavSection[] = [
     label: 'Operations',
     items: [
       { to: '/admin/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard', permission: PERMISSIONS.DASHBOARD_READ },
+      { to: '/admin/unresolved-items', icon: <AlertTriangle size={18} />, label: 'Unresolved Items', permission: PERMISSIONS.DASHBOARD_READ },
       { to: '/admin/dispatch', icon: <Ambulance size={18} />, label: 'Dispatch Center', permission: PERMISSIONS.DISPATCH_READ },
       { to: '/admin/requests', icon: <ClipboardList size={18} />, label: 'Request Queue', permission: PERMISSIONS.DISPATCH_READ },
       { to: '/admin/scheduling', icon: <Calendar size={18} />, label: 'Scheduling Board', permission: PERMISSIONS.SCHEDULING_READ },
