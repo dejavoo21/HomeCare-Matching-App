@@ -111,6 +111,13 @@ export function AssistantWidget() {
         'Show oldest blockers',
       ];
     }
+    if (location.pathname.includes('/admin/escalations')) {
+      return [
+        'Show critical escalations',
+        'Which escalations have no owner?',
+        'Show aged escalations',
+      ];
+    }
     if (location.pathname.includes('/admin/audit')) {
       return [
         'Summarize recent audit events',
@@ -268,6 +275,15 @@ export function AssistantWidget() {
       normalized.includes('oldest blockers')
     ) {
       navigate('/admin/unresolved-items');
+      return;
+    }
+
+    if (
+      normalized.includes('critical escalations') ||
+      normalized.includes('escalations have no owner') ||
+      normalized.includes('aged escalations')
+    ) {
+      navigate('/admin/escalations');
       return;
     }
 

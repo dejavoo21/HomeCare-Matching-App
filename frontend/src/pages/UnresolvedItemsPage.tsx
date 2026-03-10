@@ -163,6 +163,9 @@ export function UnresolvedItemsPage() {
           </div>
 
           <div className="pageActions">
+            <Link to="/admin/escalations" className="btn">
+              Open Escalations
+            </Link>
             <Link to="/admin/dispatch" className="btn btn-primary">
               Open Dispatch
             </Link>
