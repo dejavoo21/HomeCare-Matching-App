@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 type AttentionRequest = {
   urgency?: string;
   status?: string;
@@ -5,35 +7,72 @@ type AttentionRequest = {
 };
 
 export function AttentionPanel({ requests }: { requests: AttentionRequest[] }) {
-  const expiring = requests.filter((request) => {
-    if (!request.offerExpiresAt || String(request.status).toLowerCase() !== 'offered') {
-      return false;
-    }
+  const criticalCount = requests.filter((request) => {
+    const urgency = String(request.urgency || '').toLowerCase();
+    const status = String(request.status || '').toLowerCase();
+    return urgency === 'critical' && status !== 'completed' && status !== 'cancelled';
+  }).length;
 
-    const diff = new Date(request.offerExpiresAt).getTime() - Date.now();
-    return diff > 0 && diff < 60_000;
-  });
+  const expiringSoonCount = requests.filter((request) => {
+    const status = String(request.status || '').toLowerCase();
+    if (!request.offerExpiresAt || status !== 'offered') return false;
 
-  const critical = requests.filter(
-    (request) =>
-      String(request.urgency).toLowerCase() === 'critical' &&
-      String(request.status).toLowerCase() !== 'completed' &&
-      String(request.status).toLowerCase() !== 'cancelled'
-  );
+    const expiry = new Date(request.offerExpiresAt).getTime();
+    const now = Date.now();
+    const inThirtyMinutes = now + 30 * 60 * 1000;
+    return expiry > now && expiry <= inThirtyMinutes;
+  }).length;
+
+  const queuePressure = requests.filter(
+    (request) => String(request.status || '').toLowerCase() === 'queued'
+  ).length;
 
   return (
-    <div className="attentionCard">
-      <h3 className="attentionTitle">Dispatch Attention</h3>
+    <aside className="railCard" aria-label="Dispatch attention">
+      <div className="railCardInner">
+        <div className="railCardHeader">
+          <div>
+            <div className="railCardEyebrow">Dispatch priority</div>
+            <h3 className="railCardTitle">Dispatch Attention</h3>
+            <p className="railCardSubtitle">
+              High-signal request conditions requiring rapid operational awareness.
+            </p>
+          </div>
 
-      <div className="attentionList">
-        <div>
-          Critical requests: <b>{critical.length}</b>
+          <div className={`railPill ${criticalCount > 0 ? 'railPill-danger' : 'railPill-neutral'}`}>
+            {criticalCount > 0 ? 'Action needed' : 'Stable'}
+          </div>
         </div>
 
-        <div>
-          Offers expiring soon: <b>{expiring.length}</b>
+        <div className="railCardDivider" />
+
+        <div className="railSignalGrid">
+          <div
+            className={`railSignalCard ${criticalCount > 0 ? 'railSignalCard-danger' : 'railSignalCard-neutral'}`}
+          >
+            <div className="railSignalLabel">Critical requests requiring intervention</div>
+            <div className="railSignalValue">{criticalCount}</div>
+          </div>
+
+          <div
+            className={`railSignalCard ${expiringSoonCount > 0 ? 'railSignalCard-warning' : 'railSignalCard-neutral'}`}
+          >
+            <div className="railSignalLabel">Offers expiring within 30 minutes</div>
+            <div className="railSignalValue">{expiringSoonCount}</div>
+          </div>
+
+          <div className="railSignalCard railSignalCard-neutral">
+            <div className="railSignalLabel">Queued requests waiting for dispatch action</div>
+            <div className="railSignalValue">{queuePressure}</div>
+          </div>
         </div>
+
+        <div className="railCardDivider" />
+
+        <Link to="/admin/dispatch" className="summaryCardAction">
+          Open Dispatch Center <span aria-hidden="true">→</span>
+        </Link>
       </div>
-    </div>
+    </aside>
   );
 }

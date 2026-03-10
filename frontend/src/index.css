@@ -13287,3 +13287,183 @@ button[aria-label='Open assistant'] {
     line-height: 1.65;
   }
 }
+
+/* Premium right-rail cards */
+.railCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 14px 30px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.railCard::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.95), rgba(56, 189, 248, 0.9));
+}
+
+.railCardInner {
+  padding: 22px;
+}
+
+.railCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.railCardEyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.railCardTitle {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.railCardSubtitle {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.railCardDivider {
+  height: 1px;
+  margin: 18px 0;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.railSignalGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.railSignalCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: #ffffff;
+}
+
+.railSignalCard-danger {
+  background: linear-gradient(180deg, rgba(254, 242, 242, 0.98), #ffffff);
+  border-color: rgba(244, 63, 94, 0.14);
+}
+
+.railSignalCard-warning {
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), #ffffff);
+  border-color: rgba(245, 158, 11, 0.16);
+}
+
+.railSignalCard-neutral {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), #ffffff);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.railSignalLabel {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.railSignalValue {
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.railPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.railPill-danger {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid rgba(244, 63, 94, 0.18);
+}
+
+.railPill-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+.railPill-neutral {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.railEmptyState {
+  display: flex;
+  min-height: 120px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  border: 1px dashed rgba(15, 23, 42, 0.1);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.9), rgba(255, 255, 255, 0.96));
+  text-align: center;
+  padding: 20px;
+}
+
+.railEmptyText {
+  font-size: 15px;
+  color: #64748b;
+}
+
+.railActivityList {
+  display: grid;
+  gap: 12px;
+}
+
+.railActivityItem {
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.railActivityTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: capitalize;
+}
+
+.railActivityMeta {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #64748b;
+}
