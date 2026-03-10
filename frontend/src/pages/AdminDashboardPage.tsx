@@ -119,21 +119,25 @@ export function AdminDashboardPage() {
           <div className="dashboardMetricLabel">Visits Today</div>
           <div className="dashboardMetricValue">{stats.completedRequests}</div>
           <div className="dashboardMetricMeta">Completed and documented field activity</div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Live operations</div>
         </div>
         <div className="dashboardMetricCard dashboardMetricCard-blue">
           <div className="dashboardMetricLabel">Active Clinicians</div>
           <div className="dashboardMetricValue">{activeVisitsCount}</div>
           <div className="dashboardMetricMeta">Accepted and in-progress assignments</div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-success">In motion</div>
         </div>
         <div className="dashboardMetricCard dashboardMetricCard-amber">
           <div className="dashboardMetricLabel">Open Requests</div>
           <div className="dashboardMetricValue">{stats.queuedRequests}</div>
           <div className="dashboardMetricMeta">Queue volume waiting for dispatch action</div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-warning">Needs attention</div>
         </div>
         <div className="dashboardMetricCard dashboardMetricCard-green">
           <div className="dashboardMetricLabel">Follow-ups Pending</div>
           <div className="dashboardMetricValue">{followUpsPending}</div>
           <div className="dashboardMetricMeta">Clinician review items still open</div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Review queue</div>
         </div>
       </section>
 
