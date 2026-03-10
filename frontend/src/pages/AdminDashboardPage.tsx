@@ -142,38 +142,42 @@ export function AdminDashboardPage() {
       </section>
 
       <section className="dashboardGrid">
-        <div className="dashboardPanel">
+        <div className="dashboardPanel dashboardPanel-premium">
           <div className="dashboardPanelHeader">
             <div>
               <div className="summaryLinkEyebrow">Operations Health</div>
               <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
             </div>
             <Link to="/admin/scheduling" className="summaryLinkAction">
-              Open Scheduling Board -&gt;
+              Open Scheduling Board <span aria-hidden="true">→</span>
             </Link>
           </div>
 
           <p className="summaryLinkText">
-            Balance the queue, monitor live offers, and keep follow-up work moving back into the
+            Balance queue pressure, monitor live offers, and keep follow-up work moving back into the
             scheduling board without leaving the operations hub.
           </p>
 
           <div className="settingsOverviewGrid">
-            <div className="settingsOverviewCard">
+            <div className="settingsOverviewCard settingsOverviewCard-queued">
               <div className="settingsOverviewLabel">Queued</div>
               <div className="settingsOverviewValue">{stats.queuedRequests}</div>
+              <div className="settingsOverviewMeta">Requests waiting for dispatch action</div>
             </div>
-            <div className="settingsOverviewCard">
+            <div className="settingsOverviewCard settingsOverviewCard-offered">
               <div className="settingsOverviewLabel">Offered</div>
               <div className="settingsOverviewValue">{stats.offeredRequests}</div>
+              <div className="settingsOverviewMeta">Requests currently in offer flow</div>
             </div>
-            <div className="settingsOverviewCard">
+            <div className="settingsOverviewCard settingsOverviewCard-motion">
               <div className="settingsOverviewLabel">In Motion</div>
               <div className="settingsOverviewValue">{activeVisitsCount}</div>
+              <div className="settingsOverviewMeta">Accepted and in-progress visits</div>
             </div>
-            <div className="settingsOverviewCard">
+            <div className="settingsOverviewCard settingsOverviewCard-followups">
               <div className="settingsOverviewLabel">Follow-ups</div>
               <div className="settingsOverviewValue">{followUpsPending}</div>
+              <div className="settingsOverviewMeta">Review actions still requiring closure</div>
             </div>
           </div>
 

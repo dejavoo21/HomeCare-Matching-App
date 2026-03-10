@@ -13846,3 +13846,185 @@ button[aria-label='Open assistant'] {
     font-size: 40px;
   }
 }
+
+/* =========================
+   Premium scheduling overview
+   ========================= */
+
+.dashboardPanel {
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboardPanel-premium {
+  background:
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.07), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  border-radius: 24px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 18px 38px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+.dashboardPanel-premium::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #6366f1, #0ea5e9);
+}
+
+.dashboardPanelHeader {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboardPanelTitle {
+  margin: 4px 0 0;
+  font-size: 30px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.summaryLinkText {
+  margin-top: 12px;
+  max-width: 920px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #64748b;
+}
+
+.summaryLinkAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #4338ca;
+  text-decoration: none;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.summaryLinkAction:hover {
+  color: #312e81;
+  transform: translateX(2px);
+}
+
+.settingsOverviewGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.settingsOverviewCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  padding: 18px 18px 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.settingsOverviewCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--overview-accent-1), var(--overview-accent-2));
+}
+
+.settingsOverviewCard-queued {
+  --overview-accent-1: #f59e0b;
+  --overview-accent-2: #f97316;
+}
+
+.settingsOverviewCard-offered {
+  --overview-accent-1: #0ea5e9;
+  --overview-accent-2: #06b6d4;
+}
+
+.settingsOverviewCard-motion {
+  --overview-accent-1: #10b981;
+  --overview-accent-2: #14b8a6;
+}
+
+.settingsOverviewCard-followups {
+  --overview-accent-1: #8b5cf6;
+  --overview-accent-2: #6366f1;
+}
+
+.settingsOverviewLabel {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.settingsOverviewValue {
+  position: relative;
+  z-index: 1;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.settingsOverviewMeta {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.dashboardActionRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.dashboardActionRow .btn,
+.dashboardActionRow a.btn {
+  min-height: 44px;
+  border-radius: 14px;
+}
+
+.dashboardActionRow .btn:not(.btn-primary) {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  color: #0f172a;
+}
+
+.dashboardActionRow .btn:not(.btn-primary):hover {
+  background: #f8fafc;
+}
+
+@media (max-width: 1100px) {
+  .settingsOverviewGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .settingsOverviewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardPanelTitle {
+    font-size: 24px;
+  }
+}
