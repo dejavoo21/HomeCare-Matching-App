@@ -1,265 +1,528 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import AppPage from '../components/layout/AppPage';
-import ContentGrid from '../components/layout/ContentGrid';
-import PageHero from '../components/ui/PageHero';
-import SectionCard from '../components/ui/SectionCard';
-import KpiCard from '../components/ui/KpiCard';
-import Button from '../components/ui/Button';
-import AssistantPanel from '../components/assistant/AssistantPanel';
+import { api } from '../services/api';
+import { useRealTime } from '../contexts/RealTimeContext';
+import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
+import { ActivityFeed } from '../components/ActivityFeed';
+import { IntegrationsSummaryCard } from '../components/IntegrationsSummaryCard';
+import { AuditSummaryCard } from '../components/AuditSummaryCard';
+import { AnalyticsSummaryCard } from '../components/AnalyticsSummaryCard';
+import { AccessSummaryCard } from '../components/AccessSummaryCard';
+import { ReliabilitySummaryCard } from '../components/ReliabilitySummaryCard';
+import { FhirSummaryCard } from '../components/FhirSummaryCard';
 
-const dashboardData = {
-  kpis: {
-    scheduledVisitsToday: 126,
-    atRiskVisits: 8,
-    coverageHealth: 94,
-    pendingReviews: 11,
-    unassignedVisits: 5,
-    lateCheckIns: 3,
-    blockedOnboarding: 4,
-  },
-  priorities: [
-    'Resolve unassigned visits before afternoon shift transitions',
-    'Review clinician notes awaiting admin review',
-    'Clear access verification blockers',
-  ],
-  exceptions: [
-    { id: '1', title: 'Medication support visit unassigned', detail: 'Johannesburg North - 09:30', tone: 'warning' as const },
-    { id: '2', title: 'Late EVV check-in detected', detail: 'Thabo Sithole visit - 22 minutes late', tone: 'danger' as const },
-    { id: '3', title: 'Clinician note escalated', detail: 'Follow-up recommended after post-op outcome review', tone: 'info' as const },
-    { id: '4', title: 'Authorization warning', detail: 'Medication support authorization nearing threshold', tone: 'warning' as const },
-  ],
-  coverageByRegion: [
-    { region: 'General region', score: 91, open: 3 },
-    { region: 'Boston MA', score: 75, open: 9 },
-  ],
-  enterpriseLinks: [
-    {
-      title: 'Connected Systems',
-      eyebrow: 'Integrations',
-      body: 'View hospital connections, dispatch agencies, partner endpoints, and connection status.',
-      cta: 'Open Connected Systems ->',
-      to: '/admin/integrations',
-    },
-    {
-      title: 'Audit & Compliance',
-      eyebrow: 'Compliance',
-      body: 'Review authentication events, approvals, administrative actions, and traceability records.',
-      cta: 'Open Audit & Compliance ->',
-      to: '/admin/audit',
-    },
-    {
-      title: 'Analytics',
-      eyebrow: 'Performance',
-      body: 'Explore dispatch trends, acceptance rates, workload distribution, and completion patterns.',
-      cta: 'Open Analytics ->',
-      to: '/admin/analytics',
-    },
-    {
-      title: 'Access Management',
-      eyebrow: 'Security',
-      body: 'Review user access requests, approve new accounts, and manage security settings.',
-      cta: 'Open Access Management ->',
-      to: '/admin/access',
-    },
-    {
-      title: 'Reliability',
-      eyebrow: 'Operations',
-      body: 'Inspect webhook delivery health, retries, failures, and operational reliability signals.',
-      cta: 'Open Reliability ->',
-      to: '/admin/integrations/reliability',
-    },
-    {
-      title: 'FHIR API',
-      eyebrow: 'Interoperability',
-      body: 'Review exposed FHIR-aligned resources, metadata, and interoperability coverage.',
-      cta: 'Open FHIR API ->',
-      to: '/admin/integrations/fhir',
-    },
-  ],
-} as const;
+type DashboardRequest = {
+  id?: string;
+  address?: string;
+  urgency?: string;
+  status?: string;
+  offerExpiresAt?: string | null;
+  evvStatus?: string | null;
+  followUpRequired?: boolean;
+  follow_up_required?: boolean;
+  adminFollowUpScheduled?: boolean;
+  admin_follow_up_scheduled?: boolean;
+};
 
-function ExceptionItem({
-  item,
-}: {
-  item: { id: string; title: string; detail: string; tone: 'danger' | 'warning' | 'info' };
-}) {
-  const toneClass =
-    item.tone === 'danger'
-      ? 'bg-rose-50 text-rose-800'
-      : item.tone === 'warning'
-        ? 'bg-amber-50 text-amber-800'
-        : 'bg-sky-50 text-sky-800';
+type DashboardData = {
+  stats: {
+    queuedRequests: number;
+    offeredRequests: number;
+    acceptedRequests: number;
+    enRouteRequests: number;
+    completedRequests: number;
+    cancelledRequests: number;
+  };
+};
 
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-slate-900">{item.title}</div>
-          <div className="mt-1 text-sm text-slate-500">{item.detail}</div>
-        </div>
-        <div className={`rounded-full px-2.5 py-1 text-xs font-semibold ${toneClass}`}>Active</div>
-      </div>
-
-      <div className="mt-4 flex gap-2">
-        <Button variant="secondary" size="sm">Open</Button>
-        <Button size="sm">Take action</Button>
-      </div>
-    </div>
-  );
+function normalizeStatus(value?: string | null) {
+  return String(value || '').toLowerCase();
 }
 
-function RegionCoverageRow({ item }: { item: { region: string; score: number; open: number } }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-xl font-semibold text-slate-900">{item.region}</div>
-          <div className="mt-1 text-sm text-slate-500">{item.open} open issues</div>
-        </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-slate-900">{item.score}%</div>
-          <div className="text-xs uppercase tracking-wide text-slate-400">Coverage</div>
-        </div>
-      </div>
-
-      <div className="mt-4 h-2 rounded-full bg-slate-200">
-        <div
-          className="h-2 rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500"
-          style={{ width: `${item.score}%` }}
-        />
-      </div>
-    </div>
-  );
+function normalizeUrgency(value?: string | null) {
+  return String(value || '').toLowerCase();
 }
 
-function EnterpriseCard({
-  title,
-  eyebrow,
-  body,
-  cta,
-  to,
+function regionFromAddress(address?: string | null) {
+  const text = String(address || '').toLowerCase();
+  if (!text) return 'Coverage not set';
+  if (text.includes('johannesburg north')) return 'Johannesburg North';
+  if (text.includes('johannesburg central')) return 'Johannesburg Central';
+  if (text.includes('pretoria east')) return 'Pretoria East';
+  if (text.includes('cape town')) return 'Cape Town';
+  if (text.includes('boston')) return 'Boston';
+  return 'General region';
+}
+
+function InsightStatCard({
+  label,
+  value,
+  hint,
+  pill,
+  accent,
 }: {
-  title: string;
-  eyebrow: string;
-  body: string;
-  cta: string;
-  to: string;
+  label: string;
+  value: string | number;
+  hint: string;
+  pill: string;
+  accent: string;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{eyebrow}</div>
-      <div className="mt-2 text-2xl font-semibold text-slate-900">{title}</div>
-      <p className="mt-4 text-sm leading-6 text-slate-600">{body}</p>
-      <Link
-        to={to}
-        className="mt-5 inline-flex text-base font-semibold text-indigo-600 transition hover:text-indigo-700"
-      >
-        {cta}
-      </Link>
-    </div>
+    <article className="statCardPro" style={{ ['--accent' as any]: accent }}>
+      <div className="statMeta">
+        <div className="statLabel">{label}</div>
+        <div className="statHint">{hint}</div>
+      </div>
+      <div className="statValueRow">
+        <div className="statValue">{value}</div>
+        <div className="statPill">{pill}</div>
+      </div>
+    </article>
   );
 }
 
 export function AdminDashboardPage() {
-  const data = dashboardData;
+  const { on } = useRealTime();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [requests, setRequests] = useState<DashboardRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activityKey, setActivityKey] = useState(0);
 
-  const assistantContext = useMemo(
-    () => ({ kpis: data.kpis, priorities: data.priorities }),
-    [data]
-  );
+  const loadDashboard = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [dash, reqs] = await Promise.all([
+        api.getAdminDashboard() as any,
+        api.getAllRequests() as any,
+      ]);
+      setData(dash?.data || null);
+      setRequests(reqs?.data || []);
+      setActivityKey((current) => current + 1);
+    } catch (err) {
+      console.error('Failed to load admin dashboard:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  useEffect(() => {
+    const unsubs = [
+      on('REQUEST_CREATED', loadDashboard),
+      on('REQUEST_STATUS_CHANGED', loadDashboard),
+      on('OFFER_CREATED', loadDashboard),
+      on('OFFER_ACCEPTED', loadDashboard),
+      on('OFFER_DECLINED', loadDashboard),
+      on('OFFER_EXPIRED', loadDashboard),
+      on('VISIT_STATUS_CHANGED', loadDashboard),
+    ];
+
+    return () => unsubs.forEach((unsubscribe) => unsubscribe());
+  }, [on, loadDashboard]);
+
+  const derived = useMemo(() => {
+    const stats = data?.stats || {
+      queuedRequests: 0,
+      offeredRequests: 0,
+      acceptedRequests: 0,
+      enRouteRequests: 0,
+      completedRequests: 0,
+      cancelledRequests: 0,
+    };
+    const activeVisitsCount = stats.acceptedRequests + stats.enRouteRequests;
+    const followUpsPending = requests.filter(
+      (request) =>
+        (request.followUpRequired || request.follow_up_required) &&
+        !(request.adminFollowUpScheduled || request.admin_follow_up_scheduled)
+    ).length;
+    const atRiskVisits = requests.filter((request) => {
+      const urgency = normalizeUrgency(request.urgency);
+      const status = normalizeStatus(request.status);
+      return urgency === 'critical' && !['completed', 'cancelled'].includes(status);
+    }).length;
+    const lateCheckIns = requests.filter(
+      (request) =>
+        ['accepted', 'en_route'].includes(normalizeStatus(request.status)) &&
+        normalizeStatus(request.evvStatus) !== 'completed'
+    ).length;
+    const blockedOnboarding = followUpsPending;
+    const coverageHealth = Math.max(82, 100 - stats.queuedRequests - atRiskVisits);
+
+    const priorities = [
+      stats.queuedRequests > 0
+        ? `Resolve ${stats.queuedRequests} queued request${stats.queuedRequests === 1 ? '' : 's'} before afternoon coverage changes`
+        : null,
+      followUpsPending > 0
+        ? `Review ${followUpsPending} clinician follow-up item${followUpsPending === 1 ? '' : 's'} awaiting admin action`
+        : null,
+      lateCheckIns > 0
+        ? `Investigate ${lateCheckIns} EVV signal${lateCheckIns === 1 ? '' : 's'} still missing final check-in state`
+        : null,
+      stats.offeredRequests > 0
+        ? `Track ${stats.offeredRequests} live offer${stats.offeredRequests === 1 ? '' : 's'} and confirm dispatch conversions`
+        : null,
+    ].filter(Boolean) as string[];
+
+    const exceptions = requests
+      .filter((request) => {
+        const status = normalizeStatus(request.status);
+        return (
+          normalizeUrgency(request.urgency) === 'critical' ||
+          ['queued', 'offered', 'accepted', 'en_route'].includes(status)
+        );
+      })
+      .slice(0, 4)
+      .map((request) => {
+        const status = normalizeStatus(request.status);
+        const tone =
+          normalizeUrgency(request.urgency) === 'critical'
+            ? 'danger'
+            : status === 'queued'
+              ? 'warning'
+              : 'info';
+
+        return {
+          id: request.id || Math.random().toString(36),
+          title: request.id
+            ? `Request ${String(request.id).slice(0, 8)} needs attention`
+            : 'Live request needs attention',
+          detail: `${regionFromAddress(request.address)} | ${status.replace('_', ' ')} | ${normalizeUrgency(request.urgency) || 'standard'} priority`,
+          tone,
+        };
+      });
+
+    const byRegion = new Map<string, { total: number; open: number }>();
+    requests.forEach((request) => {
+      const region = regionFromAddress(request.address);
+      const current = byRegion.get(region) || { total: 0, open: 0 };
+      current.total += 1;
+      if (!['completed', 'cancelled'].includes(normalizeStatus(request.status))) {
+        current.open += 1;
+      }
+      byRegion.set(region, current);
+    });
+
+    const regionCoverage = Array.from(byRegion.entries())
+      .map(([region, meta]) => ({
+        region,
+        open: meta.open,
+        score: Math.max(75, 100 - meta.open * 3),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4);
+
+    return {
+      stats,
+      activeVisitsCount,
+      followUpsPending,
+      atRiskVisits,
+      lateCheckIns,
+      blockedOnboarding,
+      coverageHealth,
+      priorities,
+      exceptions,
+      regionCoverage,
+    };
+  }, [data, requests]);
+
+  if (isLoading || !data) {
+    return (
+      <main className="opsDashboard" role="main" aria-label="Operations dashboard">
+        <div className="pageHeaderBlock">
+          <h1 className="pageTitle">Operations Hub</h1>
+          <p className="subtitle">Loading operations view...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <AppPage>
-      <PageHero
-        eyebrow="Care operations command center"
-        title="Today's service delivery posture"
-        description="Monitor care coverage, workforce readiness, EVV integrity, verification blockers, and follow-up pressure from one operational surface."
-        stats={[
-          { label: 'Scheduled today', value: data.kpis.scheduledVisitsToday, subtitle: 'Visits on the care plan' },
-          { label: 'At risk', value: data.kpis.atRiskVisits, subtitle: 'Needs intervention' },
-          { label: 'Coverage health', value: `${data.kpis.coverageHealth}%`, subtitle: 'Regional staffing posture' },
-          { label: 'Pending reviews', value: data.kpis.pendingReviews, subtitle: 'Admin review queue' },
-        ]}
-        rightContent={
+    <main className="opsDashboard" role="main" aria-label="Operations dashboard">
+      <section className="dashboardHeroCard">
+        <div className="dashboardHeroGrid">
           <div>
-            <div className="text-lg font-semibold text-white">Priority actions</div>
-            <div className="mt-3 space-y-3">
-              {data.priorities.map((item) => (
-                <button
-                  key={item}
-                  className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm hover:bg-white/15"
-                  type="button"
-                >
-                  {item}
-                </button>
+            <div className="dashboardHeroEyebrow">Care operations command center</div>
+            <h1 className="dashboardHeroTitle">Today&apos;s service delivery posture</h1>
+            <p className="dashboardHeroText">
+              Monitor care coverage, workforce readiness, EVV integrity, verification blockers,
+              and follow-up pressure from one operating surface.
+            </p>
+
+            <div className="dashboardHeroStats">
+              <div className="dashboardHeroStat">
+                <span className="dashboardHeroStatLabel">Scheduled today</span>
+                <strong className="dashboardHeroStatValue">{derived.stats.completedRequests}</strong>
+                <span className="dashboardHeroStatText">Completed and documented field activity</span>
+              </div>
+              <div className="dashboardHeroStat">
+                <span className="dashboardHeroStatLabel">At risk</span>
+                <strong className="dashboardHeroStatValue">{derived.atRiskVisits}</strong>
+                <span className="dashboardHeroStatText">Needs operational intervention</span>
+              </div>
+              <div className="dashboardHeroStat">
+                <span className="dashboardHeroStatLabel">Coverage health</span>
+                <strong className="dashboardHeroStatValue">{derived.coverageHealth}%</strong>
+                <span className="dashboardHeroStatText">Regional staffing posture</span>
+              </div>
+              <div className="dashboardHeroStat">
+                <span className="dashboardHeroStatLabel">Pending reviews</span>
+                <strong className="dashboardHeroStatValue">{derived.followUpsPending}</strong>
+                <span className="dashboardHeroStatText">Admin follow-up queue</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="dashboardPriorityCard">
+            <div className="dashboardPriorityHeader">
+              <div>
+                <h2 className="dashboardPriorityTitle">Priority actions</h2>
+                <p className="dashboardPriorityText">Highest-value actions for operations today.</p>
+              </div>
+              <div className="dashboardPriorityBadge">Today</div>
+            </div>
+
+            <div className="dashboardPriorityList">
+              {derived.priorities.length === 0 ? (
+                <div className="dashboardPriorityItem">No priority blockers right now.</div>
+              ) : (
+                derived.priorities.map((item) => (
+                  <button key={item} className="dashboardPriorityItem" type="button">
+                    {item}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="stats-grid" aria-label="Operations summary">
+        <InsightStatCard
+          label="Unassigned Visits"
+          value={derived.stats.queuedRequests}
+          hint="Coverage gaps awaiting dispatch action"
+          pill={`${derived.stats.offeredRequests} offered`}
+          accent="#f59e0b"
+        />
+        <InsightStatCard
+          label="At Risk Visits"
+          value={derived.atRiskVisits}
+          hint="Critical or unresolved requests still open"
+          pill={derived.atRiskVisits > 0 ? 'Escalate' : 'Stable'}
+          accent={derived.atRiskVisits > 0 ? '#ef4444' : '#10b981'}
+        />
+        <InsightStatCard
+          label="Late Check-ins"
+          value={derived.lateCheckIns}
+          hint="Potential EVV exceptions still missing final status"
+          pill={derived.lateCheckIns > 0 ? 'Needs review' : 'Clear'}
+          accent="#0ea5e9"
+        />
+        <InsightStatCard
+          label="Blocked Onboarding"
+          value={derived.blockedOnboarding}
+          hint="Verification or follow-up work still blocking release"
+          pill={derived.blockedOnboarding > 0 ? 'Pending action' : 'Clear'}
+          accent="#6366f1"
+        />
+        <InsightStatCard
+          label="Coverage Health"
+          value={`${derived.coverageHealth}%`}
+          hint="Overall staffing readiness across active requests"
+          pill="Regional posture"
+          accent="#10b981"
+        />
+      </section>
+
+      <section className="dashboardOperationalStrip">
+        <div className="dashboardOperationalCard">
+          <div className="dashboardOperationalTitle">Workforce presence</div>
+          <div className="dashboardOperationalGrid">
+            <div className="dashboardOperationalMetric dashboardOperationalMetric-success">
+              <span className="dashboardOperationalLabel">Available now</span>
+              <strong className="dashboardOperationalValue">
+                {Math.max(derived.activeVisitsCount, 1)}
+              </strong>
+            </div>
+            <div className="dashboardOperationalMetric dashboardOperationalMetric-warning">
+              <span className="dashboardOperationalLabel">In visit</span>
+              <strong className="dashboardOperationalValue">{derived.activeVisitsCount}</strong>
+            </div>
+            <div className="dashboardOperationalMetric">
+              <span className="dashboardOperationalLabel">Off shift</span>
+              <strong className="dashboardOperationalValue">{derived.stats.cancelledRequests}</strong>
+            </div>
+            <div className="dashboardOperationalMetric dashboardOperationalMetric-info">
+              <span className="dashboardOperationalLabel">Compliance avg</span>
+              <strong className="dashboardOperationalValue">96%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="dashboardOperationalCard">
+          <div className="dashboardOperationalTitle">EVV integrity</div>
+          <div className="dashboardOperationalStack">
+            <div className="dashboardOperationalNotice">
+              <span>Completed today</span>
+              <strong>{derived.stats.completedRequests}</strong>
+            </div>
+            <div className="dashboardOperationalNotice dashboardOperationalNotice-violet">
+              <span>Missing check-ins</span>
+              <strong>{derived.lateCheckIns}</strong>
+            </div>
+            <div className="dashboardOperationalNotice dashboardOperationalNotice-info">
+              <span>GPS-ready rate</span>
+              <strong>97%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="dashboardOperationalCard">
+          <div className="dashboardOperationalTitle">Review and follow-up pressure</div>
+          <div className="dashboardOperationalStack">
+            <div className="dashboardOperationalNarrative">
+              {derived.followUpsPending} clinician review item
+              {derived.followUpsPending === 1 ? '' : 's'} are awaiting admin action.
+            </div>
+            <div className="dashboardOperationalNarrative">
+              Escalate outcomes that require follow-up creation and supervisor attention.
+            </div>
+            <Link to="/admin/clinician-review" className="btn btn-primary">
+              Open review queue
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="dashboardCommandLayout">
+        <div className="dashboardMainColumn">
+          <div className="dashboardPanel">
+            <div className="dashboardPanelHeader">
+              <div>
+                <div className="summaryLinkEyebrow">Operational focus</div>
+                <h2 className="dashboardPanelTitle">Live exceptions</h2>
+              </div>
+              <Link to="/admin/dispatch" className="summaryLinkAction">
+                View all -&gt;
+              </Link>
+            </div>
+
+            <div className="dashboardExceptionList">
+              {derived.exceptions.length === 0 ? (
+                <div className="premiumEmptyState premiumEmptyState-compact">
+                  <div className="premiumEmptyTitle">No live exceptions</div>
+                  <div className="premiumEmptyText">
+                    Operations are clear right now. New issues will surface here first.
+                  </div>
+                </div>
+              ) : (
+                derived.exceptions.map((item) => (
+                  <div key={item.id} className="dashboardExceptionCard">
+                    <div className="dashboardExceptionTop">
+                      <div>
+                        <div className="dashboardExceptionTitle">{item.title}</div>
+                        <div className="dashboardExceptionDetail">{item.detail}</div>
+                      </div>
+                      <span className={`dashboardExceptionTag dashboardExceptionTag-${item.tone}`}>
+                        Active
+                      </span>
+                    </div>
+                    <div className="dashboardExceptionActions">
+                      <Link to="/admin/dispatch" className="btn btn-small">
+                        Open
+                      </Link>
+                      <Link to="/admin/dispatch" className="btn btn-small btn-primary">
+                        Take action
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="dashboardPanel">
+            <div className="dashboardPanelHeader">
+              <div>
+                <div className="summaryLinkEyebrow">Regional posture</div>
+                <h2 className="dashboardPanelTitle">Coverage by region</h2>
+              </div>
+              <Link to="/admin/dispatch" className="summaryLinkAction">
+                Open dispatch -&gt;
+              </Link>
+            </div>
+
+            <div className="dashboardCoverageList">
+              {derived.regionCoverage.map((item) => (
+                <div key={item.region} className="dashboardCoverageCard">
+                  <div className="dashboardCoverageTop">
+                    <div>
+                      <div className="dashboardCoverageTitle">{item.region}</div>
+                      <div className="dashboardCoverageMeta">
+                        {item.open} open issue{item.open === 1 ? '' : 's'}
+                      </div>
+                    </div>
+                    <div className="dashboardCoverageScore">
+                      <strong>{item.score}%</strong>
+                      <span>Coverage</span>
+                    </div>
+                  </div>
+                  <div className="dashboardCoverageBar">
+                    <div
+                      className="dashboardCoverageBarFill"
+                      style={{ width: `${item.score}%` }}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
           </div>
-        }
-      />
+        </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <KpiCard title="Unassigned visits" value={data.kpis.unassignedVisits} subtitle="Coverage gaps awaiting assignment" accent="warning" />
-        <KpiCard title="At risk visits" value={data.kpis.atRiskVisits} subtitle="Visits needing intervention" accent="danger" />
-        <KpiCard title="Late check-ins" value={data.kpis.lateCheckIns} subtitle="Potential EVV exceptions" accent="info" />
-        <KpiCard title="Blocked onboarding" value={data.kpis.blockedOnboarding} subtitle="Access verification incomplete" accent="warning" />
-        <KpiCard title="Coverage health" value={`${data.kpis.coverageHealth}%`} subtitle="Overall staffing readiness" accent="success" />
-      </div>
+        <aside className="dashboardAsideRail">
+          <ActivityFeed refreshKey={activityKey} />
+          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
 
-      <ContentGrid
-        main={
-          <>
-            <SectionCard title="Live exceptions" subtitle="Operational issues requiring attention across care delivery">
-              <div className="grid gap-3 lg:grid-cols-2">
-                {data.exceptions.map((item) => (
-                  <ExceptionItem key={item.id} item={item} />
-                ))}
+          <div className="dashboardPanel">
+            <div className="dashboardPanelHeader">
+              <div>
+                <div className="summaryLinkEyebrow">Operational narrative</div>
+                <h2 className="dashboardPanelTitle">Today&apos;s story</h2>
               </div>
-            </SectionCard>
-
-            <SectionCard title="Regional coverage" subtitle="Staffing posture and open issue pressure by region">
-              <div className="grid gap-4 lg:grid-cols-2">
-                {data.coverageByRegion.map((item) => (
-                  <RegionCoverageRow key={item.region} item={item} />
-                ))}
-              </div>
-            </SectionCard>
-
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-              {data.enterpriseLinks.map((item) => (
-                <EnterpriseCard
-                  key={item.title}
-                  title={item.title}
-                  eyebrow={item.eyebrow}
-                  body={item.body}
-                  cta={item.cta}
-                  to={item.to}
-                />
-              ))}
             </div>
-          </>
-        }
-        rail={
-          <>
-            <SectionCard title="Today's story">
-              <div className="space-y-4">
-                <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-700">
-                  Care delivery is broadly healthy, but unresolved queue pressure and EVV exceptions still need intervention.
-                </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-700">
-                  Workforce readiness is stable, with active clinicians and regional coverage supporting service continuity.
-                </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-700">
-                  Verification and follow-up queues remain the main blockers to smoother throughput.
-                </div>
-              </div>
-            </SectionCard>
 
-            <AssistantPanel context="dashboard" contextData={assistantContext} />
-          </>
-        }
-      />
-    </AppPage>
+            <div className="dashboardNarrativeList">
+              <div className="dashboardNarrativeItem">
+                Care delivery is broadly healthy, but unresolved queue pressure and EVV exceptions
+                still need intervention.
+              </div>
+              <div className="dashboardNarrativeItem">
+                Workforce readiness is stable, with active clinicians and regional coverage
+                supporting service continuity.
+              </div>
+              <div className="dashboardNarrativeItem">
+                Verification and follow-up queues remain the main blockers to smoother throughput.
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section className="pageGridTwo">
+        <div className="dashboardPrimaryStack">
+          <div className="summaryStrip">
+            <IntegrationsSummaryCard />
+            <AuditSummaryCard />
+            <AnalyticsSummaryCard />
+            <AccessSummaryCard />
+            <ReliabilitySummaryCard />
+            <FhirSummaryCard />
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
