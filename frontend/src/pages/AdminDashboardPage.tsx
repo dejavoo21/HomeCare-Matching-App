@@ -108,7 +108,7 @@ export function AdminDashboardPage() {
 
           <div className="pageActions">
             <button className="btn btn-primary" onClick={() => navigate('/admin/dispatch')}>
-              Open Dispatch Center
+              Open Live Dispatch
             </button>
           </div>
         </div>
