@@ -96,23 +96,44 @@ export function AdminDashboardPage() {
   ).length;
 
   return (
-    <main className="opsDashboard" role="main" aria-label="Operations dashboard">
-      <section className="pageHeaderBlock">
-        <div className="pageHeaderRow">
-          <div>
-            <h1 className="pageTitle">Operations Hub</h1>
-            <p className="subtitle">
-              Dispatch, workforce, compliance, and platform activity in one operating surface.
-            </p>
+      <main className="opsDashboard" role="main" aria-label="Operations dashboard">
+        <section className="pageHeaderBlock">
+          <div className="pageHeaderRow">
+            <div className="pageHeaderContent">
+              <div className="pageHeaderEyebrow">Care operations command center</div>
+              <h1 className="pageTitle">Operations Hub</h1>
+              <p className="subtitle">
+                Dispatch, workforce, compliance, and platform activity in one operating surface.
+              </p>
+            </div>
+
+            <div className="pageActions">
+              <button className="btn btn-primary" onClick={() => navigate('/admin/dispatch')}>
+                Open Live Dispatch
+              </button>
+              <Link to="/admin/scheduling" className="btn">
+                Open Scheduling
+              </Link>
+            </div>
           </div>
 
-          <div className="pageActions">
-            <button className="btn btn-primary" onClick={() => navigate('/admin/dispatch')}>
-              Open Live Dispatch
-            </button>
+          <div className="pageHeaderMeta">
+            <div className="pageHeaderMetaCard">
+              <div className="pageHeaderMetaLabel">Queue status</div>
+              <div className="pageHeaderMetaValue">{stats.queuedRequests} requests awaiting action</div>
+            </div>
+
+            <div className="pageHeaderMetaCard">
+              <div className="pageHeaderMetaLabel">Workforce posture</div>
+              <div className="pageHeaderMetaValue">{activeVisitsCount} clinicians currently active</div>
+            </div>
+
+            <div className="pageHeaderMetaCard">
+              <div className="pageHeaderMetaLabel">Follow-up pressure</div>
+              <div className="pageHeaderMetaValue">{followUpsPending} review items still open</div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
       <section className="dashboardTopGrid" aria-label="Operations summary">
         <div className="dashboardMetricCard dashboardMetricCard-indigo">

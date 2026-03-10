@@ -14028,3 +14028,170 @@ button[aria-label='Open assistant'] {
     font-size: 24px;
   }
 }
+
+/* =========================
+   Premium operations header
+   ========================= */
+
+.pageHeaderBlock {
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px;
+  padding: 28px 30px;
+  background:
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.14), transparent 24%),
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.1), transparent 20%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 20px 44px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.pageHeaderBlock::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #6366f1, #0ea5e9, #14b8a6);
+}
+
+.pageHeaderBlock::after {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.12), transparent 68%);
+  pointer-events: none;
+}
+
+.pageHeaderRow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.pageHeaderContent {
+  min-width: 0;
+}
+
+.pageHeaderEyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.08);
+  color: #4f46e5;
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.pageTitle {
+  margin: 14px 0 0;
+  font-size: 34px;
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+}
+
+.subtitle {
+  margin: 12px 0 0;
+  max-width: 780px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #64748b;
+}
+
+.pageActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pageActions .btn,
+.pageActions .btn-primary {
+  min-height: 46px;
+  border-radius: 14px;
+}
+
+.pageActions .btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  border-color: transparent;
+  color: #fff;
+  box-shadow:
+    0 12px 24px rgba(79, 70, 229, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.pageActions .btn-primary:hover {
+  filter: brightness(0.97);
+}
+
+.pageHeaderMeta {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.pageHeaderMetaCard {
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.pageHeaderMetaLabel {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.pageHeaderMetaValue {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+@media (max-width: 1100px) {
+  .pageHeaderRow {
+    flex-direction: column;
+  }
+
+  .pageHeaderMeta {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .pageHeaderBlock {
+    padding: 22px 20px;
+    border-radius: 22px;
+  }
+
+  .pageTitle {
+    font-size: 28px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+}
