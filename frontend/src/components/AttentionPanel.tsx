@@ -28,7 +28,7 @@ export function AttentionPanel({ requests }: { requests: AttentionRequest[] }) {
   ).length;
 
   return (
-    <aside className="railCard" aria-label="Dispatch attention">
+    <aside className="railCard railCard-compact" aria-label="Dispatch attention">
       <div className="railCardInner">
         <div className="railCardHeader">
           <div>
