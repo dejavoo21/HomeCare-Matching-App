@@ -1,86 +1,199 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { api } from "../services/api";
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { api } from '../services/api';
 
-type Pro = {
+type Professional = {
   id: string;
-  name: string;
-  email: string;
-  role: "nurse" | "doctor" | string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
+  email?: string;
+  role?: string;
   location?: string;
   isActive?: boolean;
   is_active?: boolean;
 };
 
-function initials(name?: string) {
-  const n = (name || "").trim();
-  if (!n) return "U";
-  const parts = n.split(/\s+/).slice(0, 2);
-  return parts.map((p) => p[0]?.toUpperCase()).join("");
+type ProfessionalsPanelProps = {
+  refreshKey?: number;
+  summaryOnly?: boolean;
+};
+
+function getDisplayName(item: Professional) {
+  if (item.name) return item.name;
+  return `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'Unknown Professional';
+}
+
+function getInitials(name: string) {
+  return (
+    name
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() || '')
+      .join('') || 'U'
+  );
+}
+
+function normalizeRole(role?: string) {
+  const value = String(role || '').toLowerCase();
+  if (value.includes('doctor')) return 'doctor';
+  if (value.includes('nurse')) return 'nurse';
+  return 'nurse';
 }
 
 export function ProfessionalsPanel({
   refreshKey,
   summaryOnly = false,
-}: {
-  refreshKey?: number;
-  summaryOnly?: boolean;
-}) {
-  const [pros, setPros] = useState<Pro[]>([]);
-  const [q, setQ] = useState("");
-  const [role, setRole] = useState<"all" | "nurse" | "doctor">("all");
+}: ProfessionalsPanelProps) {
+  const [items, setItems] = useState<Professional[]>([]);
+  const [query, setQuery] = useState('');
+  const [role, setRole] = useState<'all' | 'nurse' | 'doctor'>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
-    (async () => {
+    async function load() {
       try {
         setLoading(true);
-        const res: any = await api.getProfessionals();
-        const rows = res?.data || [];
+        const response = (await api.getAllProfessionals()) as any;
+        if (!mounted) return;
 
-        const normalized = rows.map((p: any) => ({
-          ...p,
-          isActive: p.isActive ?? p.is_active ?? true,
+        const normalized = (response?.data || []).map((item: any) => ({
+          ...item,
+          isActive: item.isActive ?? item.is_active ?? true,
         }));
 
-        if (mounted) setPros(normalized);
-      } catch (e: any) {
-        console.error("Failed to load professionals:", e?.message || e);
-        if (mounted) setPros([]);
+        setItems(normalized);
+      } catch (error) {
+        console.error('Failed to load professionals:', error);
+        if (mounted) setItems([]);
       } finally {
         if (mounted) setLoading(false);
       }
-    })();
+    }
+
+    load();
 
     return () => {
       mounted = false;
     };
   }, [refreshKey]);
 
-  const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    return (pros || [])
-      .filter((p: any) => (p.isActive ?? p.is_active ?? true) === true)
-      .filter((p) => ["nurse", "doctor"].includes(String(p.role).toLowerCase()))
-      .filter((p) => (role === "all" ? true : String(p.role).toLowerCase() === role))
-      .filter((p) => {
-        if (!query) return true;
-        const hay = [p.name, p.email, p.location, p.role].filter(Boolean).join(" ").toLowerCase();
-        return hay.includes(query);
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [pros, q, role]);
+  const activeItems = useMemo(
+    () => items.filter((item) => (item.isActive ?? item.is_active ?? true) === true),
+    [items]
+  );
 
-  const nurseCount = (pros || []).filter(
-    (p) => String(p.role).toLowerCase() === "nurse" && (p.isActive ?? true)
-  ).length;
-  const doctorCount = (pros || []).filter(
-    (p) => String(p.role).toLowerCase() === "doctor" && (p.isActive ?? true)
-  ).length;
-  const activeCount = (pros || []).filter((p) => (p.isActive ?? p.is_active ?? true) === true).length;
-  const summaryPreview = filtered.slice(0, 3);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+
+    return activeItems
+      .filter((item) => ['nurse', 'doctor'].includes(normalizeRole(item.role)))
+      .filter((item) => (role === 'all' ? true : normalizeRole(item.role) === role))
+      .filter((item) => {
+        if (!q) return true;
+        const hay = [
+          getDisplayName(item),
+          item.email,
+          item.location,
+          item.role,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return hay.includes(q);
+      })
+      .sort((a, b) => getDisplayName(a).localeCompare(getDisplayName(b)));
+  }, [activeItems, query, role]);
+
+  const doctors = activeItems.filter((item) => normalizeRole(item.role) === 'doctor');
+  const nurses = activeItems.filter((item) => normalizeRole(item.role) === 'nurse');
+  const preview = filtered.slice(0, 3);
+
+  if (summaryOnly) {
+    return (
+      <section className="workforcePanel" aria-label="Team availability">
+        <div className="workforcePanelInner">
+          <div className="workforcePanelHeader">
+            <div>
+              <div className="workforcePanelEyebrow">Workforce readiness</div>
+              <h3 className="workforcePanelTitle">Team Availability</h3>
+              <p className="workforcePanelSubtitle">Active doctors & nurses</p>
+            </div>
+
+            <div className="workforcePanelPills">
+              <span className="workforcePill">Nurses {nurses.length}</span>
+              <span className="workforcePill">Doctors {doctors.length}</span>
+            </div>
+          </div>
+
+          <div className="workforceDivider" />
+
+          <div className="workforceMetrics">
+            <div className="workforceMetricCard">
+              <div className="workforceMetricLabel">Active</div>
+              <div className="workforceMetricValue">{activeItems.length}</div>
+            </div>
+
+            <div className="workforceMetricCard">
+              <div className="workforceMetricLabel">Nurses</div>
+              <div className="workforceMetricValue">{nurses.length}</div>
+            </div>
+
+            <div className="workforceMetricCard">
+              <div className="workforceMetricLabel">Doctors</div>
+              <div className="workforceMetricValue">{doctors.length}</div>
+            </div>
+          </div>
+
+          <div className="workforceRosterCard">
+            <div className="workforceRosterEyebrow">Available roster preview</div>
+
+            {preview.length === 0 ? (
+              <div className="railEmptyState">
+                <div className="railEmptyText">No professionals available yet.</div>
+              </div>
+            ) : (
+              <div className="workforceRosterList">
+                {preview.map((item) => {
+                  const name = getDisplayName(item);
+                  const normalizedRole = normalizeRole(item.role);
+
+                  return (
+                    <div key={item.id} className="workforceRosterItem">
+                      <div className="workforceRosterLeft">
+                        <div className="workforceAvatar">{getInitials(name)}</div>
+                        <div>
+                          <div className="workforceName">{name}</div>
+                          <div className="workforceMeta">{normalizedRole.toUpperCase()}</div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`workforceRoleBadge ${
+                          normalizedRole === 'doctor'
+                            ? 'workforceRoleBadge-doctor'
+                            : 'workforceRoleBadge-nurse'
+                        }`}
+                      >
+                        {normalizedRole}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <Link to="/admin/team" className="workforceFooterLink">
+            Open Team Roster <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="sideCard">
@@ -91,109 +204,76 @@ export function ProfessionalsPanel({
         </div>
 
         <div className="pillRow">
-          <span className="pillSoft">Nurses <b>{nurseCount}</b></span>
-          <span className="pillSoft">Doctors <b>{doctorCount}</b></span>
+          <span className="pillSoft">
+            Nurses <b>{nurses.length}</b>
+          </span>
+          <span className="pillSoft">
+            Doctors <b>{doctors.length}</b>
+          </span>
         </div>
       </div>
 
-      {summaryOnly ? (
-        <div className="rowGap teamAvailabilitySummary">
-          <div className="teamAvailabilityMetrics">
-            <div className="settingsOverviewCard">
-              <div className="settingsOverviewLabel">Active</div>
-              <div className="settingsOverviewValue">{activeCount}</div>
-            </div>
-            <div className="settingsOverviewCard">
-              <div className="settingsOverviewLabel">Nurses</div>
-              <div className="settingsOverviewValue">{nurseCount}</div>
-            </div>
-            <div className="settingsOverviewCard">
-              <div className="settingsOverviewLabel">Doctors</div>
-              <div className="settingsOverviewValue">{doctorCount}</div>
-            </div>
-          </div>
+      <div className="rowGap">
+        <input
+          className="input"
+          placeholder="Search team..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
 
-          <div className="teamAvailabilityPreview">
-            <div className="teamAvailabilityPreviewLabel">Available roster preview</div>
-            {summaryPreview.length === 0 ? (
-              <div className="muted tiny">No active clinicians available right now.</div>
-            ) : (
-              <div className="teamAvailabilityPreviewList">
-                {summaryPreview.map((professional) => (
-                  <div key={professional.id} className="teamAvailabilityPreviewItem">
-                    <div className="teamAvailabilityPreviewIdentity">
-                      <span className="teamAvailabilityPreviewAvatar">{initials(professional.name)}</span>
-                      <span className="teamAvailabilityPreviewName">{professional.name}</span>
-                    </div>
-                    <span
-                      className={
-                        String(professional.role).toLowerCase() === "doctor"
-                          ? "roleBadge roleDoctor"
-                          : "roleBadge roleNurse"
-                      }
-                    >
-                      {String(professional.role).toUpperCase()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <Link to="/admin/team" className="summaryLinkAction">
-            Open Team Roster →
-          </Link>
+        <div className="chips">
+          <button className={role === 'all' ? 'chip chip-active' : 'chip'} onClick={() => setRole('all')}>
+            All
+          </button>
+          <button className={role === 'nurse' ? 'chip chip-active' : 'chip'} onClick={() => setRole('nurse')}>
+            Nurses
+          </button>
+          <button className={role === 'doctor' ? 'chip chip-active' : 'chip'} onClick={() => setRole('doctor')}>
+            Doctors
+          </button>
         </div>
-      ) : (
-        <div className="rowGap">
-          <input
-            className="input"
-            placeholder="Search team..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
 
-          <div className="chips">
-            <button className={role === "all" ? "chip chip-active" : "chip"} onClick={() => setRole("all")}>All</button>
-            <button className={role === "nurse" ? "chip chip-active" : "chip"} onClick={() => setRole("nurse")}>Nurses</button>
-            <button className={role === "doctor" ? "chip chip-active" : "chip"} onClick={() => setRole("doctor")}>Doctors</button>
+        {loading ? (
+          <div className="skeletonList">
+            <div className="skRow" />
+            <div className="skRow" />
+            <div className="skRow" />
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="emptyState">
+            <div className="emptyTitle">No active professionals</div>
+            <p className="muted">Check roles, active status, or admin permissions.</p>
+          </div>
+        ) : (
+          <div className="proList">
+            {filtered.map((item) => {
+              const name = getDisplayName(item);
+              const normalizedRole = normalizeRole(item.role);
 
-          {loading ? (
-            <div className="skeletonList">
-              <div className="skRow" />
-              <div className="skRow" />
-              <div className="skRow" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="emptyState">
-              <div className="emptyTitle">No active professionals</div>
-              <p className="muted">Check roles, active status, or admin permissions.</p>
-            </div>
-          ) : (
-            <div className="proList">
-              {filtered.map((p) => (
-                <div key={p.id} className="proRow">
-                  <div className="proAvatar">{initials(p.name)}</div>
+              return (
+                <div key={item.id} className="proRow">
+                  <div className="proAvatar">{getInitials(name)}</div>
 
                   <div className="proMeta">
-                    <div className="proName">{p.name}</div>
-                    <div className="muted proSub">{p.email}</div>
+                    <div className="proName">{name}</div>
+                    <div className="muted proSub">{item.email}</div>
                   </div>
 
-                  <span className={String(p.role).toLowerCase() === "doctor" ? "roleBadge roleDoctor" : "roleBadge roleNurse"}>
-                    {String(p.role).toUpperCase()}
+                  <span
+                    className={
+                      normalizedRole === 'doctor' ? 'roleBadge roleDoctor' : 'roleBadge roleNurse'
+                    }
+                  >
+                    {normalizedRole.toUpperCase()}
                   </span>
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
+        )}
 
-          {filtered.length > 8 && (
-            <div className="muted tiny">Showing 8 of {filtered.length}</div>
-          )}
-        </div>
-      )}
+        {filtered.length > 8 && <div className="muted tiny">Showing 8 of {filtered.length}</div>}
+      </div>
     </div>
   );
 }
