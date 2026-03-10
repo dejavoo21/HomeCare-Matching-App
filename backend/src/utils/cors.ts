@@ -4,6 +4,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:4173',
   'http://127.0.0.1:4173',
   'https://beneficial-solace-production-0743.up.railway.app',
+  'https://homecare-matching-app-frontend-production.up.railway.app',
 ];
 
 function normalizeOrigin(origin: string): string {
