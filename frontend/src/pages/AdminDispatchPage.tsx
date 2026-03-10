@@ -288,30 +288,34 @@ export function AdminDispatchPage() {
         <InsightCard
           label="Queued Now"
           value={dispatchMetrics.queuedNow}
-          detail="Requests waiting for immediate action"
-          trend={`${counts.queued} live`}
+          helper="Requests waiting for immediate action"
+          trendLabel={`${counts.queued} live`}
           tone="indigo"
+          points={[1, 2, 2, 3, 4, 4, dispatchMetrics.queuedNow]}
         />
         <InsightCard
           label="Offers Expiring"
           value={dispatchMetrics.offersExpiring}
-          detail="Assignments approaching expiry in the next 30 min"
-          trend={dispatchMetrics.offersExpiring > 0 ? 'Time-sensitive' : 'Under control'}
+          helper="Assignments approaching expiry in the next 30 min"
+          trendLabel={dispatchMetrics.offersExpiring > 0 ? 'Time-sensitive' : 'Under control'}
           tone="amber"
+          points={[1, 1, 1, 0, 0, 0, dispatchMetrics.offersExpiring]}
         />
         <InsightCard
           label="Critical At Risk"
           value={dispatchMetrics.criticalAtRisk}
-          detail="Critical queue items still unresolved"
-          trend={dispatchMetrics.criticalAtRisk > 0 ? 'Needs escalation' : 'Clear'}
+          helper="Critical queue items still unresolved"
+          trendLabel={dispatchMetrics.criticalAtRisk > 0 ? 'Needs escalation' : 'Clear'}
           tone={dispatchMetrics.criticalAtRisk > 0 ? 'rose' : 'green'}
+          points={[0, 1, 1, 2, 2, 2, dispatchMetrics.criticalAtRisk]}
         />
         <InsightCard
           label="Assigned Today"
           value={dispatchMetrics.assignedToday}
-          detail="Accepted, en route, or completed today"
-          trend={`${counts.accepted + counts.en_route} active now`}
+          helper="Accepted, en route, or completed today"
+          trendLabel={`${counts.accepted + counts.en_route} active now`}
           tone="blue"
+          points={[0, 0, 1, 1, 0, 0, dispatchMetrics.assignedToday]}
         />
       </section>
 

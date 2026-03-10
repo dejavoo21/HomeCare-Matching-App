@@ -104,6 +104,10 @@ export function AdminShell() {
 
   return (
     <div className="adminShell">
+      <a href="#main-content" className="skipLink">
+        Skip to main content
+      </a>
+
       <Navbar />
 
       <div className="adminShellBody">
@@ -152,9 +156,9 @@ export function AdminShell() {
           </div>
         </aside>
 
-        <section className="adminContent">
+        <main id="main-content" className="adminContent">
           <Outlet />
-        </section>
+        </main>
       </div>
 
       <AssistantWidget />
