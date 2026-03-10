@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { RequestDrawer } from '../components/RequestDrawer';
-import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import RequestDetailDrawer from '../components/requests/RequestDetailDrawer';
 import type { RequestWorkspaceTabKey } from '../components/requests/RequestWorkspaceTabs';
 import { InsightCard } from '../components/InsightCard';
+import AssistantPanel from '../components/assistant/AssistantPanel';
 import PermissionNotice from '../components/auth/PermissionNotice';
 import ProtectedAction from '../components/auth/ProtectedAction';
 import { hasPermission } from '../lib/auth/access';
@@ -64,7 +64,6 @@ export function AdminDispatchPage() {
   const [drawerRequest, setDrawerRequest] = useState<CareRequest | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [detailDrawerTab, setDetailDrawerTab] = useState<RequestWorkspaceTabKey>('overview');
-  const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
 
   const loadDispatch = useCallback(async () => {
     try {
@@ -233,36 +232,6 @@ export function AdminDispatchPage() {
       .sort((a, b) => b.currentLoad - a.currentLoad)
       .slice(0, 4);
   }, [professionalMap, requests]);
-
-  const requestThreads = useMemo(() => {
-    return exceptionRequests.slice(0, 4).map((request) => ({
-      id: request.id,
-      title: request.description || formatServiceType(String(request.serviceType)),
-      scheduled: formatShortTime(request.scheduledDateTime),
-      serviceType: formatServiceType(String(request.serviceType)),
-      status: normalizeStatus(request.status),
-      urgency: String(request.urgency || '').toLowerCase(),
-    }));
-  }, [exceptionRequests]);
-
-  const dispatchPriorities = useMemo(() => {
-    const items: string[] = [];
-
-    if (dispatchMetrics.criticalAtRisk > 0) {
-      items.push(`${dispatchMetrics.criticalAtRisk} critical request${dispatchMetrics.criticalAtRisk === 1 ? '' : 's'} need intervention`);
-    }
-    if (dispatchMetrics.offersExpiring > 0) {
-      items.push(`${dispatchMetrics.offersExpiring} offer${dispatchMetrics.offersExpiring === 1 ? '' : 's'} expiring within 30 minutes`);
-    }
-    if (counts.queued > 0) {
-      items.push(`${counts.queued} queued request${counts.queued === 1 ? '' : 's'} waiting for coverage`);
-    }
-    if (counts.en_route > 0) {
-      items.push(`${counts.en_route} active visit${counts.en_route === 1 ? '' : 's'} currently en route`);
-    }
-
-    return items.slice(0, 4);
-  }, [counts.en_route, counts.queued, dispatchMetrics.criticalAtRisk, dispatchMetrics.offersExpiring]);
 
   const onRequeue = async (id: string) => {
     try {
@@ -588,65 +557,7 @@ export function AdminDispatchPage() {
           <div className="dispatchCommandCard">
             <div className="dispatchCommandCardHeader">
               <div>
-                <h2 className="dispatchCommandTitle">Request Threads</h2>
-                <p className="muted">Communication tied directly to live dispatch work.</p>
-              </div>
-            </div>
-
-            <div className="dispatchThreadList">
-              {requestThreads.length === 0 ? (
-                <div className="muted">No live request threads yet.</div>
-              ) : (
-                requestThreads.map((thread) => (
-                  <button
-                    key={thread.id}
-                    className="dispatchThreadCard"
-                    onClick={() => setRequestChatRequestId(thread.id)}
-                    type="button"
-                  >
-                    <div className="dispatchThreadTitle">{thread.title}</div>
-                    <div className="dispatchThreadMeta">
-                      {thread.scheduled} | {thread.serviceType}
-                    </div>
-                    <div className="dispatchThreadBadges">
-                      <span className={`dispatchStatusTag dispatchStatusTag-${thread.status.replace(/[^a-z]+/g, '-')}`}>
-                        {thread.status.replace('_', ' ')}
-                      </span>
-                      <span className={`dispatchPriorityTag dispatchPriorityTag-${thread.urgency}`}>
-                        {thread.urgency}
-                      </span>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="dispatchCommandCard">
-            <div className="dispatchCommandCardHeader">
-              <div>
-                <h2 className="dispatchCommandTitle">Dispatch Priorities</h2>
-                <p className="muted">High-signal issues to keep on the board.</p>
-              </div>
-            </div>
-
-            <div className="dispatchPriorityList">
-              {dispatchPriorities.length === 0 ? (
-                <div className="muted">No urgent dispatch priorities at the moment.</div>
-              ) : (
-                dispatchPriorities.map((item, index) => (
-                  <div key={item} className={`dispatchPriorityItem dispatchPriorityItem-${index % 3}`}>
-                    {item}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="dispatchCommandCard">
-            <div className="dispatchCommandCardHeader">
-              <div>
-                <h2 className="dispatchCommandTitle">Queue handoff</h2>
+                <h2 className="dispatchCommandTitle">Request queue handoff</h2>
                 <p className="muted">Use the right workspace for live coordination versus backlog management.</p>
               </div>
             </div>
@@ -667,6 +578,8 @@ export function AdminDispatchPage() {
               </div>
             </div>
           </div>
+
+          <AssistantPanel context="dispatch" contextData={{ selectedRequestId: selectedRequest?.id }} />
         </aside>
       </section>
 
@@ -681,12 +594,6 @@ export function AdminDispatchPage() {
         open={detailDrawerOpen}
         initialTab={detailDrawerTab}
         onClose={() => setDetailDrawerOpen(false)}
-      />
-
-      <RequestChatDrawer
-        open={!!requestChatRequestId}
-        requestId={requestChatRequestId}
-        onClose={() => setRequestChatRequestId(null)}
       />
     </main>
   );

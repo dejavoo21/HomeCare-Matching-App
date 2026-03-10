@@ -9,14 +9,6 @@ import SectionCard from '../components/ui/SectionCard';
 import KpiCard from '../components/ui/KpiCard';
 import Button from '../components/ui/Button';
 import AssistantPanel from '../components/assistant/AssistantPanel';
-import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
-import { ActivityFeed } from '../components/ActivityFeed';
-import { IntegrationsSummaryCard } from '../components/IntegrationsSummaryCard';
-import { AuditSummaryCard } from '../components/AuditSummaryCard';
-import { AnalyticsSummaryCard } from '../components/AnalyticsSummaryCard';
-import { AccessSummaryCard } from '../components/AccessSummaryCard';
-import { ReliabilitySummaryCard } from '../components/ReliabilitySummaryCard';
-import { FhirSummaryCard } from '../components/FhirSummaryCard';
 
 type DashboardRequest = {
   id?: string;
@@ -97,26 +89,52 @@ function ExceptionItem({
 
 function RegionCoverageRow({ item }: { item: { region: string; score: number; open: number } }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-slate-900">{item.region}</div>
-          <div className="mt-1 text-xs text-slate-500">
-            {item.open} open issue{item.open === 1 ? '' : 's'}
-          </div>
+          <div className="text-xl font-semibold text-slate-900">{item.region}</div>
+          <div className="mt-1 text-sm text-slate-500">{item.open} open issue{item.open === 1 ? '' : 's'}</div>
         </div>
         <div className="text-right">
-          <div className="text-lg font-bold text-slate-900">{item.score}%</div>
-          <div className="text-[11px] uppercase tracking-wide text-slate-400">Coverage</div>
+          <div className="text-2xl font-bold text-slate-900">{item.score}%</div>
+          <div className="text-xs uppercase tracking-wide text-slate-400">Coverage</div>
         </div>
       </div>
 
-      <div className="mt-3 h-2 rounded-full bg-white">
+      <div className="mt-4 h-2 rounded-full bg-slate-200">
         <div
           className="h-2 rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500"
           style={{ width: `${item.score}%` }}
         />
       </div>
+    </div>
+  );
+}
+
+function EnterpriseCard({
+  title,
+  eyebrow,
+  body,
+  cta,
+  to,
+}: {
+  title: string;
+  eyebrow: string;
+  body: string;
+  cta: string;
+  to: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="text-xs uppercase tracking-wide text-slate-500">{eyebrow}</div>
+      <div className="mt-2 text-2xl font-semibold text-slate-900">{title}</div>
+      <p className="mt-4 text-sm leading-6 text-slate-600">{body}</p>
+      <Link
+        to={to}
+        className="mt-5 inline-flex text-base font-semibold text-indigo-600 transition hover:text-indigo-700"
+      >
+        {cta}
+      </Link>
     </div>
   );
 }
@@ -127,7 +145,6 @@ export function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [requests, setRequests] = useState<DashboardRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activityKey, setActivityKey] = useState(0);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -138,7 +155,6 @@ export function AdminDashboardPage() {
       ]);
       setData(dash?.data || null);
       setRequests(reqs?.data || []);
-      setActivityKey((current) => current + 1);
     } catch (err) {
       console.error('Failed to load admin dashboard:', err);
       setData(null);
@@ -268,6 +284,50 @@ export function AdminDashboardPage() {
       priorities,
       exceptions,
       regionCoverage,
+      enterpriseLinks: [
+        {
+          title: 'Connected Systems',
+          eyebrow: 'Integrations',
+          body: 'View hospital connections, dispatch agencies, partner endpoints, and connection status.',
+          cta: 'Open Connected Systems ->',
+          to: '/admin/integrations',
+        },
+        {
+          title: 'Audit & Compliance',
+          eyebrow: 'Compliance',
+          body: 'Review authentication events, approvals, administrative actions, and traceability records.',
+          cta: 'Open Audit & Compliance ->',
+          to: '/admin/audit',
+        },
+        {
+          title: 'Analytics',
+          eyebrow: 'Performance',
+          body: 'Explore dispatch trends, acceptance rates, workload distribution, and completion patterns.',
+          cta: 'Open Analytics ->',
+          to: '/admin/analytics',
+        },
+        {
+          title: 'Access Management',
+          eyebrow: 'Security',
+          body: 'Review user access requests, approve new accounts, and manage security settings.',
+          cta: 'Open Access Management ->',
+          to: '/admin/access',
+        },
+        {
+          title: 'Reliability',
+          eyebrow: 'Operations',
+          body: 'Inspect webhook delivery health, retries, failures, and operational reliability signals.',
+          cta: 'Open Reliability ->',
+          to: '/admin/integrations/reliability',
+        },
+        {
+          title: 'FHIR API',
+          eyebrow: 'Interoperability',
+          body: 'Review exposed FHIR-aligned resources, metadata, and interoperability coverage.',
+          cta: 'Open FHIR API ->',
+          to: '/admin/integrations/fhir',
+        },
+      ],
     };
   }, [data, requests]);
 
@@ -370,63 +430,6 @@ export function AdminDashboardPage() {
         />
       </div>
 
-      <section className="dashboardOperationalStrip">
-        <div className="dashboardOperationalCard">
-          <div className="dashboardOperationalTitle">Workforce presence</div>
-          <div className="dashboardOperationalGrid">
-            <div className="dashboardOperationalMetric dashboardOperationalMetric-success">
-              <span className="dashboardOperationalLabel">Available now</span>
-              <strong className="dashboardOperationalValue">{Math.max(derived.activeVisitsCount, 1)}</strong>
-            </div>
-            <div className="dashboardOperationalMetric dashboardOperationalMetric-warning">
-              <span className="dashboardOperationalLabel">In visit</span>
-              <strong className="dashboardOperationalValue">{derived.activeVisitsCount}</strong>
-            </div>
-            <div className="dashboardOperationalMetric">
-              <span className="dashboardOperationalLabel">Off shift</span>
-              <strong className="dashboardOperationalValue">{derived.stats.cancelledRequests}</strong>
-            </div>
-            <div className="dashboardOperationalMetric dashboardOperationalMetric-info">
-              <span className="dashboardOperationalLabel">Compliance avg</span>
-              <strong className="dashboardOperationalValue">96%</strong>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboardOperationalCard">
-          <div className="dashboardOperationalTitle">EVV integrity</div>
-          <div className="dashboardOperationalStack">
-            <div className="dashboardOperationalNotice">
-              <span>Completed today</span>
-              <strong>{derived.stats.completedRequests}</strong>
-            </div>
-            <div className="dashboardOperationalNotice dashboardOperationalNotice-violet">
-              <span>Missing check-ins</span>
-              <strong>{derived.lateCheckIns}</strong>
-            </div>
-            <div className="dashboardOperationalNotice dashboardOperationalNotice-info">
-              <span>GPS-ready rate</span>
-              <strong>97%</strong>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboardOperationalCard">
-          <div className="dashboardOperationalTitle">Review and follow-up pressure</div>
-          <div className="dashboardOperationalStack">
-            <div className="dashboardOperationalNarrative">
-              {derived.followUpsPending} clinician review item{derived.followUpsPending === 1 ? '' : 's'} are awaiting admin action.
-            </div>
-            <div className="dashboardOperationalNarrative">
-              Escalate outcomes that require follow-up creation and supervisor attention.
-            </div>
-            <Link to="/admin/clinician-review" className="btn btn-primary">
-              Open review queue
-            </Link>
-          </div>
-        </div>
-      </section>
-
       <ContentGrid
         main={
           <>
@@ -450,34 +453,27 @@ export function AdminDashboardPage() {
             </SectionCard>
 
             <SectionCard
-              title="Regional coverage"
+              title="Coverage by region"
               subtitle="Staffing posture and open issue pressure by region"
               actions={<Button variant="secondary" onClick={() => navigate('/admin/dispatch')}>Open dispatch</Button>}
             >
-              <div className="grid gap-3 lg:grid-cols-2">
+              <div className="space-y-4">
                 {derived.regionCoverage.map((item) => (
                   <RegionCoverageRow key={item.region} item={item} />
                 ))}
               </div>
             </SectionCard>
 
-            <div className="summaryStrip">
-              <IntegrationsSummaryCard />
-              <AuditSummaryCard />
-              <AnalyticsSummaryCard />
-              <AccessSummaryCard />
-              <ReliabilitySummaryCard />
-              <FhirSummaryCard />
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+              {derived.enterpriseLinks.map((item) => (
+                <EnterpriseCard key={item.title} {...item} />
+              ))}
             </div>
           </>
         }
         rail={
           <>
-            <AssistantPanel context="dashboard" contextData={assistantContext} />
-            <ActivityFeed refreshKey={activityKey} />
-            <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
-
-            <SectionCard title="Operational narrative">
+            <SectionCard title="Today's story">
               <div className="space-y-3">
                 <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
                   Care delivery is broadly healthy, but unassigned visits and late EVV signals need active intervention.
@@ -490,32 +486,7 @@ export function AdminDashboardPage() {
                 </div>
               </div>
             </SectionCard>
-
-            <SectionCard title="Fast actions">
-              <div className="space-y-3">
-                <button
-                  className="w-full rounded-2xl bg-sky-50 px-4 py-3 text-left text-sm font-medium text-sky-800 hover:bg-sky-100"
-                  onClick={() => navigate('/admin/dispatch')}
-                  type="button"
-                >
-                  Resolve unassigned visits
-                </button>
-                <button
-                  className="w-full rounded-2xl bg-amber-50 px-4 py-3 text-left text-sm font-medium text-amber-800 hover:bg-amber-100"
-                  onClick={() => navigate('/admin/scheduling')}
-                  type="button"
-                >
-                  Review EVV exceptions
-                </button>
-                <button
-                  className="w-full rounded-2xl bg-emerald-50 px-4 py-3 text-left text-sm font-medium text-emerald-800 hover:bg-emerald-100"
-                  onClick={() => navigate('/admin/access')}
-                  type="button"
-                >
-                  Release verified applicants to onboarding
-                </button>
-              </div>
-            </SectionCard>
+            <AssistantPanel context="dashboard" contextData={assistantContext} />
           </>
         }
       />

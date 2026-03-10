@@ -54,12 +54,11 @@ export function AdminAnalyticsPage() {
 
       <ContentGrid
         main={
-          <SectionCard title="Operational analytics surface" subtitle="Delivery, dispatch, and workload visibility">
-            <AnalyticsDashboardPanel refreshKey={refreshKey} />
-          </SectionCard>
-        }
-        rail={
           <>
+            <SectionCard title="Operational analytics surface" subtitle="Delivery, dispatch, and workload visibility">
+              <AnalyticsDashboardPanel refreshKey={refreshKey} />
+            </SectionCard>
+
             <SectionCard title="Analytics interpretation" subtitle="Executive-friendly story">
               <div className="space-y-3">
                 <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -73,10 +72,9 @@ export function AdminAnalyticsPage() {
                 </div>
               </div>
             </SectionCard>
-
-            <AssistantPanel context="dashboard" contextData={{ area: 'analytics' }} />
           </>
         }
+        rail={<AssistantPanel context="dashboard" contextData={{ area: 'analytics' }} />}
       />
     </AppPage>
   );
