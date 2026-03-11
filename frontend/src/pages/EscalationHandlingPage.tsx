@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import AssistantPanel from '../components/assistant/AssistantPanel';
 
 type EscalationItem = {
   id: string;
@@ -297,7 +296,6 @@ export function EscalationHandlingPage() {
             </div>
           </aside>
 
-          <AssistantPanel context="dashboard" contextData={{ page: 'escalation_handling', counts }} />
         </div>
       </section>
     </main>

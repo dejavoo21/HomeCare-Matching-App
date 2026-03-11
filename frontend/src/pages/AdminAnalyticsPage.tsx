@@ -4,7 +4,6 @@ import ContentGrid from '../components/layout/ContentGrid';
 import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
 import KpiCard from '../components/ui/KpiCard';
-import AssistantPanel from '../components/assistant/AssistantPanel';
 import { AnalyticsDashboardPanel } from '../components/AnalyticsDashboardPanel';
 
 export function AdminAnalyticsPage() {
@@ -74,7 +73,7 @@ export function AdminAnalyticsPage() {
             </SectionCard>
           </>
         }
-        rail={<AssistantPanel context="dashboard" contextData={{ area: 'analytics' }} />}
+        rail={null}
       />
     </AppPage>
   );

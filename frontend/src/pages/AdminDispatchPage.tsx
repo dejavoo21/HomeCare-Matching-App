@@ -6,7 +6,6 @@ import { RequestDrawer } from '../components/RequestDrawer';
 import RequestDetailDrawer from '../components/requests/RequestDetailDrawer';
 import type { RequestWorkspaceTabKey } from '../components/requests/RequestWorkspaceTabs';
 import { InsightCard } from '../components/InsightCard';
-import AssistantPanel from '../components/assistant/AssistantPanel';
 import PermissionNotice from '../components/auth/PermissionNotice';
 import ProtectedAction from '../components/auth/ProtectedAction';
 import { hasPermission } from '../lib/auth/access';
@@ -580,7 +579,6 @@ export function AdminDispatchPage() {
             </div>
           </div>
 
-          <AssistantPanel context="dispatch" contextData={{ selectedRequestId: selectedRequest?.id }} />
         </aside>
       </section>
 

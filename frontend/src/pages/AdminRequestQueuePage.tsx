@@ -6,10 +6,8 @@ import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import PageHero from '../components/ui/PageHero';
 import AppPage from '../components/layout/AppPage';
-import ContentGrid from '../components/layout/ContentGrid';
 import SectionCard from '../components/ui/SectionCard';
 import KpiCard from '../components/ui/KpiCard';
-import AssistantPanel from '../components/assistant/AssistantPanel';
 import type { CareRequest } from '../types/index';
 
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
@@ -179,21 +177,16 @@ export function AdminRequestQueuePage() {
         </div>
       </SectionCard>
 
-      <ContentGrid
-        main={
-          <SectionCard title="Queue guidance">
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                Use Request Queue for broad request administration, filtering, and status-based review.
-              </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                Use Dispatch Center for urgent live coordination and active work resolution.
-              </div>
-            </div>
-          </SectionCard>
-        }
-        rail={<AssistantPanel context="dispatch" contextData={{ page: 'request_queue', activeTab: tab }} />}
-      />
+      <SectionCard title="Queue guidance">
+        <div className="space-y-3">
+          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            Use Request Queue for broad request administration, filtering, and status-based review.
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            Use Dispatch Center for urgent live coordination and active work resolution.
+          </div>
+        </div>
+      </SectionCard>
 
       <RequestChatDrawer
         open={!!requestChatRequestId}

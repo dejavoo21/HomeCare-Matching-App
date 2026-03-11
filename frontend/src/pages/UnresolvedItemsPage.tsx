@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import AssistantPanel from '../components/assistant/AssistantPanel';
 
 type UnresolvedItem = {
   id: string;
@@ -296,7 +295,6 @@ export function UnresolvedItemsPage() {
             </div>
           </aside>
 
-          <AssistantPanel context="dashboard" contextData={{ page: 'unresolved_items', counts }} />
         </div>
       </section>
     </main>
