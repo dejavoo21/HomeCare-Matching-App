@@ -315,7 +315,7 @@ export function AdminDispatchPage() {
         />
       </section>
 
-      <section className="dispatchCommandLayout" aria-label="Dispatch command center">
+      <section className="dispatchTopGrid" aria-label="Dispatch command center">
         <aside className="dispatchRail">
           <div className="dispatchCommandCard">
             <div className="dispatchCommandCardHeader">
@@ -381,43 +381,6 @@ export function AdminDispatchPage() {
             </div>
           </div>
 
-          <div className="dispatchCommandCard">
-            <div className="dispatchCommandCardHeader">
-              <div>
-                <h2 className="dispatchCommandTitle">Available Coverage</h2>
-                <p className="muted">Current clinician load for reassignment decisions.</p>
-              </div>
-            </div>
-
-            <div className="dispatchCoverageList">
-              {activeClinicians.length === 0 ? (
-                <div className="muted">No active clinician loads yet.</div>
-              ) : (
-                activeClinicians.map((clinician) => (
-                  <div key={clinician.id} className="dispatchCoverageRow">
-                    <div>
-                      <div className="dispatchCoverageName">{clinician.name}</div>
-                      <div className="dispatchCoverageMeta">
-                        {clinician.region} | {String(clinician.role).toUpperCase()}
-                      </div>
-                    </div>
-                    <div className="dispatchCoverageRight">
-                      <span
-                        className={
-                          clinician.status === 'Busy'
-                            ? 'dispatchInfoTag dispatchInfoTag-warn'
-                            : 'dispatchInfoTag dispatchInfoTag-ok'
-                        }
-                      >
-                        {clinician.status}
-                      </span>
-                      <span className="dispatchCoverageLoad">Load {clinician.currentLoad}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
         </aside>
 
         <section className="dispatchCenterColumn">
@@ -557,29 +520,138 @@ export function AdminDispatchPage() {
           <div className="dispatchCommandCard">
             <div className="dispatchCommandCardHeader">
               <div>
-                <h2 className="dispatchCommandTitle">Request queue handoff</h2>
-                <p className="muted">Use the right workspace for live coordination versus backlog management.</p>
+                <h2 className="dispatchCommandTitle">Dispatch priorities</h2>
+                <p className="muted">Keep live coordination lean and move backlog work into the queue workspace.</p>
               </div>
             </div>
 
             <div className="dispatchPriorityList">
-              <button
-                className="dispatchPriorityItem dispatchPriorityItem-soft"
-                onClick={() => navigate('/admin/requests')}
-                type="button"
-              >
-                Open Request Queue
-              </button>
               <div className="dispatchPriorityItem dispatchPriorityItem-1">
-                Use Dispatch Center for live coordination and immediate exception handling.
+                Work critical queued and offered requests before they age into escalation.
               </div>
               <div className="dispatchPriorityItem dispatchPriorityItem-2">
-                Use Request Queue for full backlog search, filters, and status-based administration.
+                Rebalance clinician load when available coverage starts clustering around one region.
+              </div>
+              <div className="dispatchPriorityItem dispatchPriorityItem-soft">
+                Use Request Queue for backlog search, filters, and status-based administration.
               </div>
             </div>
           </div>
-
         </aside>
+      </section>
+
+      <section className="dispatchLowerGrid" aria-label="Dispatch coordination workspace">
+        <aside className="dispatchCoverageColumn">
+          <div className="dispatchCommandCard">
+            <div className="dispatchCommandCardHeader">
+              <div>
+                <h2 className="dispatchCommandTitle">Available Coverage</h2>
+                <p className="muted">Current clinician load for reassignment decisions.</p>
+              </div>
+            </div>
+
+            <div className="dispatchCoverageList">
+              {activeClinicians.length === 0 ? (
+                <div className="muted">No active clinician loads yet.</div>
+              ) : (
+                activeClinicians.map((clinician) => (
+                  <div key={clinician.id} className="dispatchCoverageRow">
+                    <div>
+                      <div className="dispatchCoverageName">{clinician.name}</div>
+                      <div className="dispatchCoverageMeta">
+                        {clinician.region} | {String(clinician.role).toUpperCase()}
+                      </div>
+                    </div>
+                    <div className="dispatchCoverageRight">
+                      <span
+                        className={
+                          clinician.status === 'Busy'
+                            ? 'dispatchInfoTag dispatchInfoTag-warn'
+                            : 'dispatchInfoTag dispatchInfoTag-ok'
+                        }
+                      >
+                        {clinician.status}
+                      </span>
+                      <span className="dispatchCoverageLoad">Load {clinician.currentLoad}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </aside>
+
+        <section className="dispatchMainFill">
+          <div className="dispatchCommandCard">
+            <div className="dispatchCommandCardHeader">
+              <div>
+                <h2 className="dispatchCommandTitle">Queue workspace</h2>
+                <p className="muted">
+                  Use this wider handoff area for backlog movement, workflow triage, and queue ownership.
+                </p>
+              </div>
+            </div>
+
+            <div className="settingsOverviewGrid dispatchQueueSummaryGrid">
+              <div className="settingsOverviewCard settingsOverviewCard-queued">
+                <div className="settingsOverviewLabel">Queued</div>
+                <div className="settingsOverviewValue">{counts.queued}</div>
+                <div className="settingsOverviewMeta">Requests awaiting immediate dispatch action</div>
+              </div>
+              <div className="settingsOverviewCard settingsOverviewCard-offered">
+                <div className="settingsOverviewLabel">Offered</div>
+                <div className="settingsOverviewValue">{counts.offered}</div>
+                <div className="settingsOverviewMeta">Requests currently in offer flow</div>
+              </div>
+              <div className="settingsOverviewCard settingsOverviewCard-motion">
+                <div className="settingsOverviewLabel">Accepted</div>
+                <div className="settingsOverviewValue">{counts.accepted + counts.en_route}</div>
+                <div className="settingsOverviewMeta">Assignments already in motion</div>
+              </div>
+              <div className="settingsOverviewCard settingsOverviewCard-followups">
+                <div className="settingsOverviewLabel">Completed</div>
+                <div className="settingsOverviewValue">{counts.completed}</div>
+                <div className="settingsOverviewMeta">Visits closed out of active dispatch flow</div>
+              </div>
+            </div>
+
+            <div className="dispatchWorkGrid dispatchWorkGrid-compact">
+              <div className="dispatchWorkPanel">
+                <div className="dispatchPanelTitle">Queue guidance</div>
+                <div className="dispatchPriorityList">
+                  <div className="dispatchPriorityItem dispatchPriorityItem-soft">
+                    Use Dispatch Center for live exception handling, reassignment, and thread coordination.
+                  </div>
+                  <div className="dispatchPriorityItem dispatchPriorityItem-soft">
+                    Move into Request Queue when you need search, filters, and broader backlog review.
+                  </div>
+                </div>
+              </div>
+
+              <div className="dispatchWorkPanel">
+                <div className="dispatchPanelTitle">Next workspace</div>
+                <div className="dispatchActionGrid dispatchActionGrid-compact">
+                  <button
+                    className="dispatchActionTile dispatchActionTile-primary"
+                    onClick={() => navigate('/admin/requests')}
+                    type="button"
+                  >
+                    <span className="dispatchActionTitle">Open Request Queue</span>
+                    <span className="dispatchActionText">Search backlog, manage statuses, and work the broader queue.</span>
+                  </button>
+                  <button
+                    className="dispatchActionTile dispatchActionTile-info"
+                    onClick={() => navigate('/admin/scheduling')}
+                    type="button"
+                  >
+                    <span className="dispatchActionTitle">Open Scheduling Board</span>
+                    <span className="dispatchActionText">Rebalance visits and review workload distribution.</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
 
       <RequestDrawer

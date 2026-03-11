@@ -15742,3 +15742,44 @@ button[aria-label='Open assistant'] {
     display: none;
   }
 }
+
+.dispatchTopGrid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.dispatchLowerGrid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.dispatchCoverageColumn,
+.dispatchMainFill {
+  min-width: 0;
+}
+
+.dispatchQueueSummaryGrid {
+  margin-top: 0;
+}
+
+.dispatchWorkGrid-compact {
+  margin-top: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dispatchActionGrid-compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1280px) {
+  .dispatchTopGrid,
+  .dispatchLowerGrid,
+  .dispatchWorkGrid-compact,
+  .dispatchActionGrid-compact {
+    grid-template-columns: 1fr;
+  }
+}
