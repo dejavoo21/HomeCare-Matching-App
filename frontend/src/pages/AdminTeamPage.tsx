@@ -4,9 +4,10 @@ import { WorkforceCard, type WorkforcePerson } from '../components/WorkforceCard
 import { WorkforceProfileDrawer } from '../components/WorkforceProfileDrawer';
 import AppPage from '../components/layout/AppPage';
 import ContentGrid from '../components/layout/ContentGrid';
-import AssistantPanel from '../components/assistant/AssistantPanel';
 import Button from '../components/ui/Button';
-import PageHero from '../components/ui/PageHero';
+import AdminFilterBar from '../components/ui/AdminFilterBar';
+import AdminPageHeader from '../components/ui/AdminPageHeader';
+import AdminStatStrip from '../components/ui/AdminStatStrip';
 import SectionCard from '../components/ui/SectionCard';
 import EmptyState from '../components/ui/states/EmptyState';
 import LoadingState from '../components/ui/states/LoadingState';
@@ -111,36 +112,26 @@ export function AdminTeamPage() {
   }, [items, q, filter]);
 
   return (
-    <AppPage>
-      <PageHero
+    <AppPage className="adminPageSection">
+      <AdminPageHeader
         eyebrow="Workforce directory"
-        title="Team operations"
+        title="Team"
         description="A live directory for staffing, compliance, availability, workload, and work-linked communication."
-        stats={[
-          { label: 'Total workforce', value: counts.total, subtitle: 'Active directory members' },
-          { label: 'Available now', value: counts.availableNow, subtitle: 'Ready for work allocation' },
-          { label: 'Active now', value: counts.active, subtitle: 'Online, in visit, or busy' },
-          { label: 'Clinical mix', value: `${counts.nurses}/${counts.doctors}`, subtitle: 'Nurses to doctors' },
-        ]}
-        rightContent={
-          <div className="space-y-3">
-            <div>
-              <h2 className="text-lg font-semibold">Workforce focus</h2>
-              <p className="mt-1 text-sm text-white/75">
-                Use the directory to balance staffing, open profile context, and start work-linked communication.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <button className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm transition hover:bg-white/15" type="button">
-                Review clinician availability before dispatch changes
-              </button>
-              <button className="w-full rounded-2xl bg-white/10 px-4 py-3 text-left text-sm transition hover:bg-white/15" type="button">
-                Use profile drawers for workload and next visit context
-              </button>
-            </div>
-          </div>
+        actions={
+          <Button variant="primary" type="button" onClick={load}>
+            Refresh Directory
+          </Button>
         }
-      />
+      >
+        <AdminStatStrip
+          items={[
+            { label: 'Total workforce', value: counts.total, meta: 'Active directory members' },
+            { label: 'Available now', value: counts.availableNow, meta: 'Ready for work allocation' },
+            { label: 'Active now', value: counts.active, meta: 'Online, in visit, or busy' },
+            { label: 'Clinical mix', value: `${counts.nurses}/${counts.doctors}`, meta: 'Nurses to doctors' },
+          ]}
+        />
+      </AdminPageHeader>
 
       <ContentGrid
         main={
@@ -148,22 +139,17 @@ export function AdminTeamPage() {
             <SectionCard
               title="Workforce directory"
               subtitle="Search and filter the live workforce layer"
-              actions={
-                <Button variant="primary" type="button" onClick={load}>
-                  Refresh Directory
-                </Button>
-              }
             >
-              <div className="teamToolbar">
+              <AdminFilterBar className="teamFilterBar">
                 <input
-                  className="input"
+                  className="input teamSearchInput"
                   placeholder="Search workforce by name, role, region, phone, or email..."
                   value={q}
                   onChange={(event) => setQ(event.target.value)}
                   aria-label="Search workforce directory"
                 />
 
-                <div className="teamFilters">
+                <div className="teamFilters" role="group" aria-label="Team role filters">
                   <button
                     className={filter === 'all' ? 'filterPill filterPill-active' : 'filterPill'}
                     type="button"
@@ -186,7 +172,7 @@ export function AdminTeamPage() {
                     Doctors
                   </button>
                 </div>
-              </div>
+              </AdminFilterBar>
 
               {loading ? (
                 <LoadingState rows={6} />
@@ -231,7 +217,6 @@ export function AdminTeamPage() {
                 </div>
               </div>
             </SectionCard>
-            <AssistantPanel context="team" contextData={{ query: q, filter }} />
           </>
         }
       />

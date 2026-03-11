@@ -17385,3 +17385,247 @@ button[aria-label='Open assistant'] {
     white-space: nowrap;
   }
 }
+
+/* =========================
+   Responsive QA and consistency sweep
+   ========================= */
+
+.teamFilterBar {
+  margin-bottom: 18px;
+}
+
+.teamSearchInput {
+  min-height: 42px;
+}
+
+.accessWorkflowCard {
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.accessWorkflowCard .sideHeader,
+.accessWorkflowCard .rowGap {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.accessWorkflowCard .sideHeader {
+  padding-top: 20px;
+}
+
+.accessWorkflowCard .rowGap {
+  padding-bottom: 20px;
+}
+
+.workforceGrid,
+.summaryStrip,
+.dashboardTopGrid,
+.adminStatStrip,
+.analyticsKpiGrid,
+.settingsOverviewGrid {
+  align-items: stretch;
+}
+
+.dispatchWorkspaceCard,
+.requestQueueTableCard,
+.analyticsSurfaceCard,
+.schedulingBoardSurface,
+.schedulingControlBand,
+.requestQueueHeader,
+.requestQueueFilters,
+.requestQueueGuidance,
+.dispatchGuidanceStrip,
+.analyticsControlCard,
+.analyticsNarrativeCard,
+.analyticsChartCard,
+.analyticsWorkloadCard,
+.analyticsInterpretationCard,
+.analyticsExceptionCard,
+.accessWorkflowCard {
+  overflow: hidden;
+}
+
+.adminFilterBar input,
+.adminFilterBar select,
+.requestQueueFilters input,
+.requestQueueFilters select,
+.teamFilterBar input {
+  min-height: 42px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.adminTableCard .tableScroll,
+.requestQueueTableCard .tableScroll,
+.dispatchWorkspaceCard .tableScroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+}
+
+.adminTableCard .tableScroll::-webkit-scrollbar,
+.requestQueueTableCard .tableScroll::-webkit-scrollbar,
+.dispatchWorkspaceCard .tableScroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.adminTableCard .tableScroll::-webkit-scrollbar-thumb,
+.requestQueueTableCard .tableScroll::-webkit-scrollbar-thumb,
+.dispatchWorkspaceCard .tableScroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
+}
+
+.adminTableCard table,
+.requestQueueTableCard table {
+  min-width: 1120px;
+}
+
+@media (max-width: 1440px) {
+  .adminPageSection,
+  .opsDashboard,
+  .dispatchPage,
+  .requestQueuePage,
+  .analyticsPage,
+  .schedulingPage {
+    gap: 18px;
+  }
+
+  .pageGridTwo.dashboardLowerGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1280px) {
+  .dashboardGrid,
+  .pageGridTwo,
+  .analyticsTopGrid,
+  .analyticsWorkspaceGrid,
+  .dispatchTopGrid,
+  .dispatchLowerGrid,
+  .schedulingControlBand {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminFilterBar {
+    align-items: stretch;
+  }
+
+  .adminFilterBarMain,
+  .adminFilterBarRight {
+    width: 100%;
+  }
+
+  .assistantFab,
+  button[aria-label='Open assistant'] {
+    right: 18px;
+    bottom: 18px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .adminStatStrip,
+  .dashboardTopGrid,
+  .analyticsKpiGrid,
+  .requestQueueHeader .adminStatStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .requestQueueFilters,
+  .teamFilterBar .adminFilterBarMain {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dispatchActionGrid,
+  .settingsOverviewGrid,
+  .summaryStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .assistantFab,
+  button[aria-label='Open assistant'] {
+    bottom: 84px;
+  }
+}
+
+@media (max-width: 768px) {
+  .adminPageSection,
+  .opsDashboard,
+  .dispatchPage,
+  .requestQueuePage,
+  .analyticsPage,
+  .schedulingPage {
+    gap: 16px;
+  }
+
+  .adminPageHeader,
+  .adminFilterBar,
+  .adminTableCard,
+  .dispatchWorkspaceCard,
+  .requestQueueHeader,
+  .requestQueueFilters,
+  .requestQueueGuidance,
+  .dispatchGuidanceStrip,
+  .schedulingControlBand,
+  .schedulingBoardSurface,
+  .analyticsSurfaceCard,
+  .analyticsControlCard,
+  .analyticsNarrativeCard,
+  .analyticsChartCard,
+  .analyticsWorkloadCard,
+  .analyticsInterpretationCard,
+  .analyticsExceptionCard,
+  .accessWorkflowCard {
+    border-radius: 18px;
+  }
+
+  .adminStatStrip,
+  .dashboardTopGrid,
+  .analyticsKpiGrid,
+  .requestQueueHeader .adminStatStrip,
+  .dispatchActionGrid,
+  .settingsOverviewGrid,
+  .summaryStrip,
+  .requestQueueFilters,
+  .teamFilterBar .adminFilterBarMain {
+    grid-template-columns: 1fr;
+  }
+
+  .adminFilterBar,
+  .requestQueueGuidance,
+  .dispatchGuidanceStrip,
+  .schedulingBottomStrip {
+    padding: 14px 16px;
+  }
+
+  .topbarRight > * {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .commHubTrigger,
+  .presenceMenuTrigger,
+  .btn-topbar,
+  .topbarUser,
+  .topbarStatusPill {
+    width: 100%;
+  }
+
+  .assistantFab,
+  button[aria-label='Open assistant'] {
+    right: 16px;
+    bottom: 16px;
+    min-width: 52px;
+    min-height: 52px;
+    padding: 0 16px;
+  }
+}

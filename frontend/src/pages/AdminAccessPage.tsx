@@ -3,9 +3,8 @@ import { AccessRequestsPanel } from '../components/AccessRequestsPanel';
 import { TotpSettingsPanel } from '../components/TotpSettingsPanel';
 import AppPage from '../components/layout/AppPage';
 import ContentGrid from '../components/layout/ContentGrid';
-import AssistantPanel from '../components/assistant/AssistantPanel';
-import KpiCard from '../components/ui/KpiCard';
-import PageHero from '../components/ui/PageHero';
+import AdminPageHeader from '../components/ui/AdminPageHeader';
+import AdminStatStrip from '../components/ui/AdminStatStrip';
 import SectionCard from '../components/ui/SectionCard';
 import { api } from '../services/api';
 
@@ -63,51 +62,21 @@ export function AdminAccessPage() {
   }, [items]);
 
   return (
-    <AppPage>
-      <PageHero
+    <AppPage className="adminPageSection">
+      <AdminPageHeader
         eyebrow="Access and onboarding control"
         title="Workforce verification hub"
         description="Validate identity, credentials, and background requirements before onboarding is released into the care operations platform."
-        stats={[
-          { label: 'Total queue', value: stats.total, subtitle: 'Active verification requests' },
-          { label: 'Pending', value: stats.pending, subtitle: 'Awaiting admin review' },
-          { label: 'Info requested', value: stats.infoRequested, subtitle: 'Waiting on applicant response' },
-          { label: 'Ready', value: stats.verified, subtitle: 'Ready for onboarding release' },
-        ]}
-      />
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5" aria-label="Verification funnel">
-        <KpiCard
-          title="Pending review"
-          value={stats.pending}
-          subtitle="Requests requiring verification work"
-          accent="warning"
+      >
+        <AdminStatStrip
+          items={[
+            { label: 'Total queue', value: stats.total, meta: 'Active verification requests' },
+            { label: 'Pending', value: stats.pending, meta: 'Awaiting admin review' },
+            { label: 'Info requested', value: stats.infoRequested, meta: 'Waiting on applicant response' },
+            { label: 'Ready', value: stats.verified, meta: 'Ready for onboarding release' },
+          ]}
         />
-        <KpiCard
-          title="Information requested"
-          value={stats.infoRequested}
-          subtitle="Blocked until applicant provides more information"
-          accent="info"
-        />
-        <KpiCard
-          title="Verified"
-          value={stats.verified}
-          subtitle="Ready for onboarding release"
-          accent="success"
-        />
-        <KpiCard
-          title="Rejected"
-          value={stats.rejected}
-          subtitle="Requests closed after review"
-          accent="danger"
-        />
-        <KpiCard
-          title="Blocked onboarding"
-          value={stats.blocked}
-          subtitle="Cannot proceed until required checks are complete"
-          accent="default"
-        />
-      </section>
+      </AdminPageHeader>
 
       <ContentGrid
         main={<AccessRequestsPanel refreshKey={refreshKey} hideSummary />}
@@ -149,8 +118,6 @@ export function AdminAccessPage() {
                 </div>
               </div>
             </SectionCard>
-
-            <AssistantPanel context="access" contextData={{ totalQueue: stats.total }} />
             <TotpSettingsPanel />
           </>
         }
