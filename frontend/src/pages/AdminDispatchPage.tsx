@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { RequestDrawer } from '../components/RequestDrawer';
@@ -253,7 +253,7 @@ export function AdminDispatchPage() {
   const canManageDispatch = hasPermission(user, PERMISSIONS.DISPATCH_MANAGE);
 
   return (
-    <main className="pageStack" role="main" aria-label="Dispatch page">
+    <main className="pageStack dispatchPage" role="main" aria-label="Dispatch page">
       <section className="dispatchHeaderCard">
         <div className="dispatchHeader">
           <div>
@@ -315,8 +315,8 @@ export function AdminDispatchPage() {
         />
       </section>
 
-      <section className="dispatchTopGrid" aria-label="Dispatch command center">
-        <aside className="dispatchRail">
+      <section className="dispatchTopGrid" aria-label="Dispatch command area">
+        <div className="dispatchColumn">
           <div className="dispatchCommandCard">
             <div className="dispatchCommandCardHeader">
               <div>
@@ -380,8 +380,7 @@ export function AdminDispatchPage() {
               )}
             </div>
           </div>
-
-        </aside>
+        </div>
 
         <section className="dispatchCenterColumn">
           <div className="dispatchCommandCard dispatchWorkCard">
@@ -516,32 +515,48 @@ export function AdminDispatchPage() {
           </div>
         </section>
 
-        <aside className="dispatchRail dispatchRail-secondary">
-          <div className="dispatchCommandCard">
-            <div className="dispatchCommandCardHeader">
-              <div>
-                <h2 className="dispatchCommandTitle">Dispatch priorities</h2>
-                <p className="muted">Keep live coordination lean and move backlog work into the queue workspace.</p>
-              </div>
+        <aside className="dispatchCompactRail">
+          <div className="dispatchCompactCard">
+            <div className="dispatchCompactCardTitle">Dispatch priorities</div>
+            <div className="dispatchCompactCardHeading">Immediate focus</div>
+            <div className="dispatchCompactCardText">
+              Work critical queued and offered requests before they age into escalation.
             </div>
-
-            <div className="dispatchPriorityList">
+            <div className="dispatchCompactActions">
               <div className="dispatchPriorityItem dispatchPriorityItem-1">
-                Work critical queued and offered requests before they age into escalation.
+                Assign coverage or escalate ownership for unresolved critical items.
               </div>
               <div className="dispatchPriorityItem dispatchPriorityItem-2">
-                Rebalance clinician load when available coverage starts clustering around one region.
+                Rebalance clinician load when one region starts taking concentrated demand.
               </div>
-              <div className="dispatchPriorityItem dispatchPriorityItem-soft">
-                Use Request Queue for backlog search, filters, and status-based administration.
-              </div>
+            </div>
+          </div>
+
+          <div className="dispatchCompactCard">
+            <div className="dispatchCompactCardTitle">Work-linked communication</div>
+            <div className="dispatchCompactCardHeading">Request threads</div>
+            <div className="dispatchCompactCardText">
+              Keep coordination inside the selected request thread instead of spreading it across generic chat.
+            </div>
+            <div className="dispatchCompactActions">
+              <button
+                className="btn"
+                onClick={() => {
+                  if (!selectedRequest) return;
+                  setDetailDrawerTab('thread');
+                  setDetailDrawerOpen(true);
+                }}
+                type="button"
+              >
+                Open selected thread
+              </button>
             </div>
           </div>
         </aside>
       </section>
 
       <section className="dispatchLowerGrid" aria-label="Dispatch coordination workspace">
-        <aside className="dispatchCoverageColumn">
+        <div className="dispatchColumn dispatchCoverageColumn">
           <div className="dispatchCommandCard">
             <div className="dispatchCommandCardHeader">
               <div>
@@ -579,15 +594,15 @@ export function AdminDispatchPage() {
               )}
             </div>
           </div>
-        </aside>
+        </div>
 
-        <section className="dispatchMainFill">
+        <section className="dispatchMainFill dispatchQueuePanel">
           <div className="dispatchCommandCard">
             <div className="dispatchCommandCardHeader">
               <div>
                 <h2 className="dispatchCommandTitle">Queue workspace</h2>
                 <p className="muted">
-                  Use this wider handoff area for backlog movement, workflow triage, and queue ownership.
+                  Let the queue workspace take the width it needs for backlog movement, workflow triage, and queue ownership.
                 </p>
               </div>
             </div>
@@ -615,43 +630,42 @@ export function AdminDispatchPage() {
               </div>
             </div>
 
-            <div className="dispatchWorkGrid dispatchWorkGrid-compact">
-              <div className="dispatchWorkPanel">
-                <div className="dispatchPanelTitle">Queue guidance</div>
-                <div className="dispatchPriorityList">
-                  <div className="dispatchPriorityItem dispatchPriorityItem-soft">
-                    Use Dispatch Center for live exception handling, reassignment, and thread coordination.
-                  </div>
-                  <div className="dispatchPriorityItem dispatchPriorityItem-soft">
-                    Move into Request Queue when you need search, filters, and broader backlog review.
-                  </div>
-                </div>
-              </div>
-
-              <div className="dispatchWorkPanel">
-                <div className="dispatchPanelTitle">Next workspace</div>
-                <div className="dispatchActionGrid dispatchActionGrid-compact">
-                  <button
-                    className="dispatchActionTile dispatchActionTile-primary"
-                    onClick={() => navigate('/admin/requests')}
-                    type="button"
-                  >
-                    <span className="dispatchActionTitle">Open Request Queue</span>
-                    <span className="dispatchActionText">Search backlog, manage statuses, and work the broader queue.</span>
-                  </button>
-                  <button
-                    className="dispatchActionTile dispatchActionTile-info"
-                    onClick={() => navigate('/admin/scheduling')}
-                    type="button"
-                  >
-                    <span className="dispatchActionTitle">Open Scheduling Board</span>
-                    <span className="dispatchActionText">Rebalance visits and review workload distribution.</span>
-                  </button>
-                </div>
-              </div>
+            <div className="dispatchActionGrid dispatchActionGrid-compact dispatchActionGrid-spaced">
+              <button
+                className="dispatchActionTile dispatchActionTile-primary"
+                onClick={() => navigate('/admin/requests')}
+                type="button"
+              >
+                <span className="dispatchActionTitle">Open Request Queue</span>
+                <span className="dispatchActionText">Search backlog, manage statuses, and work the broader queue.</span>
+              </button>
+              <button
+                className="dispatchActionTile dispatchActionTile-info"
+                onClick={() => navigate('/admin/scheduling')}
+                type="button"
+              >
+                <span className="dispatchActionTitle">Open Scheduling Board</span>
+                <span className="dispatchActionText">Rebalance visits and review workload distribution.</span>
+              </button>
             </div>
           </div>
         </section>
+      </section>
+
+      <section className="dispatchGuidanceStrip" aria-label="Dispatch guidance">
+        <div className="dispatchGuidanceText">
+          <div className="dispatchGuidanceTitle">Queue guidance</div>
+          <div className="dispatchGuidanceBody">
+            Use Dispatch Center for live coordination and urgent action. Use Request Queue for broader filtering,
+            status review, and structured administration.
+          </div>
+        </div>
+
+        <div className="pageActions">
+          <Link to="/admin/requests" className="btn">
+            Open Request Queue
+          </Link>
+        </div>
       </section>
 
       <RequestDrawer

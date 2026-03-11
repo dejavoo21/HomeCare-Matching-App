@@ -15762,6 +15762,87 @@ button[aria-label='Open assistant'] {
   min-width: 0;
 }
 
+.dispatchColumn {
+  min-width: 0;
+}
+
+.dispatchCompactRail {
+  display: grid;
+  gap: 16px;
+}
+
+.dispatchQueuePanel {
+  min-width: 0;
+}
+
+.dispatchQueuePanel-full {
+  grid-column: 1 / -1;
+}
+
+.dispatchGuidanceStrip {
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  padding: 18px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.dispatchGuidanceText {
+  max-width: 720px;
+}
+
+.dispatchGuidanceTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dispatchGuidanceBody {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.dispatchCompactCard {
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  padding: 18px 20px;
+}
+
+.dispatchCompactCardTitle {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.dispatchCompactCardHeading {
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dispatchCompactCardText {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.dispatchCompactActions {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
 .dispatchQueueSummaryGrid {
   margin-top: 0;
 }
@@ -15773,6 +15854,10 @@ button[aria-label='Open assistant'] {
 
 .dispatchActionGrid-compact {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dispatchActionGrid-spaced {
+  margin-top: 18px;
 }
 
 @media (max-width: 1280px) {
