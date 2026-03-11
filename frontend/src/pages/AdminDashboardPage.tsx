@@ -114,6 +114,9 @@ export function AdminDashboardPage() {
               <Link to="/admin/escalations" className="btn">
                 Open Escalations
               </Link>
+              <Link to="/admin/release-readiness" className="btn">
+                Open Release Readiness
+              </Link>
               <Link to="/admin/unresolved-items" className="btn">
                 Open Unresolved Items
               </Link>

@@ -118,6 +118,13 @@ export function AssistantWidget() {
         'Show aged escalations',
       ];
     }
+    if (location.pathname.includes('/admin/release-readiness')) {
+      return [
+        'Summarize release posture',
+        'Show watch items',
+        'Which gaps remain open?',
+      ];
+    }
     if (location.pathname.includes('/admin/audit')) {
       return [
         'Summarize recent audit events',
@@ -284,6 +291,15 @@ export function AssistantWidget() {
       normalized.includes('aged escalations')
     ) {
       navigate('/admin/escalations');
+      return;
+    }
+
+    if (
+      normalized.includes('release posture') ||
+      normalized.includes('watch items') ||
+      normalized.includes('gaps remain open')
+    ) {
+      navigate('/admin/release-readiness');
       return;
     }
 

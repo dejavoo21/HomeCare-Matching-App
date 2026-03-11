@@ -27,6 +27,7 @@ import { AdminSettingsPage } from '../pages/AdminSettingsPage';
 import { AdminClinicianReviewPage } from '../pages/AdminClinicianReviewPage';
 import { UnresolvedItemsPage } from '../pages/UnresolvedItemsPage';
 import { EscalationHandlingPage } from '../pages/EscalationHandlingPage';
+import { ReleaseReadinessPage } from '../pages/ReleaseReadinessPage';
 
 function ProtectedRoute({
   element,
@@ -157,6 +158,10 @@ export function AppRoutes() {
         <Route
           path="escalations"
           element={<WithPermission permission={PERMISSIONS.DASHBOARD_READ} element={<EscalationHandlingPage />} />}
+        />
+        <Route
+          path="release-readiness"
+          element={<WithPermission permission={PERMISSIONS.DASHBOARD_READ} element={<ReleaseReadinessPage />} />}
         />
         <Route
           path="integrations"

@@ -14478,6 +14478,131 @@ button[aria-label='Open assistant'] {
   }
 }
 
+.readinessList {
+  display: grid;
+  gap: 12px;
+}
+
+.readinessRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+}
+
+.readinessRowMain {
+  min-width: 0;
+}
+
+.readinessRowTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.readinessRowTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.readinessRowText {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.readinessBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.readinessBadge-pass {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.18);
+}
+
+.readinessBadge-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+.readinessBadge-fail {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid rgba(244, 63, 94, 0.18);
+}
+
+.readinessPriorityList {
+  display: grid;
+  gap: 12px;
+}
+
+.readinessPriorityCard {
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.readinessPriorityCard-critical {
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.readinessPriorityCard-warning {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.readinessPriorityCard-neutral {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.readinessFocus {
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.readinessFocus-pass {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.readinessFocus-warning {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.readinessFocus-neutral {
+  background: #f8fafc;
+  color: #475569;
+}
+
+@media (max-width: 640px) {
+  .readinessRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 /* =========================
    Compact dashboard rail
    ========================= */
