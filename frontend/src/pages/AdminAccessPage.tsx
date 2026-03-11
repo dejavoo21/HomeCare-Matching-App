@@ -66,7 +66,7 @@ export function AdminAccessPage() {
       <AdminPageHeader
         eyebrow="Access and onboarding control"
         title="Workforce verification hub"
-        description="Validate identity, credentials, and background requirements before onboarding is released into the care operations platform."
+        description="Move applicants from pending review to verified onboarding with a clear, auditable evidence trail."
       >
         <AdminStatStrip
           items={[

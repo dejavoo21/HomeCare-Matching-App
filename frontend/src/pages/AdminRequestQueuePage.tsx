@@ -132,7 +132,7 @@ export function AdminRequestQueuePage() {
         className="requestQueueHeader"
         eyebrow="Request operations"
         title="Request Queue"
-        description="Review queued and in-flight requests, filter backlog, and take structured request actions outside the live dispatch center."
+        description="Review the broader request backlog, see where work is progressing cleanly, and intervene where service delivery could stall."
       >
         <AdminStatStrip
           items={[
@@ -249,7 +249,7 @@ export function AdminRequestQueuePage() {
 
         <div className="pageActions">
           <Link to="/admin/dispatch" className="btn">
-            Open Dispatch Center
+            Review live dispatch
           </Link>
         </div>
       </section>

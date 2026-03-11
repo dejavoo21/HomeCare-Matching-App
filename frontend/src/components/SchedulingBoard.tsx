@@ -869,7 +869,7 @@ export function SchedulingBoard() {
                           setSelectedVisit(visit);
                         }}
                       >
-                        Open
+                        Review
                       </button>
                       <button
                         type="button"
@@ -879,7 +879,7 @@ export function SchedulingBoard() {
                           setRequestChatRequestId(visit.id);
                         }}
                       >
-                        Thread
+                        Review thread
                       </button>
                     </div>
                   </div>
@@ -1017,7 +1017,7 @@ export function SchedulingBoard() {
                                           setSelectedVisit(visit);
                                         }}
                                       >
-                                        Open
+                                        Review
                                       </button>
                                       <button
                                         type="button"
@@ -1027,7 +1027,7 @@ export function SchedulingBoard() {
                                           setRequestChatRequestId(visit.id);
                                         }}
                                       >
-                                        Thread
+                                        Review thread
                                       </button>
                                     </div>
                                   </div>
@@ -1111,7 +1111,7 @@ export function SchedulingBoard() {
                 deniedReason="You do not have permission to access request-linked communication."
                 onClick={() => setRequestChatRequestId(selectedVisit.id)}
               >
-                Open request thread
+                Review request thread
               </ProtectedAction>
               <button type="button" className="btn" onClick={() => setSelectedVisit(null)}>
                 Back to board
@@ -1134,8 +1134,7 @@ export function SchedulingBoard() {
                   {quickCreate.professionalName} on {formatDay(new Date(quickCreate.day))}
                 </p>
                 <p className="modalSub">
-                  Create a one-time visit or a recurring schedule directly from the scheduling
-                  board.
+                  Create a one-time visit or a recurring schedule directly from the live board.
                 </p>
               </div>
               <button

@@ -35,7 +35,7 @@ export function AttentionPanel({ requests }: { requests: AttentionRequest[] }) {
             <div className="railCardEyebrow">Dispatch priority</div>
             <h3 className="railCardTitle">Dispatch Attention</h3>
             <p className="railCardSubtitle">
-              High-signal request conditions requiring rapid operational awareness.
+              High-signal queue conditions that can still disrupt today&apos;s service posture.
             </p>
           </div>
 
@@ -50,19 +50,19 @@ export function AttentionPanel({ requests }: { requests: AttentionRequest[] }) {
           <div
             className={`railSignalCard ${criticalCount > 0 ? 'railSignalCard-danger' : 'railSignalCard-neutral'}`}
           >
-            <div className="railSignalLabel">Critical requests requiring intervention</div>
+            <div className="railSignalLabel">Critical requests still needing intervention</div>
             <div className="railSignalValue">{criticalCount}</div>
           </div>
 
           <div
             className={`railSignalCard ${expiringSoonCount > 0 ? 'railSignalCard-warning' : 'railSignalCard-neutral'}`}
           >
-            <div className="railSignalLabel">Offers expiring within 30 minutes</div>
+            <div className="railSignalLabel">Offers expiring in the next 30 minutes</div>
             <div className="railSignalValue">{expiringSoonCount}</div>
           </div>
 
           <div className="railSignalCard railSignalCard-neutral">
-            <div className="railSignalLabel">Queued requests waiting for dispatch action</div>
+            <div className="railSignalLabel">Queued requests still waiting for assignment</div>
             <div className="railSignalValue">{queuePressure}</div>
           </div>
         </div>
@@ -70,7 +70,7 @@ export function AttentionPanel({ requests }: { requests: AttentionRequest[] }) {
         <div className="railCardDivider" />
 
         <Link to="/admin/dispatch" className="summaryCardAction">
-          Open Dispatch Center <span aria-hidden="true">→</span>
+          Review live dispatch <span aria-hidden="true">→</span>
         </Link>
       </div>
     </aside>

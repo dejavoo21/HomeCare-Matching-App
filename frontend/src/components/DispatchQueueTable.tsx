@@ -257,7 +257,7 @@ export function DispatchQueueTable({
                   <td className="actionsCell queueActions">
                     <div className="actionsRow">
                       <button className="btn btn-small" onClick={() => onView(r)}>
-                        View
+                        Review request
                       </button>
 
                       <button
@@ -265,7 +265,7 @@ export function DispatchQueueTable({
                         type="button"
                         onClick={() => onOpenThread?.(r.id)}
                       >
-                        Thread
+                        Open thread
                       </button>
 
                       <button
@@ -276,7 +276,7 @@ export function DispatchQueueTable({
                         disabled={!['queued'].includes(String(r.status).toLowerCase())}
                         aria-disabled={!['queued'].includes(String(r.status).toLowerCase())}
                       >
-                        Offer
+                        Send offer
                       </button>
 
                       <button
@@ -287,7 +287,7 @@ export function DispatchQueueTable({
                         disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
                         aria-disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
                       >
-                        Requeue
+                        Reassign
                       </button>
 
                       <button
@@ -298,7 +298,7 @@ export function DispatchQueueTable({
                         disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
                         aria-disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
                       >
-                        Cancel
+                        Cancel request
                       </button>
                     </div>
                   </td>
@@ -350,14 +350,14 @@ export function DispatchQueueTable({
 
               <div className="queueMobileActions">
                 <button className="btn btn-small" onClick={() => onView(r)}>
-                  View
+                  Review request
                 </button>
                 <button
                   className="btn btn-small btn-ghost"
                   type="button"
                   onClick={() => onOpenThread?.(r.id)}
                 >
-                  Thread
+                  Open thread
                 </button>
                 <button
                   className="btn btn-small btn-ghost"
@@ -367,7 +367,7 @@ export function DispatchQueueTable({
                   disabled={!['queued'].includes(String(r.status).toLowerCase())}
                   aria-disabled={!['queued'].includes(String(r.status).toLowerCase())}
                 >
-                  Offer
+                  Send offer
                 </button>
                 <button
                   className="btn btn-small btn-danger"
@@ -377,7 +377,7 @@ export function DispatchQueueTable({
                   disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
                   aria-disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
                 >
-                  Cancel
+                  Cancel request
                 </button>
               </div>
             </article>

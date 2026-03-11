@@ -64,7 +64,7 @@ export function WorkforceCard({
             <div className="workforceName">{person.name}</div>
             <div className="workforceMeta">
               {String(person.role).toUpperCase()}
-              {person.region ? ` • ${person.region}` : ''}
+              {person.region ? ` | ${person.region}` : ''}
             </div>
           </div>
         </div>

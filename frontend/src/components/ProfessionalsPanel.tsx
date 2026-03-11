@@ -120,7 +120,7 @@ export function ProfessionalsPanel({
             <div>
               <div className="workforcePanelEyebrow">Workforce readiness</div>
               <h3 className="workforcePanelTitle">Team Availability</h3>
-              <p className="workforcePanelSubtitle">Active doctors & nurses</p>
+              <p className="workforcePanelSubtitle">Who is available to absorb live demand right now</p>
             </div>
 
             <div className="workforcePanelPills">
@@ -133,7 +133,7 @@ export function ProfessionalsPanel({
 
           <div className="workforceMetrics">
             <div className="workforceMetricCard">
-              <div className="workforceMetricLabel">Active</div>
+              <div className="workforceMetricLabel">Ready now</div>
               <div className="workforceMetricValue">{activeItems.length}</div>
             </div>
 
@@ -188,7 +188,7 @@ export function ProfessionalsPanel({
           </div>
 
           <Link to="/admin/team" className="workforceFooterLink">
-            Open Team Roster <span aria-hidden="true">→</span>
+            Review workforce directory <span aria-hidden="true">→</span>
           </Link>
         </div>
       </section>

@@ -19,18 +19,18 @@ function buildActions(context: string, contextData?: Record<string, any>): Assis
     case 'dashboard':
       return [
         {
-          label: 'Open Dispatch Center',
-          description: 'Review urgent queue and active coordination issues.',
+          label: 'Review live dispatch',
+          description: 'Go straight to the cases that can still change today\'s service posture.',
           to: '/admin/dispatch',
         },
         {
-          label: 'Review Access Requests',
-          description: 'Clear verification blockers affecting onboarding.',
+          label: 'Clear onboarding blockers',
+          description: 'Work the verification queue holding clinicians back from release.',
           to: '/admin/access',
         },
         {
-          label: 'Check Analytics',
-          description: 'Review operational performance and review backlog.',
+          label: 'Read the operating signals',
+          description: 'Check trend, workload, and exception patterns behind today\'s story.',
           to: '/admin/analytics',
         },
       ];
@@ -38,18 +38,18 @@ function buildActions(context: string, contextData?: Record<string, any>): Assis
     case 'dispatch':
       return [
         {
-          label: 'Open Request Queue',
-          description: 'Review broader request backlog outside live dispatch.',
+          label: 'Review broader queue',
+          description: 'Move out of the live console and work the wider backlog deliberately.',
           to: '/admin/requests',
         },
         {
-          label: 'Open Scheduling Board',
-          description: 'Rebalance workload and available coverage.',
+          label: 'Rebalance the board',
+          description: 'Review coverage, conflicts, and workload before service risk spreads.',
           to: '/admin/scheduling',
         },
         {
-          label: 'Review Escalations',
-          description: 'Check unresolved and high-risk operational items.',
+          label: 'Inspect escalations',
+          description: 'Check the unresolved items that are starting to age beyond dispatch.',
           to: '/admin/escalations',
         },
       ];
@@ -57,18 +57,18 @@ function buildActions(context: string, contextData?: Record<string, any>): Assis
     case 'scheduling':
       return [
         {
-          label: 'Open Dispatch Center',
-          description: 'Move from planning into live coordination.',
+          label: 'Move into live dispatch',
+          description: 'Switch from planning into active coordination when timing becomes critical.',
           to: '/admin/dispatch',
         },
         {
-          label: 'Open Team',
-          description: 'Review workforce availability and directory detail.',
+          label: 'Review workforce coverage',
+          description: 'Check who is available, overloaded, or best placed to absorb new work.',
           to: '/admin/team',
         },
         {
-          label: 'Check Unresolved Items',
-          description: 'Review issues affecting coverage and assignments.',
+          label: 'Check unresolved items',
+          description: 'See which issues are now affecting assignment quality or coverage.',
           to: '/admin/unresolved-items',
         },
       ];
@@ -76,18 +76,18 @@ function buildActions(context: string, contextData?: Record<string, any>): Assis
     case 'analytics':
       return [
         {
-          label: 'Open Dispatch Center',
-          description: 'Investigate live issues behind current metrics.',
+          label: 'Investigate live issues',
+          description: 'Jump from the metrics into the live cases creating today\'s pressure.',
           to: '/admin/dispatch',
         },
         {
-          label: 'Open Clinician Review',
-          description: 'Work through note backlog and review exceptions.',
+          label: 'Work the review backlog',
+          description: 'Open clinician review and clear the operational items behind the metrics.',
           to: '/admin/clinician-review',
         },
         {
-          label: 'Open Reliability',
-          description: 'Inspect technical conditions impacting platform signals.',
+          label: 'Inspect platform reliability',
+          description: 'Check whether technical conditions are distorting operational signals.',
           to: '/admin/integrations/reliability',
         },
       ];
@@ -95,13 +95,13 @@ function buildActions(context: string, contextData?: Record<string, any>): Assis
     default:
       return [
         {
-          label: 'Open Dashboard',
-          description: 'Return to the main operations hub.',
+          label: 'Return to Operations Hub',
+          description: 'Go back to the main care operations command surface.',
           to: '/admin/dashboard',
         },
         {
-          label: 'Open Dispatch Center',
-          description: 'Review live coordination and urgent work.',
+          label: 'Review live dispatch',
+          description: 'Open the urgent work surface for queue coordination and fast decisions.',
           to: '/admin/dispatch',
         },
       ];
@@ -128,13 +128,13 @@ function contextSummary(context: string, contextData?: Record<string, any>) {
 
   switch (context) {
     case 'dashboard':
-      return 'Use the dashboard to monitor overall service delivery posture, then move into live workflows only where attention is needed.';
+      return 'Use the dashboard to understand what is under control, what is drifting into risk, and where the team should act next.';
     case 'dispatch':
-      return 'Use Dispatch Center for urgent coordination, assignment decisions, and request-linked communication.';
+      return 'Use Dispatch Center for urgent coordination, assignment decisions, and request-linked communication tied to one live case.';
     case 'scheduling':
-      return 'Use Scheduling Board for planning, rebalance work, recurring patterns, and assignment preparation.';
+      return 'Use Scheduling Board for planning, recurring patterns, and workload balancing before issues become live dispatch problems.';
     case 'analytics':
-      return 'Use Analytics to interpret performance patterns and send follow-up work back into operational pages.';
+      return 'Use Analytics to interpret performance patterns and route follow-up work back into the operational pages that can change the outcome.';
     default:
       return 'Use the assistant to move between related workflows in this workspace.';
   }

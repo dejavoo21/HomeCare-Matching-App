@@ -94,6 +94,12 @@ export function AdminDashboardPage() {
       (request.followUpRequired || request.follow_up_required) &&
       !(request.adminFollowUpScheduled || request.admin_follow_up_scheduled)
   ).length;
+  const underControlCount = Math.max(stats.completedRequests - followUpsPending, 0);
+  const criticalQueueCount = requests.filter((request) => {
+    const urgency = String(request.urgency || '').toLowerCase();
+    const status = String(request.status || '').toLowerCase();
+    return urgency === 'critical' && ['queued', 'offered'].includes(status);
+  }).length;
 
   return (
       <main className="opsDashboard" role="main" aria-label="Operations dashboard">
@@ -103,7 +109,7 @@ export function AdminDashboardPage() {
               <div className="pageHeaderEyebrow">Care operations command center</div>
               <h1 className="pageTitle">Operations Hub</h1>
               <p className="subtitle">
-                Dispatch, workforce, compliance, and platform activity in one operating surface.
+                See what is under control, what is at risk, and where the operations team should act next.
               </p>
             </div>
 
@@ -128,46 +134,56 @@ export function AdminDashboardPage() {
 
           <div className="pageHeaderMeta">
             <div className="pageHeaderMetaCard">
-              <div className="pageHeaderMetaLabel">Queue status</div>
-              <div className="pageHeaderMetaValue">{stats.queuedRequests} requests awaiting action</div>
+              <div className="pageHeaderMetaLabel">Immediate attention</div>
+              <div className="pageHeaderMetaValue">
+                {criticalQueueCount > 0
+                  ? `${criticalQueueCount} critical requests still need intervention`
+                  : 'No critical requests are ageing in the queue'}
+              </div>
             </div>
 
             <div className="pageHeaderMetaCard">
-              <div className="pageHeaderMetaLabel">Workforce posture</div>
-              <div className="pageHeaderMetaValue">{activeVisitsCount} clinicians currently active</div>
+              <div className="pageHeaderMetaLabel">Under control</div>
+              <div className="pageHeaderMetaValue">
+                {underControlCount} visit{underControlCount === 1 ? '' : 's'} closed cleanly today
+              </div>
             </div>
 
             <div className="pageHeaderMetaCard">
-              <div className="pageHeaderMetaLabel">Follow-up pressure</div>
-              <div className="pageHeaderMetaValue">{followUpsPending} review items still open</div>
+              <div className="pageHeaderMetaLabel">Next admin move</div>
+              <div className="pageHeaderMetaValue">
+                {followUpsPending > 0
+                  ? `Review ${followUpsPending} follow-up item${followUpsPending === 1 ? '' : 's'} before end of shift`
+                  : 'Verification and follow-up queues are stable'}
+              </div>
             </div>
           </div>
         </section>
 
       <section className="dashboardTopGrid" aria-label="Operations summary">
         <div className="dashboardMetricCard dashboardMetricCard-indigo">
-          <div className="dashboardMetricLabel">Visits Today</div>
+          <div className="dashboardMetricLabel">Visits Closed Today</div>
           <div className="dashboardMetricValue">{stats.completedRequests}</div>
-          <div className="dashboardMetricMeta">Completed and documented field activity</div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Live operations</div>
+          <div className="dashboardMetricMeta">Completed care activity already documented and out of active risk.</div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Under control</div>
         </div>
         <div className="dashboardMetricCard dashboardMetricCard-blue">
-          <div className="dashboardMetricLabel">Active Clinicians</div>
+          <div className="dashboardMetricLabel">Clinicians In Motion</div>
           <div className="dashboardMetricValue">{activeVisitsCount}</div>
-          <div className="dashboardMetricMeta">Accepted and in-progress assignments</div>
+          <div className="dashboardMetricMeta">Accepted and in-progress assignments moving through live delivery.</div>
           <div className="dashboardMetricTrend dashboardMetricTrend-success">In motion</div>
         </div>
         <div className="dashboardMetricCard dashboardMetricCard-amber">
-          <div className="dashboardMetricLabel">Open Requests</div>
+          <div className="dashboardMetricLabel">Requests Waiting</div>
           <div className="dashboardMetricValue">{stats.queuedRequests}</div>
-          <div className="dashboardMetricMeta">Queue volume waiting for dispatch action</div>
+          <div className="dashboardMetricMeta">Queue volume still waiting for matching, assignment, or escalation.</div>
           <div className="dashboardMetricTrend dashboardMetricTrend-warning">Needs attention</div>
         </div>
         <div className="dashboardMetricCard dashboardMetricCard-green">
-          <div className="dashboardMetricLabel">Follow-ups Pending</div>
+          <div className="dashboardMetricLabel">Follow-up Queue</div>
           <div className="dashboardMetricValue">{followUpsPending}</div>
-          <div className="dashboardMetricMeta">Clinician review items still open</div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Review queue</div>
+          <div className="dashboardMetricMeta">Clinician outcomes that still need admin follow-through or scheduling.</div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Next action</div>
         </div>
       </section>
 
@@ -179,7 +195,7 @@ export function AdminDashboardPage() {
               <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
             </div>
             <Link to="/admin/scheduling" className="summaryLinkAction">
-              Open Scheduling Board <span aria-hidden="true">→</span>
+              Review Scheduling Board <span aria-hidden="true">→</span>
             </Link>
           </div>
 
@@ -213,7 +229,7 @@ export function AdminDashboardPage() {
 
           <div className="dashboardActionRow">
             <Link to="/admin/dispatch" className="btn btn-primary">
-              Open Dispatch Center
+              Review live dispatch
             </Link>
             <Link to="/admin/clinician-review" className="btn">
               Review Clinician Notes

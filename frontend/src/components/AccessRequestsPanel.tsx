@@ -202,7 +202,7 @@ export function AccessRequestsPanel({
         <div>
           <h3 className="sideTitle">Access Requests</h3>
           <p className="muted">
-            Review identity, documents, and onboarding readiness before approval.
+            Review evidence, request missing information, and unlock onboarding only when the record is ready.
           </p>
         </div>
       </div>
@@ -255,7 +255,7 @@ export function AccessRequestsPanel({
                     <div>
                       <div className="accessTitle">{item.requester_name || item.requester_email}</div>
                       <div className="accessMeta muted">
-                        {item.requester_email} • {String(item.requested_role).toUpperCase()}
+                        {item.requester_email} | {String(item.requested_role).toUpperCase()}
                       </div>
                     </div>
 
@@ -277,8 +277,8 @@ export function AccessRequestsPanel({
 
                   <div className="accessDates muted">
                     Requested: {formatDate(item.created_at)}
-                    {item.reviewed_at ? ` • Reviewed: ${formatDate(item.reviewed_at)}` : ''}
-                    {item.reviewer_email ? ` • Reviewer: ${item.reviewer_email}` : ''}
+                    {item.reviewed_at ? ` | Reviewed: ${formatDate(item.reviewed_at)}` : ''}
+                    {item.reviewer_email ? ` | Reviewer: ${item.reviewer_email}` : ''}
                   </div>
 
                   <div className="accessWorkflowChecks">
@@ -413,8 +413,8 @@ export function AccessRequestsPanel({
 
                     <div className="verificationSummary muted">
                       {verificationCompleted
-                        ? 'Verification complete. This request can be approved.'
-                        : 'Complete all four verification checks before approval.'}
+                        ? 'Verification complete. This request is ready to unlock onboarding.'
+                        : 'Complete all four verification checks before operational release.'}
                     </div>
 
                     <div className="verificationActions">
@@ -433,7 +433,7 @@ export function AccessRequestsPanel({
                         deniedReason="You do not have verification authority to unlock onboarding."
                         onClick={() => decide(item, 'approved')}
                       >
-                        Verify & Unlock Onboarding
+                        Approve & unlock onboarding
                       </ProtectedAction>
                       <ProtectedAction
                         permission={PERMISSIONS.ACCESS_REQUESTS_REVIEW}
@@ -441,7 +441,7 @@ export function AccessRequestsPanel({
                         deniedReason="You do not have review authority to reject access requests."
                         onClick={() => decide(item, 'rejected')}
                       >
-                        Reject
+                        Reject request
                       </ProtectedAction>
                     </div>
                   </div>

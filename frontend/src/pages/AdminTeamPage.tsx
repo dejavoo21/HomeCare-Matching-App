@@ -116,7 +116,7 @@ export function AdminTeamPage() {
       <AdminPageHeader
         eyebrow="Workforce directory"
         title="Team"
-        description="A live directory for staffing, compliance, availability, workload, and work-linked communication."
+        description="See who is available, who is overloaded, and who can support today&apos;s care delivery across regions."
         actions={
           <Button variant="primary" type="button" onClick={load}>
             Refresh Directory
@@ -210,10 +210,10 @@ export function AdminTeamPage() {
             <SectionCard title="Workforce posture" subtitle="Live workforce signal for allocation and coordination">
               <div className="space-y-3">
                 <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                  Workforce readiness is stable across active regions.
+                  Workforce coverage is healthy in the main operating regions today.
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  Use the directory to balance workload and identify available clinicians.
+                  Use the directory to reassign work quickly and surface the best clinician for a high-priority request.
                 </div>
               </div>
             </SectionCard>

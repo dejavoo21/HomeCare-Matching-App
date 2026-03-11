@@ -15,7 +15,7 @@ export function AdminSchedulingPage() {
       <AdminPageHeader
         eyebrow="Workforce planning"
         title="Scheduling Board"
-        description="Assign visits, balance coverage, manage recurring schedules, and resolve operational conflicts from one planning surface."
+        description="Keep the board active with planned visits, visible conflicts, and recurring patterns that make coverage decisions believable at a glance."
       >
         <AdminStatStrip
           items={[
@@ -37,7 +37,7 @@ export function AdminSchedulingPage() {
 
         <div className="pageActions">
           <Link to="/admin/dispatch" className="btn">
-            Open Dispatch Center
+            Review live dispatch
           </Link>
           <Link to="/admin/requests" className="btn">
             Open Request Queue

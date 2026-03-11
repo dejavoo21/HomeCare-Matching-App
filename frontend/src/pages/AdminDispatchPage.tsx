@@ -257,7 +257,7 @@ export function AdminDispatchPage() {
       <AdminPageHeader
         eyebrow="Live dispatch operations"
         title="Dispatch Center"
-        description="Mission control for queue movement, expiring offers, and real-time dispatch actions."
+        description="Coordinate one believable live case at a time, keep urgent work visible, and move the queue before service risk spreads."
         actions={
           <button className="btn btn-primary" onClick={loadDispatch}>
             Refresh Dispatch
@@ -316,7 +316,7 @@ export function AdminDispatchPage() {
               <div>
                 <h2 className="dispatchCommandTitle">Live Exceptions</h2>
                 <p className="muted">
-                  Prioritize coverage gaps, expiring offers, and high-risk requests.
+                  Prioritize coverage gaps, expiring offers, and high-risk requests before the next handover.
                 </p>
               </div>
             </div>
@@ -426,7 +426,7 @@ export function AdminDispatchPage() {
                     }}
                     type="button"
                   >
-                    <span className="dispatchActionTitle">Open full request</span>
+                    <span className="dispatchActionTitle">Review full request</span>
                     <span className="dispatchActionText">Review offer controls, EVV state, and manual actions.</span>
                   </button>
                   <button
@@ -437,7 +437,7 @@ export function AdminDispatchPage() {
                     }}
                     type="button"
                   >
-                    <span className="dispatchActionTitle">Open request thread</span>
+                    <span className="dispatchActionTitle">Review request thread</span>
                     <span className="dispatchActionText">Continue work-linked communication for this visit.</span>
                   </button>
                   <ProtectedAction
@@ -526,7 +526,7 @@ export function AdminDispatchPage() {
                 }}
                 type="button"
               >
-                Open selected thread
+                Review selected thread
               </button>
             </div>
           </div>
@@ -638,7 +638,7 @@ export function AdminDispatchPage() {
                 onClick={() => navigate('/admin/scheduling')}
                 type="button"
               >
-                <span className="dispatchActionTitle">Open Scheduling Board</span>
+                <span className="dispatchActionTitle">Review Scheduling Board</span>
                 <span className="dispatchActionText">Rebalance visits and review workload distribution.</span>
               </button>
             </div>
