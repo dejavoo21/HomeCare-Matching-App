@@ -16934,6 +16934,133 @@ button,
   color: #64748b;
 }
 
+/* =========================
+   Analytics second refinement
+   ========================= */
+
+.analyticsWorkspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.analyticsStack {
+  display: grid;
+  gap: 18px;
+}
+
+.analyticsChartCard,
+.analyticsWorkloadCard,
+.analyticsInterpretationCard,
+.analyticsExceptionCard {
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255,255,255,0.72);
+  padding: 18px 20px;
+}
+
+.analyticsCardTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.analyticsCardSubtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.analyticsChartArea {
+  margin-top: 16px;
+  min-height: 280px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 16px;
+}
+
+.analyticsMiniList {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.analyticsMiniRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 12px 14px;
+}
+
+.analyticsMiniRowLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.analyticsMiniRowMeta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.analyticsMiniRowValue {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.analyticsMiniRowValue-wide {
+  min-width: auto;
+}
+
+.analyticsNarrativePoints {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.analyticsNarrativePoint {
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.analyticsHeader-compact {
+  margin-bottom: 18px;
+}
+
+.trendChart-tall {
+  margin-top: 18px;
+}
+
+.trendBars-tall {
+  min-height: 180px;
+  align-items: end;
+}
+
 @media (max-width: 1200px) {
   .adminStatStrip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -16941,6 +17068,17 @@ button,
 
   .requestQueueFilters {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 1280px) {
+  .analyticsWorkspaceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dispatchTopGrid,
+  .dispatchLowerGrid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -16963,12 +17101,5 @@ button,
 
   .dispatchSelectedTitle {
     font-size: 22px;
-  }
-}
-
-@media (max-width: 1280px) {
-  .dispatchTopGrid,
-  .dispatchLowerGrid {
-    grid-template-columns: 1fr;
   }
 }
