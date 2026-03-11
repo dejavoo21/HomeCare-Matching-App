@@ -36,6 +36,7 @@ import { createClinicianRouter } from './routes/clinician.routes';
 import { createWorkforceRouter } from './routes/workforce.routes';
 import { createWorkforceChatRouter } from './routes/workforce-chat.routes';
 import { createRequestChatRouter } from './routes/request-chat.routes';
+import { createSchemaHealthRouter } from './routes/schema-health.routes';
 
 // Migrations
 import { runMigrations } from './migrations/runner';
@@ -166,6 +167,7 @@ app.use('/clinician', createClinicianRouter(pool));
 app.use('/workforce', createWorkforceRouter(pool));
 app.use('/workforce/chat', createWorkforceChatRouter(pool));
 app.use('/requests', createRequestChatRouter(pool));
+app.use('/', createSchemaHealthRouter(pool));
 app.use('/users', userRoutes);
 app.use('/requests', requestRoutes);
 app.use('/visits', visitRoutes);

@@ -3,6 +3,8 @@
 // ============================================================================
 // Phase 4: HttpOnly cookies + refresh flow + Railway-safe
 
+import { mapRequest, mapRequestList } from './mappers/requestMapper';
+
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD
@@ -283,15 +285,27 @@ class ApiClient {
   }
 
   async getClientRequests() {
-    return this.request('GET', '/requests/client/list');
+    const response = await this.request<any>('GET', '/requests/client/list');
+    return {
+      ...response,
+      data: mapRequestList(response?.data || []),
+    };
   }
 
   async getAllRequests() {
-    return this.request('GET', '/requests/all');
+    const response = await this.request<any>('GET', '/requests/all');
+    return {
+      ...response,
+      data: mapRequestList(response?.data || []),
+    };
   }
 
   async getRequestById(id: string) {
-    return this.request('GET', `/requests/${id}`);
+    const response = await this.request<any>('GET', `/requests/${id}`);
+    return {
+      ...response,
+      data: response?.data ? mapRequest(response.data) : response?.data,
+    };
   }
 
   async findMatches(requestId: string) {

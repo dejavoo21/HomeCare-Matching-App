@@ -13,6 +13,7 @@ import { hasPermission } from '../lib/auth/access';
 import { PERMISSIONS } from '../lib/auth/permissions';
 import { useAuth } from '../contexts/AuthContext';
 import type { CareRequest } from '../types/index';
+import { normalizeRequestStatus } from '../shared/schema/normalize';
 type Professional = {
   id: string;
   name: string;
@@ -22,13 +23,9 @@ type Professional = {
   is_active?: boolean;
 };
 
-function normalizeStatus(status?: string) {
-  return String(status || '').toLowerCase();
-}
-
 function severityScore(request: CareRequest) {
   const urgency = String(request.urgency || '').toLowerCase();
-  const status = normalizeStatus(request.status);
+  const status = normalizeRequestStatus(String(request.status || ''));
 
   if (urgency === 'critical' && ['queued', 'offered'].includes(status)) return 0;
   if (status === 'queued') return 1;
@@ -177,7 +174,7 @@ export function AdminDispatchPage() {
   const exceptionRequests = useMemo(() => {
     return [...requests]
       .filter((request) => {
-        const status = normalizeStatus(request.status);
+        const status = normalizeRequestStatus(String(request.status || ''));
         const urgency = String(request.urgency || '').toLowerCase();
         return (
           ['queued', 'offered', 'accepted', 'en_route'].includes(status) ||
@@ -209,7 +206,7 @@ export function AdminDispatchPage() {
 
     requests.forEach((request) => {
       if (!request.assignedProfessionalId) return;
-      const status = normalizeStatus(request.status);
+      const status = normalizeRequestStatus(String(request.status || ''));
       if (!['accepted', 'en_route', 'queued', 'offered'].includes(status)) return;
       loadMap.set(
         request.assignedProfessionalId,
@@ -341,7 +338,7 @@ export function AdminDispatchPage() {
                 </div>
               ) : (
                 exceptionRequests.map((request) => {
-                  const status = normalizeStatus(request.status);
+                  const status = normalizeRequestStatus(String(request.status || ''));
                   const urgency = String(request.urgency || '').toLowerCase();
                   return (
                     <button
@@ -449,9 +446,9 @@ export function AdminDispatchPage() {
 
                   <div className="dispatchWorkBadges">
                     <span
-                      className={`dispatchStatusTag dispatchStatusTag-${normalizeStatus(selectedRequest.status).replace(/[^a-z]+/g, '-')}`}
+                      className={`dispatchStatusTag dispatchStatusTag-${normalizeRequestStatus(String(selectedRequest.status || '')).replace(/[^a-z]+/g, '-')}`}
                     >
-                      {normalizeStatus(selectedRequest.status).replace('_', ' ')}
+                      {normalizeRequestStatus(String(selectedRequest.status || '')).replace('_', ' ')}
                     </span>
                     <span
                       className={`dispatchPriorityTag dispatchPriorityTag-${String(selectedRequest.urgency || '').toLowerCase()}`}
@@ -528,7 +525,7 @@ export function AdminDispatchPage() {
                       </div>
                       <div className="dispatchInfoRow">
                         <span className="dispatchInfoLabel">Current status</span>
-                        <strong>{normalizeStatus(selectedRequest.status).replace('_', ' ')}</strong>
+                        <strong>{normalizeRequestStatus(String(selectedRequest.status || '')).replace('_', ' ')}</strong>
                       </div>
                       <div className="dispatchInfoRow">
                         <span className="dispatchInfoLabel">Request ID</span>

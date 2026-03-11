@@ -11,6 +11,7 @@ import { UserRole, VisitStatus } from '../types/index';
 import { v4 as uuidv4 } from 'uuid';
 import { emitRealtimeEventToDb } from '../realtime/emitToDb';
 import { publishRealtimeEvent } from '../realtime/publisher';
+import { serializeRequest } from '../utils/request-serializer';
 
 const router = Router();
 let dbPool: Pool | null = null;
@@ -148,12 +149,12 @@ export function setupPostgresRoutes(pool: Pool): void {
          ORDER BY cr.created_at DESC`
       );
 
-      const requests = result.rows.map((row: any) => ({
-        ...row,
-        offerExpiresAt: row.offerExpiresAt ? row.offerExpiresAt.toISOString() : undefined,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-      }));
+      const requests = result.rows.map((row: any) =>
+        serializeRequest({
+          ...row,
+          offerExpiresAt: row.offerExpiresAt ? row.offerExpiresAt.toISOString() : undefined,
+        })
+      );
 
       res.json({
         success: true,
@@ -288,12 +289,12 @@ router.get('/all', authMiddleware, requireRole(UserRole.ADMIN), async (req: Auth
         ORDER BY cr.created_at DESC`
       );
 
-      const requests = result.rows.map((row: any) => ({
-        ...row,
-        offerExpiresAt: row.offerExpiresAt ? row.offerExpiresAt.toISOString() : undefined,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-      }));
+      const requests = result.rows.map((row: any) =>
+        serializeRequest({
+          ...row,
+          offerExpiresAt: row.offerExpiresAt ? row.offerExpiresAt.toISOString() : undefined,
+        })
+      );
 
       res.json({
         success: true,
