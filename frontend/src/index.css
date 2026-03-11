@@ -16238,3 +16238,179 @@ button,
     font-size: 26px;
   }
 }
+
+.schedulingPage {
+  display: grid;
+  gap: 20px;
+}
+
+.schedulingControlBand {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: start;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  padding: 18px 20px;
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255,255,255,0.72);
+}
+
+.schedulingControlMain {
+  display: grid;
+  gap: 14px;
+}
+
+.schedulingControlTop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.schedulingControlGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.schedulingControlLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.schedulingInlineActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.schedulingActionChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.schedulingRecommendationCard {
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  padding: 16px 18px;
+}
+
+.schedulingRecommendationEyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.schedulingRecommendationTitle {
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.schedulingRecommendationText {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.schedulingRecommendationList {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.schedulingRecommendationItem {
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.schedulingBoardSurface {
+  border-radius: 24px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  padding: 18px 20px;
+  box-shadow:
+    0 14px 30px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255,255,255,0.72);
+}
+
+.schedulingBoardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.schedulingBoardTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.schedulingBoardSubtitle {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.schedulingBottomStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  padding: 18px 20px;
+}
+
+.schedulingBottomStripText {
+  max-width: 760px;
+}
+
+.schedulingBottomStripTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.schedulingBottomStripBody {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+@media (max-width: 1280px) {
+  .schedulingControlBand {
+    grid-template-columns: 1fr;
+  }
+}

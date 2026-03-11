@@ -622,6 +622,118 @@ export function SchedulingBoard() {
         </div>
       </section>
 
+      <section className="schedulingControlBand" aria-label="Scheduling controls">
+        <div className="schedulingControlMain">
+          <div className="schedulingControlLabel">Board controls</div>
+
+          <div className="schedulingControlTop">
+            <div className="schedulingControlGroup">
+              <div className="scheduleViewToggle" role="tablist" aria-label="Scheduling view mode">
+                <button
+                  type="button"
+                  className={viewMode === 'day' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
+                  onClick={() => handleViewModeChange('day')}
+                  role="tab"
+                  aria-selected={viewMode === 'day'}
+                >
+                  Day
+                </button>
+                <button
+                  type="button"
+                  className={viewMode === 'week' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
+                  onClick={() => handleViewModeChange('week')}
+                  role="tab"
+                  aria-selected={viewMode === 'week'}
+                >
+                  Week
+                </button>
+              </div>
+
+              <div className="scheduleHeroNav">
+                <button className="btn" onClick={moveBackward}>
+                  Previous
+                </button>
+                <div className="scheduleRangePill">{rangeLabel}</div>
+                <button className="btn" onClick={moveForward}>
+                  Next
+                </button>
+              </div>
+
+              <select
+                className="select scheduleRoleSelect"
+                value={role}
+                onChange={(event) => setRole(event.target.value as 'all' | 'nurse' | 'doctor')}
+              >
+                <option value="all">All professionals</option>
+                <option value="nurse">Nurses only</option>
+                <option value="doctor">Doctors only</option>
+              </select>
+            </div>
+
+            <div className="schedulingControlGroup">
+              <ProtectedAction
+                permission={PERMISSIONS.SCHEDULING_CREATE}
+                variant="primary"
+                deniedReason="You can view the board, but only schedulers can create visits."
+                onClick={openUnassignedQuickCreate}
+              >
+                Quick create
+              </ProtectedAction>
+              <ProtectedAction
+                permission={PERMISSIONS.SCHEDULING_CREATE}
+                variant="secondary"
+                deniedReason="You do not have permission to create recurring scheduling instances."
+                onClick={() => {
+                  openUnassignedQuickCreate();
+                  setQuickCreateMode('recurring');
+                }}
+              >
+                Repeat from board
+              </ProtectedAction>
+              <button className="btn" onClick={load}>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div className="schedulingInlineActions">
+            <div className="schedulingActionChip">Unassigned lane active</div>
+            <div className="schedulingActionChip">Conflict badges enabled</div>
+            <div className="schedulingActionChip">Authorization warnings visible</div>
+            <div className="schedulingActionChip">Workload badges visible</div>
+          </div>
+        </div>
+
+        <div className="schedulingRecommendationCard">
+          <div className="schedulingRecommendationEyebrow">Recommended actions</div>
+          <div className="schedulingRecommendationTitle">Board guidance</div>
+          <div className="schedulingRecommendationText">
+            Keep planning guidance close to controls instead of leaving it below the board.
+          </div>
+
+          {!canCreateSchedule || !canAssignSchedule ? (
+            <div className="schedulingRecommendationList">
+              <PermissionNotice description="You can view this scheduling board, but creation and reassignment controls are restricted by role." />
+            </div>
+          ) : null}
+
+          <div className="schedulingRecommendationList">
+            {(schedulePriorities.length === 0
+              ? [
+                  'No urgent scheduling priorities right now.',
+                  'Use repeat scheduling for stable recurring visit patterns.',
+                  'Review unassigned visits before the next shift handover.',
+                ]
+              : schedulePriorities
+            ).slice(0, 3).map((item) => (
+              <div key={item} className="schedulingRecommendationItem">
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {message ? (
         <section className="scheduleMessage" role="status" aria-live="polite">
           {message}
@@ -694,7 +806,16 @@ export function SchedulingBoard() {
             </div>
           </section>
 
-          <section className="scheduleCommandLayout">
+          <section className="schedulingBoardSurface" aria-label="Scheduling board surface">
+            <div className="schedulingBoardHeader">
+              <div>
+                <div className="schedulingBoardTitle">Board workspace</div>
+                <div className="schedulingBoardSubtitle">
+                  Day and week scheduling with drag-and-drop assignment, recurring planning, and operational badges.
+                </div>
+              </div>
+            </div>
+
             <div className="scheduleMainColumn">
           <section className="scheduleUnassignedCard">
             <div className="scheduleUnassignedHeader">
@@ -923,75 +1044,6 @@ export function SchedulingBoard() {
             </div>
           </section>
             </div>
-
-            <aside className="scheduleAsideStack">
-              <section className="scheduleAsideCard">
-                <div className="scheduleAsideTitle">Board priorities</div>
-                <p className="scheduleAsideText">
-                  Immediate scheduling issues requiring action in this view.
-                </p>
-
-                <div className="schedulePriorityList">
-                  {schedulePriorities.length === 0 ? (
-                    <div className="schedulePriorityItem schedulePriorityItem-clear">
-                      No urgent scheduling priorities right now.
-                    </div>
-                  ) : (
-                    schedulePriorities.map((item, index) => (
-                      <div key={item} className={`schedulePriorityItem schedulePriorityItem-${index % 3}`}>
-                        {item}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </section>
-
-              <section className="scheduleAsideCard">
-                <div className="scheduleAsideTitle">Recommended actions</div>
-                <p className="scheduleAsideText">
-                  Use the board to assign coverage, rebalance load, and open request-linked threads.
-                </p>
-
-                {!canCreateSchedule || !canAssignSchedule ? (
-                  <PermissionNotice description="You can view this scheduling board, but creation and reassignment controls are restricted by role." />
-                ) : null}
-
-                <div className="scheduleActionList">
-                  <button
-                    className="scheduleActionBtn"
-                    type="button"
-                    onClick={openUnassignedQuickCreate}
-                    disabled={!canCreateSchedule}
-                    title={!canCreateSchedule ? 'You can view the board, but only schedulers can create visits.' : undefined}
-                  >
-                    Quick create one-time visit
-                  </button>
-                  <button
-                    className="scheduleActionBtn"
-                    type="button"
-                    onClick={() => {
-                      openUnassignedQuickCreate();
-                      setQuickCreateMode('recurring');
-                    }}
-                    disabled={!canCreateSchedule}
-                    title={!canCreateSchedule ? 'You do not have permission to create recurring scheduling instances.' : undefined}
-                  >
-                    Create recurring schedule
-                  </button>
-                  <button
-                    className="scheduleActionBtn"
-                    type="button"
-                    onClick={() => {
-                      if (unassignedVisits[0]) {
-                        setSelectedVisit(unassignedVisits[0]);
-                      }
-                    }}
-                  >
-                    Review next unassigned visit
-                  </button>
-                </div>
-              </section>
-            </aside>
           </section>
         </>
       )}
