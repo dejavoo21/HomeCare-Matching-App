@@ -16485,3 +16485,182 @@ button,
   line-height: 1.55;
   color: #64748b;
 }
+
+/* =========================
+   Final admin shell consistency
+   ========================= */
+
+.adminPageHeader,
+.adminFilterBar,
+.adminTableCard {
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255,255,255,0.72);
+}
+
+.adminPageHeader {
+  padding: 20px 22px;
+  display: grid;
+  gap: 16px;
+}
+
+.adminPageHeaderTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.adminPageHeaderEyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.adminPageHeaderTitle {
+  margin: 6px 0 0;
+  font-size: 30px;
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.adminPageHeaderDescription {
+  margin: 8px 0 0;
+  max-width: 760px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #64748b;
+}
+
+.adminPageHeaderActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.adminPageHeaderMeta {
+  display: grid;
+  gap: 12px;
+}
+
+.adminFilterBar {
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.adminFilterBarMain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  flex: 1 1 auto;
+}
+
+.adminFilterBarMain > * {
+  flex: 1 1 200px;
+}
+
+.adminFilterBarRight {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.adminTableCard {
+  overflow: hidden;
+}
+
+.adminTableCardHeader {
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.adminTableCardTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.adminTableCardSubtitle {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.adminStatStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.adminStatStripCard {
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  padding: 14px 16px;
+}
+
+.adminStatStripLabel {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.adminStatStripValue {
+  font-size: 24px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.adminStatStripMeta {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.adminPageSection {
+  display: grid;
+  gap: 18px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1200px) {
+  .adminStatStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .adminPageHeaderTitle {
+    font-size: 26px;
+  }
+
+  .adminStatStrip {
+    grid-template-columns: 1fr;
+  }
+}

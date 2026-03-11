@@ -12,6 +12,11 @@ type Props = {
   onSetUrgency?: (requestId: string, urgency: string) => Promise<void>;
   search: string;
   onSearchChange: (q: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (value: string) => void;
+  urgencyFilter?: string;
+  onUrgencyFilterChange?: (value: string) => void;
+  hideToolbar?: boolean;
 };
 
 function formatDate(dt: any) {
@@ -77,16 +82,25 @@ export function DispatchQueueTable({
   onSetUrgency,
   search,
   onSearchChange,
+  statusFilter,
+  onStatusFilterChange,
+  urgencyFilter,
+  onUrgencyFilterChange,
+  hideToolbar = false,
 }: Props) {
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
+  const [internalStatusFilter, setInternalStatusFilter] = useState<string>('all');
+  const [internalUrgencyFilter, setInternalUrgencyFilter] = useState<string>('all');
+  const activeStatusFilter = statusFilter ?? internalStatusFilter;
+  const activeUrgencyFilter = urgencyFilter ?? internalUrgencyFilter;
+  const updateStatusFilter = onStatusFilterChange ?? setInternalStatusFilter;
+  const updateUrgencyFilter = onUrgencyFilterChange ?? setInternalUrgencyFilter;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (requests || [])
       .filter((r) => {
-        if (statusFilter !== 'all' && String(r.status).toLowerCase() !== statusFilter) return false;
-        if (urgencyFilter !== 'all' && String(r.urgency).toLowerCase() !== urgencyFilter) return false;
+        if (activeStatusFilter !== 'all' && String(r.status).toLowerCase() !== activeStatusFilter) return false;
+        if (activeUrgencyFilter !== 'all' && String(r.urgency).toLowerCase() !== activeUrgencyFilter) return false;
         if (!q) return true;
 
         const hay = [
@@ -104,69 +118,71 @@ export function DispatchQueueTable({
         return hay.includes(q);
       })
       .sort((a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime());
-  }, [requests, statusFilter, urgencyFilter, search]);
+  }, [requests, activeStatusFilter, activeUrgencyFilter, search]);
 
   return (
     <div className="queue-card">
-      <div className="queueHeader">
-        <div className="queueTools" role="toolbar" aria-label="Dispatch queue filters">
-          <div className="searchField">
-            <span className="searchIcon" aria-hidden="true">?</span>
-            <input
-              className="input inputSearch"
-              placeholder="Search service, address, client, ID..."
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              aria-label="Search requests"
-            />
-            {search?.trim() ? (
-              <button
-                type="button"
-                className="clearBtn"
-                onClick={() => onSearchChange('')}
-                aria-label="Clear search"
-                title="Clear"
+      {!hideToolbar ? (
+        <div className="queueHeader">
+          <div className="queueTools" role="toolbar" aria-label="Dispatch queue filters">
+            <div className="searchField">
+              <span className="searchIcon" aria-hidden="true">?</span>
+              <input
+                className="input inputSearch"
+                placeholder="Search service, address, client, ID..."
+                value={search}
+                onChange={(e) => onSearchChange(e.target.value)}
+                aria-label="Search requests"
+              />
+              {search?.trim() ? (
+                <button
+                  type="button"
+                  className="clearBtn"
+                  onClick={() => onSearchChange('')}
+                  aria-label="Clear search"
+                  title="Clear"
+                >
+                  x
+                </button>
+              ) : null}
+            </div>
+
+            <div className="filterPills">
+              <select
+                className="select selectPill"
+                value={activeStatusFilter}
+                onChange={(e) => updateStatusFilter(e.target.value)}
+                aria-label="Filter by status"
               >
-                x
-              </button>
-            ) : null}
-          </div>
+                <option value="all">Status: All</option>
+                <option value="queued">Status: Queued</option>
+                <option value="offered">Status: Offered</option>
+                <option value="accepted">Status: Accepted</option>
+                <option value="en_route">Status: En Route</option>
+                <option value="completed">Status: Completed</option>
+                <option value="cancelled">Status: Cancelled</option>
+              </select>
 
-          <div className="filterPills">
-            <select
-              className="select selectPill"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              aria-label="Filter by status"
-            >
-              <option value="all">Status: All</option>
-              <option value="queued">Status: Queued</option>
-              <option value="offered">Status: Offered</option>
-              <option value="accepted">Status: Accepted</option>
-              <option value="en_route">Status: En Route</option>
-              <option value="completed">Status: Completed</option>
-              <option value="cancelled">Status: Cancelled</option>
-            </select>
+              <select
+                className="select selectPill"
+                value={activeUrgencyFilter}
+                onChange={(e) => updateUrgencyFilter(e.target.value)}
+                aria-label="Filter by urgency"
+              >
+                <option value="all">Urgency: All</option>
+                <option value="low">Urgency: Low</option>
+                <option value="medium">Urgency: Medium</option>
+                <option value="high">Urgency: High</option>
+                <option value="critical">Urgency: Critical</option>
+              </select>
+            </div>
 
-            <select
-              className="select selectPill"
-              value={urgencyFilter}
-              onChange={(e) => setUrgencyFilter(e.target.value)}
-              aria-label="Filter by urgency"
-            >
-              <option value="all">Urgency: All</option>
-              <option value="low">Urgency: Low</option>
-              <option value="medium">Urgency: Medium</option>
-              <option value="high">Urgency: High</option>
-              <option value="critical">Urgency: Critical</option>
-            </select>
-          </div>
-
-          <div className="queueStatusBadge">
-            Showing: <b>{statusFilter === 'all' ? 'ALL' : statusFilter.replace('_', ' ').toUpperCase()}</b>
+            <div className="queueStatusBadge">
+              Showing: <b>{activeStatusFilter === 'all' ? 'ALL' : activeStatusFilter.replace('_', ' ').toUpperCase()}</b>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="table-wrap">
         <table className="table">

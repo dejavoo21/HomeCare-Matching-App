@@ -1,11 +1,12 @@
 import AppPage from '../components/layout/AppPage';
 import ContentGrid from '../components/layout/ContentGrid';
-import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
 import { InsightCard } from '../components/InsightCard';
+import AdminPageHeader from '../components/ui/AdminPageHeader';
+import AdminStatStrip from '../components/ui/AdminStatStrip';
 
 const statusData = {
-  phase: 'Phase 6 — Commercial Polish / Sales Readiness',
+  phase: 'Phase 6 - Commercial Polish / Sales Readiness',
   done: [
     'Deploy workflow to Railway with health and login verification',
     'Scheduling loading-state hardening',
@@ -92,17 +93,20 @@ function RoadmapList({
 export function DeliveryRoadmapPage() {
   return (
     <AppPage>
-      <PageHero
+      <AdminPageHeader
         eyebrow="Internal delivery governance"
         title="Delivery Roadmap"
         description="Track shipped work, partial items, technical debt, and the next execution order from inside the admin shell."
-        stats={[
-          { label: 'Done', value: statusData.done.length, subtitle: 'Completed deliveries' },
-          { label: 'Partial', value: statusData.partial.length, subtitle: 'Needs more closure' },
-          { label: 'Not started', value: statusData.notStarted.length, subtitle: 'Still open' },
-          { label: 'Debt items', value: statusData.debt.length, subtitle: 'Technical watch areas' },
-        ]}
-      />
+      >
+        <AdminStatStrip
+          items={[
+            { label: 'Done', value: statusData.done.length, meta: 'Completed deliveries' },
+            { label: 'Partial', value: statusData.partial.length, meta: 'Needs more closure' },
+            { label: 'Not started', value: statusData.notStarted.length, meta: 'Still open' },
+            { label: 'Debt items', value: statusData.debt.length, meta: 'Technical watch areas' },
+          ]}
+        />
+      </AdminPageHeader>
 
       <section className="insightGrid" aria-label="Delivery status summary">
         <InsightCard

@@ -5,6 +5,10 @@ import { useRealTime } from '../contexts/RealTimeContext';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
 import AppPage from '../components/layout/AppPage';
+import AdminFilterBar from '../components/ui/AdminFilterBar';
+import AdminPageHeader from '../components/ui/AdminPageHeader';
+import AdminStatStrip from '../components/ui/AdminStatStrip';
+import AdminTableCard from '../components/ui/AdminTableCard';
 import type { CareRequest } from '../types/index';
 
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
@@ -18,6 +22,8 @@ export function AdminRequestQueuePage() {
   const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabFilter>('queued');
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [urgencyFilter, setUrgencyFilter] = useState('all');
 
   const loadRequests = useCallback(async () => {
     try {
@@ -122,22 +128,20 @@ export function AdminRequestQueuePage() {
 
   return (
     <AppPage className="requestQueuePage">
-      <section className="requestQueueHeader">
-        <div>
-          <div className="summaryLinkEyebrow">Request operations</div>
-          <h1 className="pageTitle">Request Queue</h1>
-          <p className="subtitle">
-            Review queued and in-flight requests, filter backlog, and take structured request actions outside the live dispatch center.
-          </p>
-        </div>
-
-        <div className="dispatchStats" aria-label="Request queue summary">
-          <span className="dispatchStatPill">{counts.queued} queued</span>
-          <span className="dispatchStatPill">{counts.offered} offered</span>
-          <span className="dispatchStatPill">{counts.accepted} accepted</span>
-          <span className="dispatchStatPill">{counts.completed} completed</span>
-        </div>
-      </section>
+      <AdminPageHeader
+        eyebrow="Request operations"
+        title="Request Queue"
+        description="Review queued and in-flight requests, filter backlog, and take structured request actions outside the live dispatch center."
+      >
+        <AdminStatStrip
+          items={[
+            { label: 'Queued', value: counts.queued, meta: 'Waiting for matching or action' },
+            { label: 'Offered', value: counts.offered, meta: 'Offer workflow in progress' },
+            { label: 'Accepted', value: counts.accepted, meta: 'Clinician has accepted' },
+            { label: 'Completed', value: counts.completed, meta: 'Closed successfully' },
+          ]}
+        />
+      </AdminPageHeader>
 
       <section className="requestQueueTabs" aria-label="Request queue status filters">
         <div className="tabs" role="tablist" aria-label="Request queue tabs">
@@ -158,23 +162,77 @@ export function AdminRequestQueuePage() {
         </div>
       </section>
 
+      <AdminFilterBar
+        rightContent={
+          <div className="queueStatusBadge">
+            Showing: <b>{statusFilter === 'all' ? 'ALL' : statusFilter.replace('_', ' ').toUpperCase()}</b>
+          </div>
+        }
+      >
+        <label className="srOnly" htmlFor="request-queue-search">
+          Search requests
+        </label>
+        <input
+          id="request-queue-search"
+          type="text"
+          placeholder="Search service, address, client, ID..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search requests"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          aria-label="Filter by status"
+        >
+          <option value="all">Status: All</option>
+          <option value="queued">Status: Queued</option>
+          <option value="offered">Status: Offered</option>
+          <option value="accepted">Status: Accepted</option>
+          <option value="en_route">Status: En Route</option>
+          <option value="completed">Status: Completed</option>
+          <option value="cancelled">Status: Cancelled</option>
+        </select>
+        <select
+          value={urgencyFilter}
+          onChange={(e) => setUrgencyFilter(e.target.value)}
+          aria-label="Filter by urgency"
+        >
+          <option value="all">Urgency: All</option>
+          <option value="low">Urgency: Low</option>
+          <option value="medium">Urgency: Medium</option>
+          <option value="high">Urgency: High</option>
+          <option value="critical">Urgency: Critical</option>
+        </select>
+      </AdminFilterBar>
+
       <section className="requestQueueTableWrap" aria-label="Request queue table">
         {isLoading ? (
           <div className="pageCard">
             <div className="empty">Loading request queue...</div>
           </div>
         ) : (
-          <DispatchQueueTable
-            requests={tabbed as any}
-            onView={(request) => navigate(`/admin/requests/${request.id}`)}
-            onOpenThread={setRequestChatRequestId}
-            onOffer={onOffer}
-            onRequeue={onRequeue}
-            onCancel={onCancel}
-            onSetUrgency={onSetUrgency}
-            search={search}
-            onSearchChange={setSearch}
-          />
+          <AdminTableCard
+            title="Queue status"
+            subtitle="Structured request administration across the broader operational backlog."
+          >
+            <DispatchQueueTable
+              requests={tabbed as any}
+              onView={(request) => navigate(`/admin/requests/${request.id}`)}
+              onOpenThread={setRequestChatRequestId}
+              onOffer={onOffer}
+              onRequeue={onRequeue}
+              onCancel={onCancel}
+              onSetUrgency={onSetUrgency}
+              search={search}
+              onSearchChange={setSearch}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              urgencyFilter={urgencyFilter}
+              onUrgencyFilterChange={setUrgencyFilter}
+              hideToolbar
+            />
+          </AdminTableCard>
         )}
       </section>
 

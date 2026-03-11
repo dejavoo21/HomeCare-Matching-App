@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import AppPage from '../components/layout/AppPage';
 import ContentGrid from '../components/layout/ContentGrid';
-import PageHero from '../components/ui/PageHero';
 import SectionCard from '../components/ui/SectionCard';
 import AssistantPanel from '../components/assistant/AssistantPanel';
 import { InsightCard } from '../components/InsightCard';
+import AdminPageHeader from '../components/ui/AdminPageHeader';
+import AdminStatStrip from '../components/ui/AdminStatStrip';
 
 type ReadinessCheck = {
   id: string;
@@ -109,21 +110,24 @@ export function ReleaseReadinessPage() {
 
   return (
     <AppPage>
-      <PageHero
+      <AdminPageHeader
         eyebrow="Go-live command surface"
         title="Release Readiness"
         description="Track technical stability, workflow readiness, schema consistency, and deployment confidence before release."
-        stats={[
-          { label: 'Checks passed', value: passCount, subtitle: 'Ready and functioning normally' },
-          { label: 'Watch items', value: warningCount, subtitle: 'Needs monitoring or closure' },
-          { label: 'Gaps', value: failCount, subtitle: 'Not ready or not started' },
-          {
-            label: 'Release posture',
-            value: failCount === 0 ? 'Controlled' : 'At risk',
-            subtitle: 'Overall current state',
-          },
-        ]}
-      />
+      >
+        <AdminStatStrip
+          items={[
+            { label: 'Checks passed', value: passCount, meta: 'Ready and functioning normally' },
+            { label: 'Watch items', value: warningCount, meta: 'Needs monitoring or closure' },
+            { label: 'Gaps', value: failCount, meta: 'Not ready or not started' },
+            {
+              label: 'Release posture',
+              value: failCount === 0 ? 'Controlled' : 'At risk',
+              meta: 'Overall current state',
+            },
+          ]}
+        />
+      </AdminPageHeader>
 
       <section className="insightGrid" aria-label="Release readiness summary">
         <InsightCard

@@ -13,6 +13,8 @@ import { PERMISSIONS } from '../lib/auth/permissions';
 import { useAuth } from '../contexts/AuthContext';
 import type { CareRequest } from '../types/index';
 import { normalizeRequestStatus } from '../shared/schema/normalize';
+import AdminPageHeader from '../components/ui/AdminPageHeader';
+import AdminStatStrip from '../components/ui/AdminStatStrip';
 type Professional = {
   id: string;
   name: string;
@@ -254,31 +256,25 @@ export function AdminDispatchPage() {
 
   return (
     <main className="pageStack dispatchPage" role="main" aria-label="Dispatch page">
-      <section className="dispatchHeaderCard">
-        <div className="dispatchHeader">
-          <div>
-            <h1 className="pageTitle">Dispatch Center</h1>
-            <p className="subtitle">
-              Mission control for queue movement, expiring offers, and real-time dispatch actions.
-            </p>
-
-            <div className="dispatchStats">
-              <span className="dispatchStatPill">{dispatchMetrics.queuedNow} queued</span>
-              <span className="dispatchStatPill">{counts.offered} offered</span>
-              <span className="dispatchStatPill">{counts.accepted + counts.en_route} active</span>
-              <span className="dispatchStatPill dispatchStatPill-alert">
-                {dispatchMetrics.criticalAtRisk} at risk
-              </span>
-            </div>
-          </div>
-
-          <div className="pageActions">
-            <button className="btn btn-primary" onClick={loadDispatch}>
-              Refresh Dispatch
-            </button>
-          </div>
-        </div>
-      </section>
+      <AdminPageHeader
+        eyebrow="Live dispatch operations"
+        title="Dispatch Center"
+        description="Mission control for queue movement, expiring offers, and real-time dispatch actions."
+        actions={
+          <button className="btn btn-primary" onClick={loadDispatch}>
+            Refresh Dispatch
+          </button>
+        }
+      >
+        <AdminStatStrip
+          items={[
+            { label: 'Queued now', value: dispatchMetrics.queuedNow, meta: 'Waiting for immediate action' },
+            { label: 'Offered', value: counts.offered, meta: 'Offer workflow active' },
+            { label: 'Active', value: counts.accepted + counts.en_route, meta: 'Accepted or en route' },
+            { label: 'At risk', value: dispatchMetrics.criticalAtRisk, meta: 'Needs intervention' },
+          ]}
+        />
+      </AdminPageHeader>
 
       <section className="dashboardTopGrid" aria-label="Dispatch summary">
         <InsightCard

@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { RecurringScheduleForm } from '../components/RecurringScheduleForm';
 import { SchedulingBoard } from '../components/SchedulingBoard';
 import AppPage from '../components/layout/AppPage';
+import AdminPageHeader from '../components/ui/AdminPageHeader';
+import AdminStatStrip from '../components/ui/AdminStatStrip';
 import SectionCard from '../components/ui/SectionCard';
 
 export function AdminSchedulingPage() {
@@ -10,6 +12,20 @@ export function AdminSchedulingPage() {
 
   return (
     <AppPage className="schedulingPage">
+      <AdminPageHeader
+        eyebrow="Workforce planning"
+        title="Scheduling Board"
+        description="Assign visits, balance coverage, manage recurring schedules, and resolve operational conflicts from one planning surface."
+      >
+        <AdminStatStrip
+          items={[
+            { label: 'Scheduled today', value: 126, meta: 'Visits on the board' },
+            { label: 'Unassigned', value: 5, meta: 'Needs coverage' },
+            { label: 'At risk', value: 8, meta: 'Conflict or authorization pressure' },
+            { label: 'Recurring plans', value: 14, meta: 'Repeat schedule templates' },
+          ]}
+        />
+      </AdminPageHeader>
       <SchedulingBoard key={refreshKey} />
       <section className="schedulingBottomStrip" aria-label="Scheduling guidance">
         <div className="schedulingBottomStripText">

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import AppPage from '../components/layout/AppPage';
 import { AnalyticsDashboardPanel } from '../components/AnalyticsDashboardPanel';
+import AdminPageHeader from '../components/ui/AdminPageHeader';
+import AdminStatStrip from '../components/ui/AdminStatStrip';
 
 export function AdminAnalyticsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -16,39 +18,20 @@ export function AdminAnalyticsPage() {
   return (
     <AppPage className="analyticsPage">
       <section className="analyticsTopGrid" aria-label="Analytics overview">
-        <div className="analyticsHeroCard">
-          <div className="analyticsEyebrow">Operational analytics</div>
-          <div className="analyticsTitle">Care operations analytics</div>
-          <div className="analyticsSubtitle">
-            Measure service delivery performance, workforce activity, review throughput, and operational risk patterns.
-          </div>
-
-          <div className="analyticsKpiGrid">
-            <div className="analyticsKpiMini">
-              <div className="analyticsKpiMiniLabel">Visits completed</div>
-              <div className="analyticsKpiMiniValue">3,482</div>
-              <div className="analyticsKpiMiniMeta">Tracked care delivery volume</div>
-            </div>
-
-            <div className="analyticsKpiMini">
-              <div className="analyticsKpiMiniLabel">Completion rate</div>
-              <div className="analyticsKpiMiniValue">97%</div>
-              <div className="analyticsKpiMiniMeta">Visit completion confidence</div>
-            </div>
-
-            <div className="analyticsKpiMini">
-              <div className="analyticsKpiMiniLabel">Review cycle</div>
-              <div className="analyticsKpiMiniValue">1.4d</div>
-              <div className="analyticsKpiMiniMeta">Average admin review time</div>
-            </div>
-
-            <div className="analyticsKpiMini">
-              <div className="analyticsKpiMiniLabel">Review backlog</div>
-              <div className="analyticsKpiMiniValue">11</div>
-              <div className="analyticsKpiMiniMeta">Pending clinician note reviews</div>
-            </div>
-          </div>
-        </div>
+        <AdminPageHeader
+          eyebrow="Operational analytics"
+          title="Care operations analytics"
+          description="Measure service delivery performance, workforce activity, review throughput, and operational risk patterns."
+        >
+          <AdminStatStrip
+            items={[
+              { label: 'Visits completed', value: '3,482', meta: 'Tracked care delivery volume' },
+              { label: 'Completion rate', value: '97%', meta: 'Visit completion confidence' },
+              { label: 'Review cycle', value: '1.4d', meta: 'Average admin review time' },
+              { label: 'Review backlog', value: '11', meta: 'Pending clinician note reviews' },
+            ]}
+          />
+        </AdminPageHeader>
 
         <div className="analyticsControlStack">
           <div className="analyticsControlCard">
