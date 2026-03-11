@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { api } from "../services/api";
+import { API_BASE_URL } from "../config/env";
 
 type ConnectionState = "connected" | "reconnecting" | "disconnected";
 type Handler = (event: any) => void;
@@ -64,7 +65,7 @@ export function RealTimeProvider({ children }: { children: React.ReactNode }) {
     clearOfflineTimer();
     clearPresenceHeartbeat();
 
-    const baseUrl = (import.meta as any).env.VITE_API_URL || 'http://localhost:6005';
+    const baseUrl = API_BASE_URL;
 
     // ✅ Phase 4: Cookie-authenticated SSE endpoint
     // Browser automatically includes HttpOnly cookies in the request

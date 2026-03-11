@@ -10,6 +10,7 @@ import path from 'path';
 import fs from 'fs';
 
 import { validateEnv } from './config/env';
+import { checkSchema } from './startup/checkSchema';
 import { logger } from './utils/logger';
 import { getAllowedOrigins, isAllowedOrigin } from './utils/cors';
 
@@ -168,6 +169,7 @@ app.use('/workforce', createWorkforceRouter(pool));
 app.use('/workforce/chat', createWorkforceChatRouter(pool));
 app.use('/requests', createRequestChatRouter(pool));
 app.use('/', createSchemaHealthRouter(pool));
+app.use('/api', createSchemaHealthRouter(pool));
 app.use('/users', userRoutes);
 app.use('/requests', requestRoutes);
 app.use('/visits', visitRoutes);
@@ -285,6 +287,10 @@ async function startServer() {
 
     await pool.query('SELECT 1');
     logger.info('Database connected');
+
+    logger.info('Running schema sanity check');
+    await checkSchema();
+    logger.info('Schema sanity check passed');
 
     server = app.listen(PORT, '0.0.0.0', () => {
       logger.info('Server started', {

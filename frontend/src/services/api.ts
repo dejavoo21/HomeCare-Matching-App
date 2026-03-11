@@ -4,12 +4,9 @@
 // Phase 4: HttpOnly cookies + refresh flow + Railway-safe
 
 import { mapRequest, mapRequestList } from './mappers/requestMapper';
+import { API_BASE_URL } from '../config/env';
 
-const BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD
-    ? 'https://homecare-matching-app-production.up.railway.app'
-    : 'http://localhost:6005');
+const BASE_URL = API_BASE_URL;
 const ACCESS_TOKEN_KEY = 'access-token';
 const REFRESH_TOKEN_KEY = 'refresh-token';
 
