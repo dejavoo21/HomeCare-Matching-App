@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
-import { RequestDrawer } from '../components/RequestDrawer';
 import RequestDetailDrawer from '../components/requests/RequestDetailDrawer';
 import type { RequestWorkspaceTabKey } from '../components/requests/RequestWorkspaceTabs';
 import { InsightCard } from '../components/InsightCard';
@@ -59,7 +58,6 @@ export function AdminDispatchPage() {
   const [requests, setRequests] = useState<CareRequest[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<CareRequest | null>(null);
-  const [drawerRequest, setDrawerRequest] = useState<CareRequest | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [detailDrawerTab, setDetailDrawerTab] = useState<RequestWorkspaceTabKey>('overview');
 
@@ -378,8 +376,8 @@ export function AdminDispatchPage() {
           </div>
         </div>
 
-        <section className="dispatchCenterColumn">
-          <div className="dispatchCommandCard dispatchWorkCard">
+        <section className="dispatchCenterColumn dispatchMainFill">
+          <div className="dispatchSelectedPanel">
             {!selectedRequest ? (
               <div className="premiumEmptyState">
                 <div className="premiumEmptyTitle">Select a dispatch item</div>
@@ -389,13 +387,13 @@ export function AdminDispatchPage() {
               </div>
             ) : (
               <>
-                <div className="dispatchWorkHeader">
+                <div className="dispatchSelectedHeader">
                   <div>
                     <div className="dispatchWorkEyebrow">Selected Request</div>
-                    <h2 className="dispatchWorkTitle">
+                    <h2 className="dispatchSelectedTitle">
                       {selectedRequest.description || formatServiceType(String(selectedRequest.serviceType))}
                     </h2>
-                    <p className="dispatchWorkMeta">
+                    <p className="dispatchSelectedMeta">
                       {formatServiceType(String(selectedRequest.serviceType))} |{' '}
                       {formatShortTime(selectedRequest.scheduledDateTime)} | {selectedRequest.address}
                     </p>
@@ -421,7 +419,7 @@ export function AdminDispatchPage() {
 
                 <div className="dispatchActionGrid">
                   <button
-                    className="dispatchActionTile dispatchActionTile-info"
+                    className="dispatchActionCard dispatchActionTile dispatchActionTile-info"
                     onClick={() => {
                       setDetailDrawerTab('overview');
                       setDetailDrawerOpen(true);
@@ -432,7 +430,7 @@ export function AdminDispatchPage() {
                     <span className="dispatchActionText">Review offer controls, EVV state, and manual actions.</span>
                   </button>
                   <button
-                    className="dispatchActionTile dispatchActionTile-primary"
+                    className="dispatchActionCard dispatchActionTile dispatchActionTile-primary"
                     onClick={() => {
                       setDetailDrawerTab('thread');
                       setDetailDrawerOpen(true);
@@ -444,7 +442,7 @@ export function AdminDispatchPage() {
                   </button>
                   <ProtectedAction
                     permission={PERMISSIONS.DISPATCH_MANAGE}
-                    className="dispatchActionTile dispatchActionTile-warn"
+                    className="dispatchActionCard dispatchActionTile dispatchActionTile-warn"
                     variant="ghost"
                     deniedReason="Only dispatch coordinators can reassign live coverage."
                     onClick={() => void onRequeue(selectedRequest.id)}
@@ -454,7 +452,7 @@ export function AdminDispatchPage() {
                   </ProtectedAction>
                   <ProtectedAction
                     permission={PERMISSIONS.DISPATCH_MANAGE}
-                    className="dispatchActionTile dispatchActionTile-danger"
+                    className="dispatchActionCard dispatchActionTile dispatchActionTile-danger"
                     variant="ghost"
                     deniedReason="Only dispatch coordinators can cancel active requests."
                     onClick={() => void onCancel(selectedRequest.id)}
@@ -511,26 +509,10 @@ export function AdminDispatchPage() {
           </div>
         </section>
 
-        <aside className="dispatchCompactRail">
+        <aside className="dispatchSupportStack">
           <div className="dispatchCompactCard">
-            <div className="dispatchCompactCardTitle">Dispatch priorities</div>
-            <div className="dispatchCompactCardHeading">Immediate focus</div>
-            <div className="dispatchCompactCardText">
-              Work critical queued and offered requests before they age into escalation.
-            </div>
-            <div className="dispatchCompactActions">
-              <div className="dispatchPriorityItem dispatchPriorityItem-1">
-                Assign coverage or escalate ownership for unresolved critical items.
-              </div>
-              <div className="dispatchPriorityItem dispatchPriorityItem-2">
-                Rebalance clinician load when one region starts taking concentrated demand.
-              </div>
-            </div>
-          </div>
-
-          <div className="dispatchCompactCard">
-            <div className="dispatchCompactCardTitle">Work-linked communication</div>
-            <div className="dispatchCompactCardHeading">Request threads</div>
+            <div className="dispatchCompactCardTitle">Request threads</div>
+            <div className="dispatchCompactCardHeading">Work-linked communication</div>
             <div className="dispatchCompactCardText">
               Keep coordination inside the selected request thread instead of spreading it across generic chat.
             </div>
@@ -546,6 +528,22 @@ export function AdminDispatchPage() {
               >
                 Open selected thread
               </button>
+            </div>
+          </div>
+
+          <div className="dispatchCompactCard">
+            <div className="dispatchCompactCardTitle">Dispatch priorities</div>
+            <div className="dispatchCompactCardHeading">Immediate focus</div>
+            <div className="dispatchCompactCardText">
+              Work critical queued and offered requests before they age into escalation.
+            </div>
+            <div className="dispatchCompactActions">
+              <div className="dispatchPriorityItem dispatchPriorityItem-1">
+                Assign coverage or escalate ownership for unresolved critical items.
+              </div>
+              <div className="dispatchPriorityItem dispatchPriorityItem-2">
+                Rebalance clinician load when one region starts taking concentrated demand.
+              </div>
             </div>
           </div>
         </aside>
@@ -593,7 +591,7 @@ export function AdminDispatchPage() {
         </div>
 
         <section className="dispatchMainFill dispatchQueuePanel">
-          <div className="dispatchCommandCard">
+          <div className="dispatchWorkspaceCard">
             <div className="dispatchCommandCardHeader">
               <div>
                 <h2 className="dispatchCommandTitle">Queue workspace</h2>
@@ -649,7 +647,7 @@ export function AdminDispatchPage() {
       </section>
 
       <section className="dispatchGuidanceStrip" aria-label="Dispatch guidance">
-        <div className="dispatchGuidanceText">
+        <div className="dispatchGuidanceCopy">
           <div className="dispatchGuidanceTitle">Queue guidance</div>
           <div className="dispatchGuidanceBody">
             Use Dispatch Center for live coordination and urgent action. Use Request Queue for broader filtering,
@@ -663,12 +661,6 @@ export function AdminDispatchPage() {
           </Link>
         </div>
       </section>
-
-      <RequestDrawer
-        request={drawerRequest}
-        onClose={() => setDrawerRequest(null)}
-        onRefresh={loadDispatch}
-      />
 
       <RequestDetailDrawer
         requestId={selectedRequest?.id || null}
