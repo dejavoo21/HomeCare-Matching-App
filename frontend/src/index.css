@@ -14603,6 +14603,278 @@ button[aria-label='Open assistant'] {
   }
 }
 
+.assistantInlineHint {
+  display: grid;
+  gap: 6px;
+}
+
+.assistantInlineHintText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.assistantInlineHintMeta {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.roadmapList {
+  display: grid;
+  gap: 10px;
+}
+
+.roadmapItem {
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.roadmapItem-done {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.roadmapItem-partial {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.roadmapItem-todo {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.roadmapItem-debt {
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.roadmapPhaseCard {
+  border-radius: 18px;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(238,242,255,0.98), #ffffff);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+.roadmapPhaseEyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #6366f1;
+}
+
+.roadmapPhaseTitle {
+  margin-top: 8px;
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.roadmapStep {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #f8fafc;
+}
+
+.roadmapStepIndex {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0e7ff;
+  color: #4338ca;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.roadmapStepText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.adminShellLayout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  min-height: calc(100vh - 72px);
+}
+
+.adminSidebar {
+  position: sticky;
+  top: 72px;
+  align-self: start;
+  height: calc(100vh - 72px);
+  padding: 14px;
+}
+
+.adminSidebar-collapsed {
+  width: 96px;
+}
+
+.adminSidebarInner {
+  height: 100%;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 18px 38px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 rgba(255,255,255,0.78);
+  padding: 18px 14px;
+  overflow-y: auto;
+}
+
+.adminSidebarBrand {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.adminSidebar-collapsed .adminSidebarBrand {
+  grid-template-columns: 52px 1fr;
+}
+
+.adminSidebarBrandMark {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #34d399, #10b981);
+  color: #064e3b;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.adminSidebarBrandEyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.adminSidebarBrandName {
+  margin-top: 3px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.adminSidebarToggle {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.adminSidebarSection + .adminSidebarSection {
+  margin-top: 18px;
+}
+
+.adminSidebarSectionTitle {
+  margin: 0 8px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.adminSidebarSectionItems {
+  display: grid;
+  gap: 6px;
+}
+
+.adminSidebarLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 50px;
+  border-radius: 16px;
+  padding: 0 14px;
+  color: #1e293b;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 700;
+  transition: all 0.18s ease;
+}
+
+.adminSidebarLink:hover {
+  background: #f8fafc;
+}
+
+.adminSidebarLink-active {
+  background: #dff3ea;
+  color: #059669;
+}
+
+.adminSidebarIcon {
+  width: 22px;
+  display: inline-flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.adminSidebarLabel {
+  min-width: 0;
+  flex: 1;
+}
+
+.adminSidebarBadge {
+  min-width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0e7ff;
+  color: #4338ca;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.adminSidebar-collapsed .adminSidebarLink {
+  justify-content: center;
+  padding: 0;
+}
+
+.adminSidebar-collapsed .adminSidebarIcon {
+  width: auto;
+}
+
+.adminSidebar-collapsed .adminSidebarToggle {
+  margin-left: auto;
+}
+
+@media (max-width: 1100px) {
+  .adminShellLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .adminSidebar {
+    display: none;
+  }
+}
+
 /* =========================
    Compact dashboard rail
    ========================= */

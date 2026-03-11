@@ -28,6 +28,7 @@ import { AdminClinicianReviewPage } from '../pages/AdminClinicianReviewPage';
 import { UnresolvedItemsPage } from '../pages/UnresolvedItemsPage';
 import { EscalationHandlingPage } from '../pages/EscalationHandlingPage';
 import { ReleaseReadinessPage } from '../pages/ReleaseReadinessPage';
+import { DeliveryRoadmapPage } from '../pages/DeliveryRoadmapPage';
 
 function ProtectedRoute({
   element,
@@ -162,6 +163,10 @@ export function AppRoutes() {
         <Route
           path="release-readiness"
           element={<WithPermission permission={PERMISSIONS.DASHBOARD_READ} element={<ReleaseReadinessPage />} />}
+        />
+        <Route
+          path="delivery-roadmap"
+          element={<WithPermission permission={PERMISSIONS.DASHBOARD_READ} element={<DeliveryRoadmapPage />} />}
         />
         <Route
           path="integrations"
