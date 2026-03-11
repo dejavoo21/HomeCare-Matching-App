@@ -15868,3 +15868,182 @@ button[aria-label='Open assistant'] {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+   Global typography reset
+   ========================= */
+
+:root {
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-base: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 34px;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.65;
+}
+
+html {
+  font-size: 14px;
+}
+
+body {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+  color: #0f172a;
+}
+
+p,
+span,
+label,
+input,
+select,
+textarea,
+button,
+a,
+td,
+th {
+  font-size: inherit;
+}
+
+.pageTitle {
+  font-size: var(--font-size-3xl);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: #64748b;
+}
+
+.dashboardPanelTitle,
+.workforcePanelTitle,
+.railCardTitle,
+.summaryCardTitle,
+.integrationPathTitle {
+  font-size: var(--font-size-2xl);
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.sectionTitle,
+h2 {
+  font-size: var(--font-size-xl);
+  line-height: 1.2;
+}
+
+.dashboardMetricLabel,
+.settingsOverviewLabel,
+.integrationMiniLabel,
+.workforceMetricLabel,
+.summaryLinkEyebrow,
+.railCardEyebrow,
+.workforcePanelEyebrow,
+.integrationPathEyebrow,
+.pageHeaderEyebrow,
+.appSidebarSectionTitle {
+  font-size: var(--font-size-xs);
+}
+
+.dashboardMetricMeta,
+.summaryLinkText,
+.integrationCardBody,
+.railCardSubtitle,
+.workforcePanelSubtitle,
+.uiStateText,
+.readinessRowText,
+.roadmapStepText,
+.dispatchCompactCardText,
+.dispatchGuidanceBody,
+.dispatchActionText,
+.dispatchExceptionNote,
+.dispatchWorkMeta,
+.muted {
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+}
+
+.dashboardMetricValue,
+.insightCardValue {
+  font-size: 38px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.settingsOverviewValue,
+.workforceMetricValue,
+.integrationMiniValue {
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.appSidebarBrandName {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.appSidebarBrandSubtext {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.appSidebarItem {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+table,
+.requestTable,
+.queueTable {
+  font-size: 14px;
+}
+
+.requestTable th,
+.queueTable th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.requestTable td,
+.queueTable td {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.btn,
+button,
+.clinicianPrimaryButton,
+.clinicianSecondaryButton {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .dashboardMetricValue,
+  .insightCardValue {
+    font-size: 34px;
+  }
+
+  .pageTitle {
+    font-size: 26px;
+  }
+
+  .dashboardPanelTitle,
+  .workforcePanelTitle,
+  .railCardTitle,
+  .summaryCardTitle,
+  .integrationPathTitle {
+    font-size: 20px;
+  }
+}
