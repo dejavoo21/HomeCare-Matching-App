@@ -4,13 +4,15 @@ export default function AdminTableCard({
   title,
   subtitle,
   children,
+  className = '',
 }: {
   title?: string;
   subtitle?: string;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="adminTableCard">
+    <section className={`adminTableCard ${className}`}>
       {(title || subtitle) && (
         <div className="adminTableCardHeader">
           {title ? <div className="adminTableCardTitle">{title}</div> : null}

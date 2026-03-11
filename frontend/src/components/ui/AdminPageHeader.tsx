@@ -6,6 +6,7 @@ type AdminPageHeaderProps = {
   description?: string;
   actions?: ReactNode;
   children?: ReactNode;
+  className?: string;
 };
 
 export default function AdminPageHeader({
@@ -14,9 +15,10 @@ export default function AdminPageHeader({
   description,
   actions,
   children,
+  className = '',
 }: AdminPageHeaderProps) {
   return (
-    <section className="adminPageHeader">
+    <section className={`adminPageHeader ${className}`}>
       <div className="adminPageHeaderTop">
         <div>
           {eyebrow ? <div className="adminPageHeaderEyebrow">{eyebrow}</div> : null}

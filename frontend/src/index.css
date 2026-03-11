@@ -16649,9 +16649,177 @@ button,
   border: 0;
 }
 
+/* =========================
+   Request Queue second pass
+   ========================= */
+
+.requestQueueHeader {
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+.requestQueueHeader .adminPageHeaderTitle {
+  font-size: 26px;
+  line-height: 1.08;
+}
+
+.requestQueueHeader .adminPageHeaderDescription {
+  margin-top: 6px;
+  max-width: 640px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.requestQueueHeader .adminStatStrip {
+  gap: 12px;
+}
+
+.requestQueueHeader .adminStatStripCard {
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.requestQueueHeader .adminStatStripLabel {
+  font-size: 11px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.requestQueueHeader .adminStatStripValue {
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.requestQueueHeader .adminStatStripMeta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.requestQueueTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 0 4px 10px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.requestQueueTabs .tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.requestQueueTabs .tab {
+  min-height: 36px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.requestQueueFilters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px 180px auto;
+  gap: 12px;
+  align-items: center;
+  border-radius: 18px;
+  padding: 14px 16px;
+}
+
+.requestQueueFilters input,
+.requestQueueFilters select {
+  min-height: 42px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.requestQueueTableCard .btn,
+.requestQueueTableCard button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.requestQueueTableCard table,
+.requestQueueTableCard .table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.requestQueueTableCard th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  padding: 14px 12px;
+}
+
+.requestQueueTableCard td {
+  font-size: 13px;
+  color: #0f172a;
+  padding: 14px 12px;
+  vertical-align: top;
+}
+
+.requestQueueTableCard .actionsRow {
+  gap: 6px;
+}
+
+.requestQueueTableCard .queueActions {
+  min-width: 260px;
+}
+
+.tableScroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+}
+
+.tableScroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.tableScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tableScroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
+}
+
+.tableScroll table {
+  min-width: 1180px;
+}
+
+.requestQueueGuidance {
+  padding: 14px 16px;
+  border-radius: 18px;
+}
+
+.requestQueueGuidance .dispatchGuidanceTitle {
+  font-size: 15px;
+}
+
+.requestQueueGuidance .dispatchGuidanceBody {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 @media (max-width: 1200px) {
   .adminStatStrip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .requestQueueFilters {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -16661,6 +16829,10 @@ button,
   }
 
   .adminStatStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .requestQueueFilters {
     grid-template-columns: 1fr;
   }
 }

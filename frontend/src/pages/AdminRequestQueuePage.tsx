@@ -129,6 +129,7 @@ export function AdminRequestQueuePage() {
   return (
     <AppPage className="requestQueuePage">
       <AdminPageHeader
+        className="requestQueueHeader"
         eyebrow="Request operations"
         title="Request Queue"
         description="Review queued and in-flight requests, filter backlog, and take structured request actions outside the live dispatch center."
@@ -163,6 +164,7 @@ export function AdminRequestQueuePage() {
       </section>
 
       <AdminFilterBar
+        className="requestQueueFilters"
         rightContent={
           <div className="queueStatusBadge">
             Showing: <b>{statusFilter === 'all' ? 'ALL' : statusFilter.replace('_', ' ').toUpperCase()}</b>
@@ -213,6 +215,7 @@ export function AdminRequestQueuePage() {
           </div>
         ) : (
           <AdminTableCard
+            className="requestQueueTableCard"
             title="Queue status"
             subtitle="Structured request administration across the broader operational backlog."
           >
