@@ -30,23 +30,27 @@ export function Navbar() {
         <div className="topbarLeft">
           <div className="topbarBrandBlock">
             <span className="topbarBrandMark" aria-hidden="true">HC</span>
-            <span className="topbarBrandText">Homecare Matching App</span>
+            <span className="topbarBrandMeta">
+              <span className="topbarBrandText">Homecare Matching App</span>
+              <span className="topbarBrandSubtext">Admin operations</span>
+            </span>
           </div>
         </div>
 
         <div className="topbarRight">
+          <CommunicationHub />
+          <PresenceMenu />
+
           {state !== 'connected' && (
-            <div className={getConnectionClass(state)}>
+            <div className={`${getConnectionClass(state)} topbarStatusPill`}>
               <span className="navStatusDot" aria-hidden="true" />
               <span>{getConnectionLabel(state)}</span>
             </div>
           )}
 
-          <CommunicationHub />
-          <PresenceMenu />
-
-          <div className="topbarUser">
-            {user.name} ({user.role})
+          <div className="topbarUser" aria-label={`Signed in as ${user.name} (${user.role})`}>
+            <span className="topbarUserName">{user.name}</span>
+            <span className="topbarUserRole">{user.role}</span>
             {summary.unreadMessages > 0 ? (
               <span className="topbarInlineBadge" aria-label={`${summary.unreadMessages} unread messages`}>
                 {summary.unreadMessages}
