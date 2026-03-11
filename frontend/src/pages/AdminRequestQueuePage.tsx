@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { DispatchQueueTable } from '../components/DispatchQueueTable';
 import { RequestChatDrawer } from '../components/RequestChatDrawer';
-import PageHero from '../components/ui/PageHero';
 import AppPage from '../components/layout/AppPage';
-import SectionCard from '../components/ui/SectionCard';
-import KpiCard from '../components/ui/KpiCard';
 import type { CareRequest } from '../types/index';
 
 const TABS = ['queued', 'offered', 'accepted', 'en_route', 'completed', 'cancelled'] as const;
@@ -124,22 +121,26 @@ export function AdminRequestQueuePage() {
   };
 
   return (
-    <AppPage>
-      <PageHero
-        eyebrow="Request operations"
-        title="Request queue"
-        description="Review queued and in-flight requests, filter operational backlog, and take structured request actions outside the live dispatch center."
-      />
+    <AppPage className="requestQueuePage">
+      <section className="requestQueueHeader">
+        <div>
+          <div className="summaryLinkEyebrow">Request operations</div>
+          <h1 className="pageTitle">Request Queue</h1>
+          <p className="subtitle">
+            Review queued and in-flight requests, filter backlog, and take structured request actions outside the live dispatch center.
+          </p>
+        </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard title="Queued" value={counts.queued} subtitle="Waiting for matching or action" accent="warning" />
-        <KpiCard title="Offered" value={counts.offered} subtitle="Offer workflow in progress" accent="info" />
-        <KpiCard title="Accepted" value={counts.accepted} subtitle="Clinician has accepted" accent="success" />
-        <KpiCard title="Completed" value={counts.completed} subtitle="Closed successfully" accent="default" />
-      </div>
+        <div className="dispatchStats" aria-label="Request queue summary">
+          <span className="dispatchStatPill">{counts.queued} queued</span>
+          <span className="dispatchStatPill">{counts.offered} offered</span>
+          <span className="dispatchStatPill">{counts.accepted} accepted</span>
+          <span className="dispatchStatPill">{counts.completed} completed</span>
+        </div>
+      </section>
 
-      <SectionCard title="Queue status" subtitle="Full request management across statuses and urgency">
-        <div className="tabs" role="tablist" aria-label="Request queue status filters">
+      <section className="requestQueueTabs" aria-label="Request queue status filters">
+        <div className="tabs" role="tablist" aria-label="Request queue tabs">
           {TABS.map((currentTab) => (
             <button
               key={currentTab}
@@ -155,38 +156,42 @@ export function AdminRequestQueuePage() {
             </button>
           ))}
         </div>
+      </section>
 
-        <div className="mt-6">
-          {isLoading ? (
-            <div className="pageCard">
-              <div className="empty">Loading request queue...</div>
-            </div>
-          ) : (
-            <DispatchQueueTable
-              requests={tabbed as any}
-              onView={(request) => navigate(`/admin/requests/${request.id}`)}
-              onOpenThread={setRequestChatRequestId}
-              onOffer={onOffer}
-              onRequeue={onRequeue}
-              onCancel={onCancel}
-              onSetUrgency={onSetUrgency}
-              search={search}
-              onSearchChange={setSearch}
-            />
-          )}
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Queue guidance">
-        <div className="space-y-3">
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-            Use Request Queue for broad request administration, filtering, and status-based review.
+      <section className="requestQueueTableWrap" aria-label="Request queue table">
+        {isLoading ? (
+          <div className="pageCard">
+            <div className="empty">Loading request queue...</div>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-            Use Dispatch Center for urgent live coordination and active work resolution.
+        ) : (
+          <DispatchQueueTable
+            requests={tabbed as any}
+            onView={(request) => navigate(`/admin/requests/${request.id}`)}
+            onOpenThread={setRequestChatRequestId}
+            onOffer={onOffer}
+            onRequeue={onRequeue}
+            onCancel={onCancel}
+            onSetUrgency={onSetUrgency}
+            search={search}
+            onSearchChange={setSearch}
+          />
+        )}
+      </section>
+
+      <section className="requestQueueGuidance" aria-label="Request queue guidance">
+        <div className="dispatchGuidanceText">
+          <div className="dispatchGuidanceTitle">Queue guidance</div>
+          <div className="dispatchGuidanceBody">
+            Use Request Queue for broader filtering, status review, and structured administration. Use Dispatch Center for urgent live coordination and active work resolution.
           </div>
         </div>
-      </SectionCard>
+
+        <div className="pageActions">
+          <Link to="/admin/dispatch" className="btn">
+            Open Dispatch Center
+          </Link>
+        </div>
+      </section>
 
       <RequestChatDrawer
         open={!!requestChatRequestId}
