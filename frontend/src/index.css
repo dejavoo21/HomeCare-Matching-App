@@ -18714,6 +18714,47 @@ button[aria-label='Open assistant'] {
   font-weight: 800;
 }
 
+/* =========================
+   Dashboard column layout fix
+   ========================= */
+
+.opsDashboard .dashboardGrid,
+.opsDashboard .dashboardFeatureRow {
+  display: none;
+}
+
+.opsDashboard .dashboardColumns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.opsDashboard .dashboardColumn {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.opsDashboard .dashboardColumn > * {
+  min-width: 0;
+}
+
+.opsDashboard .dashboardPanel,
+.opsDashboard .dashboardFeatureCard,
+.opsDashboard .dashboardColumn .workforcePanel,
+.opsDashboard .dashboardColumn .attentionPanel,
+.opsDashboard .dashboardColumn .railCard {
+  height: auto;
+  min-height: 0;
+}
+
+@media (max-width: 1400px) {
+  .opsDashboard .dashboardColumns {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Remove stacked-right-column gap on dashboard */
 
 .opsDashboard .dashboardGrid {
