@@ -18632,3 +18632,19 @@ button[aria-label='Open assistant'] {
     grid-template-columns: 1fr;
   }
 }
+
+/* Remove stacked-right-column gap on dashboard */
+
+.opsDashboard .dashboardGrid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.opsDashboard .dashboardGrid > * {
+  min-width: 0;
+}
+
+.opsDashboard .dashboardFeatureRow > * {
+  min-width: 0;
+}

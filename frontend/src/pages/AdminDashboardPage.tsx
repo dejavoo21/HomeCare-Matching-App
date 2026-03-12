@@ -203,10 +203,7 @@ export function AdminDashboardPage() {
 
         <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
 
-        <div className="dashboardAsideStack">
-          <AttentionPanel requests={requests} />
-          <ActivityFeed refreshKey={activityKey} />
-        </div>
+        <AttentionPanel requests={requests} />
       </section>
 
       <section className="dashboardFeatureRow">
@@ -241,20 +238,7 @@ export function AdminDashboardPage() {
         </div>
 
         <div className="dashboardFeatureCard">
-          <div className="summaryLinkEyebrow">Platform Watch</div>
-          <h3 className="dashboardFeatureTitle">Escalations and release checks</h3>
-          <p className="dashboardFeatureText">
-            Keep operational exceptions and deployment readiness close to the live activity feed.
-          </p>
-
-          <div className="dashboardFeatureActionList">
-            <Link to="/admin/escalations" className="dashboardFeatureActionBtn">
-              Escalation Handling <span>→</span>
-            </Link>
-            <Link to="/admin/release-readiness" className="dashboardFeatureActionBtn">
-              Release Readiness <span>→</span>
-            </Link>
-          </div>
+          <ActivityFeed refreshKey={activityKey} />
         </div>
       </section>
 
