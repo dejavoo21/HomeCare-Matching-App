@@ -94,12 +94,7 @@ export function ProfessionalsPanel({
       .filter((item) => (role === 'all' ? true : normalizeRole(item.role) === role))
       .filter((item) => {
         if (!q) return true;
-        const hay = [
-          getDisplayName(item),
-          item.email,
-          item.location,
-          item.role,
-        ]
+        const hay = [getDisplayName(item), item.email, item.location, item.role]
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
@@ -110,7 +105,8 @@ export function ProfessionalsPanel({
 
   const doctors = activeItems.filter((item) => normalizeRole(item.role) === 'doctor');
   const nurses = activeItems.filter((item) => normalizeRole(item.role) === 'nurse');
-  const preview = filtered.slice(0, 3);
+  const previewCount = summaryOnly ? 2 : 6;
+  const rosterPreview = filtered.slice(0, previewCount);
 
   if (summaryOnly) {
     return (
@@ -151,34 +147,35 @@ export function ProfessionalsPanel({
           <div className="workforceRosterCard">
             <div className="workforceRosterEyebrow">Available roster preview</div>
 
-            {preview.length === 0 ? (
+            {rosterPreview.length === 0 ? (
               <div className="railEmptyState">
                 <div className="railEmptyText">No professionals available yet.</div>
               </div>
             ) : (
-              <div className="workforceRosterList">
-                {preview.map((item) => {
-                  const name = getDisplayName(item);
-                  const normalizedRole = normalizeRole(item.role);
+              <div className="workforceRosterPreview">
+                {rosterPreview.map((professional) => {
+                  const name = getDisplayName(professional);
+                  const normalizedRole = normalizeRole(professional.role);
 
                   return (
-                    <div key={item.id} className="workforceRosterItem">
-                      <div className="workforceRosterLeft">
-                        <div className="workforceAvatar">{getInitials(name)}</div>
+                    <div key={professional.id} className="workforceRosterItem">
+                      <div className="workforceRosterIdentity">
+                        <div className="workforceRosterAvatar">{getInitials(name)}</div>
+
                         <div>
-                          <div className="workforceName">{name}</div>
-                          <div className="workforceMeta">{normalizedRole.toUpperCase()}</div>
+                          <div className="workforceRosterName">{name}</div>
+                          <div className="workforceRosterMeta">{normalizedRole.toUpperCase()}</div>
                         </div>
                       </div>
 
                       <div
-                        className={`workforceRoleBadge ${
+                        className={`workforceRosterBadge ${
                           normalizedRole === 'doctor'
-                            ? 'workforceRoleBadge-doctor'
-                            : 'workforceRoleBadge-nurse'
+                            ? 'workforceRosterBadge-doctor'
+                            : 'workforceRosterBadge-nurse'
                         }`}
                       >
-                        {normalizedRole}
+                        {normalizedRole.toUpperCase()}
                       </div>
                     </div>
                   );
