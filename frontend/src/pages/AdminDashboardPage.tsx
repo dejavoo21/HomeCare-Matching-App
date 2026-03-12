@@ -96,9 +96,6 @@ export function AdminDashboardPage() {
       (request.followUpRequired || request.follow_up_required) &&
       !(request.adminFollowUpScheduled || request.admin_follow_up_scheduled)
   ).length;
-  const underControlCount = Math.max(stats.completedRequests - followUpsPending, 0);
-  const unresolvedCount = stats.queuedRequests + followUpsPending;
-  const readinessCount = stats.offeredRequests + activeVisitsCount;
 
   return (
     <main className="opsDashboard dashboardPageCompact" role="main" aria-label="Operations dashboard">
@@ -107,8 +104,7 @@ export function AdminDashboardPage() {
           <div className="dashboardEyebrow">Care operations command center</div>
           <h1 className="dashboardTitle">Operations Hub</h1>
           <p className="dashboardIntro">
-            Monitor service posture, queue pressure, workforce activity, and follow-up work from one
-            operational view.
+            Monitor service posture, queue pressure, workforce activity, and follow-up work from one operational view.
           </p>
         </div>
 
@@ -125,72 +121,77 @@ export function AdminDashboardPage() {
       <section className="dashboardTopGrid" aria-label="Operations summary">
         <div className="dashboardMetricCard dashboardMetricCard-indigo">
           <div className="dashboardMetricLabel">Under Control</div>
-          <div className="dashboardMetricValue">{underControlCount}</div>
+          <div className="dashboardMetricValue">{stats.completedRequests}</div>
           <div className="dashboardMetricMeta">Visits closed cleanly and out of active risk.</div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-success">Stable</div>
+          <div className="dashboardMetricPill">Stable</div>
         </div>
+
         <div className="dashboardMetricCard dashboardMetricCard-blue">
           <div className="dashboardMetricLabel">Clinicians In Motion</div>
           <div className="dashboardMetricValue">{activeVisitsCount}</div>
           <div className="dashboardMetricMeta">Accepted and in-progress assignments moving through delivery.</div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-success">Active</div>
+          <div className="dashboardMetricPill dashboardMetricPill-active">Active</div>
         </div>
+
         <div className="dashboardMetricCard dashboardMetricCard-amber">
           <div className="dashboardMetricLabel">Requests Waiting</div>
           <div className="dashboardMetricValue">{stats.queuedRequests}</div>
           <div className="dashboardMetricMeta">Queue items still waiting for matching, assignment, or escalation.</div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-warning">At risk</div>
+          <div className="dashboardMetricPill dashboardMetricPill-warning">At risk</div>
         </div>
+
         <div className="dashboardMetricCard dashboardMetricCard-green">
           <div className="dashboardMetricLabel">Next Admin Move</div>
           <div className="dashboardMetricValue">{followUpsPending}</div>
-          <div className="dashboardMetricMeta">
-            {followUpsPending > 0
-              ? 'Follow-up work still needs admin review or scheduling closure.'
-              : 'Verification and follow-up queues are stable.'}
-          </div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Review</div>
+          <div className="dashboardMetricMeta">Verification and follow-up queues are stable.</div>
+          <div className="dashboardMetricPill dashboardMetricPill-neutral">Review</div>
         </div>
       </section>
 
       <section className="dashboardGrid">
-        <div className="dashboardPanel dashboardPanel-premium dashboardPanel-scheduling">
+        <div className="dashboardPanel">
           <div className="dashboardPanelHeader">
             <div>
               <div className="summaryLinkEyebrow">Operations Health</div>
               <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
             </div>
+
             <Link to="/admin/scheduling" className="summaryLinkAction">
-              Open Scheduling Board <span aria-hidden="true">→</span>
+              Open Scheduling Board →
             </Link>
           </div>
 
-          <p className="summaryLinkText">Monitor queue pressure, live offers, and follow-up flow.</p>
+          <p className="summaryLinkText">
+            Monitor queue pressure, live offers, and follow-up flow.
+          </p>
 
           <div className="settingsOverviewGrid">
-            <div className="settingsOverviewCard settingsOverviewCard-queued">
+            <div className="settingsOverviewCard">
               <div className="settingsOverviewLabel">Queued</div>
               <div className="settingsOverviewValue">{stats.queuedRequests}</div>
               <div className="settingsOverviewMeta">Waiting</div>
             </div>
-            <div className="settingsOverviewCard settingsOverviewCard-offered">
+
+            <div className="settingsOverviewCard">
               <div className="settingsOverviewLabel">Offered</div>
               <div className="settingsOverviewValue">{stats.offeredRequests}</div>
               <div className="settingsOverviewMeta">In offer flow</div>
             </div>
-            <div className="settingsOverviewCard settingsOverviewCard-motion">
+
+            <div className="settingsOverviewCard">
               <div className="settingsOverviewLabel">In Motion</div>
               <div className="settingsOverviewValue">{activeVisitsCount}</div>
               <div className="settingsOverviewMeta">Already moving</div>
             </div>
-            <div className="settingsOverviewCard settingsOverviewCard-followups">
+
+            <div className="settingsOverviewCard">
               <div className="settingsOverviewLabel">Follow-ups</div>
               <div className="settingsOverviewValue">{followUpsPending}</div>
               <div className="settingsOverviewMeta">Awaiting closure</div>
             </div>
           </div>
 
-          <div className="dashboardActionRow dashboardActionRow-compact">
+          <div className="dashboardActionRow">
             <Link to="/admin/dispatch" className="btn btn-primary">
               Open Dispatch Center
             </Link>
@@ -202,71 +203,68 @@ export function AdminDashboardPage() {
 
         <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
 
-        <div className="dashboardAsideStack dashboardSideColumn-compact">
+        <div className="dashboardAsideStack">
           <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
-
         </div>
       </section>
 
-      <section className="dashboardFeatureRow" aria-label="Operational follow-through">
+      <section className="dashboardFeatureRow">
         <div className="dashboardFeatureCard dashboardFeatureCard-warm">
-          <div className="dashboardCompactLinkEyebrow">Exception management</div>
-          <h3 className="dashboardCompactLinkTitle">Unresolved Items</h3>
-          <p className="dashboardCompactLinkText">
+          <div className="summaryLinkEyebrow">Exception Management</div>
+          <h3 className="dashboardFeatureTitle">Unresolved Items</h3>
+          <p className="dashboardFeatureText">
             Review open request blockers, follow-up work, and service exceptions that still need ownership.
           </p>
-          <div className="dashboardCompactLinkMeta">
-            <span className="dashboardCompactLinkPill">{unresolvedCount} items to review</span>
-            <Link to="/admin/unresolved-items" className="dashboardCompactLinkAction">
-              Open Unresolved Items <span aria-hidden="true">→</span>
+
+          <div className="dashboardFeatureFooter">
+            <span className="dashboardFeatureBadge">{stats.queuedRequests} items to review</span>
+            <Link to="/admin/unresolved-items" className="summaryLinkAction">
+              Open Unresolved Items →
             </Link>
           </div>
         </div>
 
         <div className="dashboardFeatureCard dashboardFeatureCard-cool">
-          <div className="dashboardCompactLinkEyebrow">Release confidence</div>
-          <h3 className="dashboardCompactLinkTitle">Release Readiness</h3>
-          <p className="dashboardCompactLinkText">
+          <div className="summaryLinkEyebrow">Release Confidence</div>
+          <h3 className="dashboardFeatureTitle">Release Readiness</h3>
+          <p className="dashboardFeatureText">
             Check production health, schema readiness, and live environment signals before stakeholder demos.
           </p>
-          <div className="dashboardCompactLinkMeta">
-            <span className="dashboardCompactLinkPill">{readinessCount} active live checks</span>
-            <Link to="/admin/release-readiness" className="dashboardCompactLinkAction">
-              Review Release Readiness <span aria-hidden="true">→</span>
+
+          <div className="dashboardFeatureFooter">
+            <span className="dashboardFeatureBadge">6 active live checks</span>
+            <Link to="/admin/release-readiness" className="summaryLinkAction">
+              Review Release Readiness →
             </Link>
           </div>
         </div>
 
-        <aside className="dashboardFeatureCard" aria-label="Platform watch">
-          <div className="dashboardRailSupportEyebrow">Platform watch</div>
-          <h3 className="dashboardRailSupportTitle">Escalations and release checks</h3>
-          <p className="dashboardRailSupportText">
+        <div className="dashboardFeatureCard">
+          <div className="summaryLinkEyebrow">Platform Watch</div>
+          <h3 className="dashboardFeatureTitle">Escalations and release checks</h3>
+          <p className="dashboardFeatureText">
             Keep operational exceptions and deployment readiness close to the live activity feed.
           </p>
 
-          <div className="dashboardRailSupportLinks">
-            <Link to="/admin/escalations" className="dashboardRailSupportLink">
-              <span>Escalation Handling</span>
-              <span aria-hidden="true">→</span>
+          <div className="dashboardFeatureActionList">
+            <Link to="/admin/escalations" className="dashboardFeatureActionBtn">
+              Escalation Handling <span>→</span>
             </Link>
-            <Link to="/admin/release-readiness" className="dashboardRailSupportLink">
-              <span>Release Readiness</span>
-              <span aria-hidden="true">→</span>
+            <Link to="/admin/release-readiness" className="dashboardFeatureActionBtn">
+              Release Readiness <span>→</span>
             </Link>
           </div>
-        </aside>
+        </div>
       </section>
 
       <section className="dashboardSummaryGrid">
-        <div className="summaryStrip">
-          <IntegrationsSummaryCard />
-          <AuditSummaryCard />
-          <AnalyticsSummaryCard />
-          <AccessSummaryCard />
-          <ReliabilitySummaryCard />
-          <FhirSummaryCard />
-        </div>
+        <IntegrationsSummaryCard />
+        <AuditSummaryCard />
+        <AnalyticsSummaryCard />
+        <AccessSummaryCard />
+        <ReliabilitySummaryCard />
+        <FhirSummaryCard />
       </section>
     </main>
   );
