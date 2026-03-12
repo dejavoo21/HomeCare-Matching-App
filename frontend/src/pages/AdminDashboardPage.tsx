@@ -97,6 +97,8 @@ export function AdminDashboardPage() {
       !(request.adminFollowUpScheduled || request.admin_follow_up_scheduled)
   ).length;
   const underControlCount = Math.max(stats.completedRequests - followUpsPending, 0);
+  const unresolvedCount = stats.queuedRequests + followUpsPending;
+  const readinessCount = stats.offeredRequests + activeVisitsCount;
 
   return (
     <main className="opsDashboard dashboardPageCompact" role="main" aria-label="Operations dashboard">
@@ -201,6 +203,36 @@ export function AdminDashboardPage() {
 
           <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
 
+          <section className="dashboardFollowThroughGrid" aria-label="Operational follow-through">
+            <div className="dashboardCompactLinkCard dashboardCompactLinkCard-warm">
+              <div className="dashboardCompactLinkEyebrow">Exception management</div>
+              <h3 className="dashboardCompactLinkTitle">Unresolved Items</h3>
+              <p className="dashboardCompactLinkText">
+                Review open request blockers, follow-up work, and service exceptions that still need ownership.
+              </p>
+              <div className="dashboardCompactLinkMeta">
+                <span className="dashboardCompactLinkPill">{unresolvedCount} items to review</span>
+                <Link to="/admin/unresolved-items" className="dashboardCompactLinkAction">
+                  Open Unresolved Items <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="dashboardCompactLinkCard dashboardCompactLinkCard-cool">
+              <div className="dashboardCompactLinkEyebrow">Release confidence</div>
+              <h3 className="dashboardCompactLinkTitle">Release Readiness</h3>
+              <p className="dashboardCompactLinkText">
+                Check production health, schema readiness, and live environment signals before stakeholder demos.
+              </p>
+              <div className="dashboardCompactLinkMeta">
+                <span className="dashboardCompactLinkPill">{readinessCount} active live checks</span>
+                <Link to="/admin/release-readiness" className="dashboardCompactLinkAction">
+                  Review Release Readiness <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+            </div>
+          </section>
+
           <section className="dashboardSummaryGrid">
             <div className="summaryStrip">
               <IntegrationsSummaryCard />
@@ -216,6 +248,25 @@ export function AdminDashboardPage() {
         <div className="dashboardSideColumn dashboardSideColumn-compact">
           <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
+
+          <aside className="dashboardRailSupportCard" aria-label="Platform watch">
+            <div className="dashboardRailSupportEyebrow">Platform watch</div>
+            <h3 className="dashboardRailSupportTitle">Escalations and release checks</h3>
+            <p className="dashboardRailSupportText">
+              Keep operational exceptions and deployment readiness close to the live activity feed.
+            </p>
+
+            <div className="dashboardRailSupportLinks">
+              <Link to="/admin/escalations" className="dashboardRailSupportLink">
+                <span>Escalation Handling</span>
+                <span aria-hidden="true">→</span>
+              </Link>
+              <Link to="/admin/release-readiness" className="dashboardRailSupportLink">
+                <span>Release Readiness</span>
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </aside>
         </div>
       </section>
     </main>

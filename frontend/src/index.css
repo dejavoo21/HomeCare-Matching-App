@@ -18353,10 +18353,145 @@ button[aria-label='Open assistant'] {
   margin-top: -2px;
 }
 
+.opsDashboard .dashboardFollowThroughGrid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.opsDashboard .dashboardCompactLinkCard {
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  padding: 16px 18px;
+}
+
+.opsDashboard .dashboardCompactLinkCard-warm {
+  background:
+    radial-gradient(circle at top right, rgba(251, 191, 36, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+}
+
+.opsDashboard .dashboardCompactLinkCard-cool {
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+}
+
+.opsDashboard .dashboardCompactLinkEyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.opsDashboard .dashboardCompactLinkTitle {
+  margin: 6px 0 0;
+  font-size: 18px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.opsDashboard .dashboardCompactLinkText {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.opsDashboard .dashboardCompactLinkMeta {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.opsDashboard .dashboardCompactLinkPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.08);
+  color: #4f46e5;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.opsDashboard .dashboardCompactLinkAction {
+  font-size: 13px;
+  font-weight: 800;
+  color: #4338ca;
+  text-decoration: none;
+}
+
 .opsDashboard .dashboardSideColumn {
   display: grid;
   gap: 14px;
   align-self: start;
+}
+
+.opsDashboard .dashboardRailSupportCard {
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  padding: 16px 18px;
+}
+
+.opsDashboard .dashboardRailSupportEyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.opsDashboard .dashboardRailSupportTitle {
+  margin: 6px 0 0;
+  font-size: 17px;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.opsDashboard .dashboardRailSupportText {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.opsDashboard .dashboardRailSupportLinks {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.opsDashboard .dashboardRailSupportLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #1f2937;
+  text-decoration: none;
 }
 
 @media (max-width: 1400px) {
@@ -18370,5 +18505,9 @@ button[aria-label='Open assistant'] {
 
   .opsDashboard .dashboardSummaryGrid {
     margin-top: 0;
+  }
+
+  .opsDashboard .dashboardFollowThroughGrid {
+    grid-template-columns: 1fr;
   }
 }
