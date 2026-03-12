@@ -18633,6 +18633,61 @@ button[aria-label='Open assistant'] {
   }
 }
 
+/* =========================
+   Dashboard first-row equal height fix
+   ========================= */
+
+.opsDashboard .dashboardGrid {
+  align-items: stretch;
+}
+
+.opsDashboard .dashboardGrid > * {
+  height: 100%;
+  min-height: 0;
+}
+
+.opsDashboard .dashboardPanel,
+.opsDashboard .dashboardGrid > .workforcePanel,
+.opsDashboard .dashboardGrid > .attentionPanel,
+.opsDashboard .dashboardGrid > .railCard,
+.opsDashboard .dashboardGrid > div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.opsDashboard .dashboardPanel .dashboardActionRow {
+  margin-top: auto;
+}
+
+.opsDashboard .dashboardGrid .summaryLinkAction,
+.opsDashboard .dashboardGrid .reviewWorkforceLink,
+.opsDashboard .dashboardGrid .reviewDispatchLink {
+  margin-top: auto;
+}
+
+.opsDashboard .workforcePanel,
+.opsDashboard .dashboardGrid > :nth-child(2) {
+  padding-bottom: 16px;
+}
+
+.opsDashboard .workforceRosterPreview {
+  margin-top: 12px;
+}
+
+.opsDashboard .workforceRosterItem {
+  padding: 12px 0;
+}
+
+.opsDashboard .dashboardGrid > :nth-child(3) {
+  justify-content: space-between;
+}
+
+.opsDashboard .dashboardGrid > :nth-child(3) .summaryLinkAction,
+.opsDashboard .dashboardGrid > :nth-child(3) a {
+  margin-top: 14px;
+}
+
 /* Remove stacked-right-column gap on dashboard */
 
 .opsDashboard .dashboardGrid {
