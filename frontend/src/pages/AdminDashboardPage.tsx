@@ -153,122 +153,119 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="dashboardWorkspaceGrid">
-        <div className="dashboardMainGrid">
-          <div className="dashboardColumnStack">
-            <div className="dashboardPanel dashboardPanel-premium dashboardPanel-scheduling">
-              <div className="dashboardPanelHeader">
-                <div>
-                  <div className="summaryLinkEyebrow">Operations Health</div>
-                  <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
-                </div>
-                <Link to="/admin/scheduling" className="summaryLinkAction">
-                  Open Scheduling Board <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-
-              <p className="summaryLinkText">Monitor queue pressure, live offers, and follow-up flow.</p>
-
-              <div className="settingsOverviewGrid">
-                <div className="settingsOverviewCard settingsOverviewCard-queued">
-                  <div className="settingsOverviewLabel">Queued</div>
-                  <div className="settingsOverviewValue">{stats.queuedRequests}</div>
-                  <div className="settingsOverviewMeta">Waiting</div>
-                </div>
-                <div className="settingsOverviewCard settingsOverviewCard-offered">
-                  <div className="settingsOverviewLabel">Offered</div>
-                  <div className="settingsOverviewValue">{stats.offeredRequests}</div>
-                  <div className="settingsOverviewMeta">In offer flow</div>
-                </div>
-                <div className="settingsOverviewCard settingsOverviewCard-motion">
-                  <div className="settingsOverviewLabel">In Motion</div>
-                  <div className="settingsOverviewValue">{activeVisitsCount}</div>
-                  <div className="settingsOverviewMeta">Already moving</div>
-                </div>
-                <div className="settingsOverviewCard settingsOverviewCard-followups">
-                  <div className="settingsOverviewLabel">Follow-ups</div>
-                  <div className="settingsOverviewValue">{followUpsPending}</div>
-                  <div className="settingsOverviewMeta">Awaiting closure</div>
-                </div>
-              </div>
-
-              <div className="dashboardActionRow dashboardActionRow-compact">
-                <Link to="/admin/dispatch" className="btn btn-primary">
-                  Open Dispatch Center
-                </Link>
-                <Link to="/admin/clinician-review" className="btn">
-                  Review Notes
-                </Link>
-              </div>
+      <section className="dashboardGrid">
+        <div className="dashboardPanel dashboardPanel-premium dashboardPanel-scheduling">
+          <div className="dashboardPanelHeader">
+            <div>
+              <div className="summaryLinkEyebrow">Operations Health</div>
+              <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
             </div>
+            <Link to="/admin/scheduling" className="summaryLinkAction">
+              Open Scheduling Board <span aria-hidden="true">→</span>
+            </Link>
+          </div>
 
-            <div className="dashboardCompactLinkCard dashboardCompactLinkCard-warm">
-              <div className="dashboardCompactLinkEyebrow">Exception management</div>
-              <h3 className="dashboardCompactLinkTitle">Unresolved Items</h3>
-              <p className="dashboardCompactLinkText">
-                Review open request blockers, follow-up work, and service exceptions that still need ownership.
-              </p>
-              <div className="dashboardCompactLinkMeta">
-                <span className="dashboardCompactLinkPill">{unresolvedCount} items to review</span>
-                <Link to="/admin/unresolved-items" className="dashboardCompactLinkAction">
-                  Open Unresolved Items <span aria-hidden="true">→</span>
-                </Link>
-              </div>
+          <p className="summaryLinkText">Monitor queue pressure, live offers, and follow-up flow.</p>
+
+          <div className="settingsOverviewGrid">
+            <div className="settingsOverviewCard settingsOverviewCard-queued">
+              <div className="settingsOverviewLabel">Queued</div>
+              <div className="settingsOverviewValue">{stats.queuedRequests}</div>
+              <div className="settingsOverviewMeta">Waiting</div>
+            </div>
+            <div className="settingsOverviewCard settingsOverviewCard-offered">
+              <div className="settingsOverviewLabel">Offered</div>
+              <div className="settingsOverviewValue">{stats.offeredRequests}</div>
+              <div className="settingsOverviewMeta">In offer flow</div>
+            </div>
+            <div className="settingsOverviewCard settingsOverviewCard-motion">
+              <div className="settingsOverviewLabel">In Motion</div>
+              <div className="settingsOverviewValue">{activeVisitsCount}</div>
+              <div className="settingsOverviewMeta">Already moving</div>
+            </div>
+            <div className="settingsOverviewCard settingsOverviewCard-followups">
+              <div className="settingsOverviewLabel">Follow-ups</div>
+              <div className="settingsOverviewValue">{followUpsPending}</div>
+              <div className="settingsOverviewMeta">Awaiting closure</div>
             </div>
           </div>
 
-          <div className="dashboardColumnStack">
-            <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
-
-            <div className="dashboardCompactLinkCard dashboardCompactLinkCard-cool">
-              <div className="dashboardCompactLinkEyebrow">Release confidence</div>
-              <h3 className="dashboardCompactLinkTitle">Release Readiness</h3>
-              <p className="dashboardCompactLinkText">
-                Check production health, schema readiness, and live environment signals before stakeholder demos.
-              </p>
-              <div className="dashboardCompactLinkMeta">
-                <span className="dashboardCompactLinkPill">{readinessCount} active live checks</span>
-                <Link to="/admin/release-readiness" className="dashboardCompactLinkAction">
-                  Review Release Readiness <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-            </div>
+          <div className="dashboardActionRow dashboardActionRow-compact">
+            <Link to="/admin/dispatch" className="btn btn-primary">
+              Open Dispatch Center
+            </Link>
+            <Link to="/admin/clinician-review" className="btn">
+              Review Notes
+            </Link>
           </div>
-
-          <section className="dashboardSummaryGrid">
-            <div className="summaryStrip">
-              <IntegrationsSummaryCard />
-              <AuditSummaryCard />
-              <AnalyticsSummaryCard />
-              <AccessSummaryCard />
-              <ReliabilitySummaryCard />
-              <FhirSummaryCard />
-            </div>
-          </section>
         </div>
 
-        <div className="dashboardSideColumn dashboardSideColumn-compact">
+        <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
+
+        <div className="dashboardAsideStack dashboardSideColumn-compact">
           <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
 
-          <aside className="dashboardRailSupportCard" aria-label="Platform watch">
-            <div className="dashboardRailSupportEyebrow">Platform watch</div>
-            <h3 className="dashboardRailSupportTitle">Escalations and release checks</h3>
-            <p className="dashboardRailSupportText">
-              Keep operational exceptions and deployment readiness close to the live activity feed.
-            </p>
+        </div>
+      </section>
 
-            <div className="dashboardRailSupportLinks">
-              <Link to="/admin/escalations" className="dashboardRailSupportLink">
-                <span>Escalation Handling</span>
-                <span aria-hidden="true">→</span>
-              </Link>
-              <Link to="/admin/release-readiness" className="dashboardRailSupportLink">
-                <span>Release Readiness</span>
-                <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-          </aside>
+      <section className="dashboardFeatureRow" aria-label="Operational follow-through">
+        <div className="dashboardFeatureCard dashboardFeatureCard-warm">
+          <div className="dashboardCompactLinkEyebrow">Exception management</div>
+          <h3 className="dashboardCompactLinkTitle">Unresolved Items</h3>
+          <p className="dashboardCompactLinkText">
+            Review open request blockers, follow-up work, and service exceptions that still need ownership.
+          </p>
+          <div className="dashboardCompactLinkMeta">
+            <span className="dashboardCompactLinkPill">{unresolvedCount} items to review</span>
+            <Link to="/admin/unresolved-items" className="dashboardCompactLinkAction">
+              Open Unresolved Items <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="dashboardFeatureCard dashboardFeatureCard-cool">
+          <div className="dashboardCompactLinkEyebrow">Release confidence</div>
+          <h3 className="dashboardCompactLinkTitle">Release Readiness</h3>
+          <p className="dashboardCompactLinkText">
+            Check production health, schema readiness, and live environment signals before stakeholder demos.
+          </p>
+          <div className="dashboardCompactLinkMeta">
+            <span className="dashboardCompactLinkPill">{readinessCount} active live checks</span>
+            <Link to="/admin/release-readiness" className="dashboardCompactLinkAction">
+              Review Release Readiness <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
+
+        <aside className="dashboardFeatureCard" aria-label="Platform watch">
+          <div className="dashboardRailSupportEyebrow">Platform watch</div>
+          <h3 className="dashboardRailSupportTitle">Escalations and release checks</h3>
+          <p className="dashboardRailSupportText">
+            Keep operational exceptions and deployment readiness close to the live activity feed.
+          </p>
+
+          <div className="dashboardRailSupportLinks">
+            <Link to="/admin/escalations" className="dashboardRailSupportLink">
+              <span>Escalation Handling</span>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link to="/admin/release-readiness" className="dashboardRailSupportLink">
+              <span>Release Readiness</span>
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </aside>
+      </section>
+
+      <section className="dashboardSummaryGrid">
+        <div className="summaryStrip">
+          <IntegrationsSummaryCard />
+          <AuditSummaryCard />
+          <AnalyticsSummaryCard />
+          <AccessSummaryCard />
+          <ReliabilitySummaryCard />
+          <FhirSummaryCard />
         </div>
       </section>
     </main>

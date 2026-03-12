@@ -18334,40 +18334,29 @@ button[aria-label='Open assistant'] {
    Dashboard structural gap fix
    ========================= */
 
-.opsDashboard .dashboardWorkspaceGrid {
+.opsDashboard .dashboardGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr) 320px;
   gap: 16px;
   align-items: start;
 }
 
-.opsDashboard .dashboardMainGrid {
+.opsDashboard .dashboardFeatureRow {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 
-.opsDashboard .dashboardColumnStack {
+.opsDashboard .dashboardSummaryGrid,
+.opsDashboard .summaryStrip {
   display: grid;
-  gap: 16px;
-  align-content: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
 }
 
-.opsDashboard .dashboardSummaryGrid {
-  grid-column: 1 / -1;
-  margin-top: -2px;
-}
-
-.opsDashboard .dashboardFollowThroughGrid {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  align-items: start;
-}
-
-.opsDashboard .dashboardCompactLinkCard {
+.opsDashboard .dashboardFeatureCard {
   border-radius: 20px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
@@ -18375,18 +18364,15 @@ button[aria-label='Open assistant'] {
     0 12px 28px rgba(15, 23, 42, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.72);
   padding: 16px 18px;
+  min-height: 180px;
 }
 
-.opsDashboard .dashboardCompactLinkCard-warm {
-  background:
-    radial-gradient(circle at top right, rgba(251, 191, 36, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+.opsDashboard .dashboardFeatureCard-warm {
+  background: linear-gradient(180deg, rgba(255, 250, 235, 0.96), rgba(255, 255, 255, 0.98));
 }
 
-.opsDashboard .dashboardCompactLinkCard-cool {
-  background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+.opsDashboard .dashboardFeatureCard-cool {
+  background: linear-gradient(180deg, rgba(243, 244, 255, 0.96), rgba(255, 255, 255, 0.98));
 }
 
 .opsDashboard .dashboardCompactLinkEyebrow {
@@ -18440,22 +18426,6 @@ button[aria-label='Open assistant'] {
   text-decoration: none;
 }
 
-.opsDashboard .dashboardSideColumn {
-  display: grid;
-  gap: 14px;
-  align-self: start;
-}
-
-.opsDashboard .dashboardRailSupportCard {
-  border-radius: 20px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
-  box-shadow:
-    0 12px 28px rgba(15, 23, 42, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  padding: 16px 18px;
-}
-
 .opsDashboard .dashboardRailSupportEyebrow {
   font-size: 10px;
   font-weight: 800;
@@ -18501,19 +18471,13 @@ button[aria-label='Open assistant'] {
 }
 
 @media (max-width: 1400px) {
-  .opsDashboard .dashboardWorkspaceGrid {
+  .opsDashboard .dashboardGrid {
     grid-template-columns: 1fr;
   }
 
-  .opsDashboard .dashboardMainGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .opsDashboard .dashboardSummaryGrid {
-    margin-top: 0;
-  }
-
-  .opsDashboard .dashboardFollowThroughGrid {
-    grid-template-columns: 1fr;
+  .opsDashboard .dashboardFeatureRow,
+  .opsDashboard .dashboardSummaryGrid,
+  .opsDashboard .summaryStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
