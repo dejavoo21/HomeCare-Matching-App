@@ -2,13 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { AttentionPanel } from '../components/AttentionPanel';
-import { AccessSummaryCard } from '../components/AccessSummaryCard';
-import { AnalyticsSummaryCard } from '../components/AnalyticsSummaryCard';
-import { AuditSummaryCard } from '../components/AuditSummaryCard';
-import { FhirSummaryCard } from '../components/FhirSummaryCard';
-import { IntegrationsSummaryCard } from '../components/IntegrationsSummaryCard';
 import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
-import { ReliabilitySummaryCard } from '../components/ReliabilitySummaryCard';
 import { useRealTime } from '../contexts/RealTimeContext';
 import { api } from '../services/api';
 
@@ -237,18 +231,7 @@ export function AdminDashboardPage() {
           </div>
         </div>
 
-        <div className="dashboardFeatureCard">
-          <ActivityFeed refreshKey={activityKey} />
-        </div>
-      </section>
-
-      <section className="dashboardSummaryGrid">
-        <IntegrationsSummaryCard />
-        <AuditSummaryCard />
-        <AnalyticsSummaryCard />
-        <AccessSummaryCard />
-        <ReliabilitySummaryCard />
-        <FhirSummaryCard />
+        <ActivityFeed refreshKey={activityKey} />
       </section>
     </main>
   );
