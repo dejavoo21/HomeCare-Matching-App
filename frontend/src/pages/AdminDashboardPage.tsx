@@ -151,69 +151,71 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="dashboardMainGrid">
-        <div className="dashboardPanel dashboardPanel-premium dashboardPanel-scheduling">
-          <div className="dashboardPanelHeader">
-            <div>
-              <div className="summaryLinkEyebrow">Operations Health</div>
-              <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
+      <section className="dashboardWorkspaceGrid">
+        <div className="dashboardMainGrid">
+          <div className="dashboardPanel dashboardPanel-premium dashboardPanel-scheduling">
+            <div className="dashboardPanelHeader">
+              <div>
+                <div className="summaryLinkEyebrow">Operations Health</div>
+                <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
+              </div>
+              <Link to="/admin/scheduling" className="summaryLinkAction">
+                Open Scheduling Board <span aria-hidden="true">→</span>
+              </Link>
             </div>
-            <Link to="/admin/scheduling" className="summaryLinkAction">
-              Open Scheduling Board <span aria-hidden="true">→</span>
-            </Link>
+
+            <p className="summaryLinkText">Monitor queue pressure, live offers, and follow-up flow.</p>
+
+            <div className="settingsOverviewGrid">
+              <div className="settingsOverviewCard settingsOverviewCard-queued">
+                <div className="settingsOverviewLabel">Queued</div>
+                <div className="settingsOverviewValue">{stats.queuedRequests}</div>
+                <div className="settingsOverviewMeta">Waiting</div>
+              </div>
+              <div className="settingsOverviewCard settingsOverviewCard-offered">
+                <div className="settingsOverviewLabel">Offered</div>
+                <div className="settingsOverviewValue">{stats.offeredRequests}</div>
+                <div className="settingsOverviewMeta">In offer flow</div>
+              </div>
+              <div className="settingsOverviewCard settingsOverviewCard-motion">
+                <div className="settingsOverviewLabel">In Motion</div>
+                <div className="settingsOverviewValue">{activeVisitsCount}</div>
+                <div className="settingsOverviewMeta">Already moving</div>
+              </div>
+              <div className="settingsOverviewCard settingsOverviewCard-followups">
+                <div className="settingsOverviewLabel">Follow-ups</div>
+                <div className="settingsOverviewValue">{followUpsPending}</div>
+                <div className="settingsOverviewMeta">Awaiting closure</div>
+              </div>
+            </div>
+
+            <div className="dashboardActionRow dashboardActionRow-compact">
+              <Link to="/admin/dispatch" className="btn btn-primary">
+                Open Dispatch Center
+              </Link>
+              <Link to="/admin/clinician-review" className="btn">
+                Review Notes
+              </Link>
+            </div>
           </div>
 
-          <p className="summaryLinkText">Monitor queue pressure, live offers, and follow-up flow.</p>
+          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
 
-          <div className="settingsOverviewGrid">
-            <div className="settingsOverviewCard settingsOverviewCard-queued">
-              <div className="settingsOverviewLabel">Queued</div>
-              <div className="settingsOverviewValue">{stats.queuedRequests}</div>
-              <div className="settingsOverviewMeta">Waiting</div>
+          <section className="dashboardSummaryGrid">
+            <div className="summaryStrip">
+              <IntegrationsSummaryCard />
+              <AuditSummaryCard />
+              <AnalyticsSummaryCard />
+              <AccessSummaryCard />
+              <ReliabilitySummaryCard />
+              <FhirSummaryCard />
             </div>
-            <div className="settingsOverviewCard settingsOverviewCard-offered">
-              <div className="settingsOverviewLabel">Offered</div>
-              <div className="settingsOverviewValue">{stats.offeredRequests}</div>
-              <div className="settingsOverviewMeta">In offer flow</div>
-            </div>
-            <div className="settingsOverviewCard settingsOverviewCard-motion">
-              <div className="settingsOverviewLabel">In Motion</div>
-              <div className="settingsOverviewValue">{activeVisitsCount}</div>
-              <div className="settingsOverviewMeta">Already moving</div>
-            </div>
-            <div className="settingsOverviewCard settingsOverviewCard-followups">
-              <div className="settingsOverviewLabel">Follow-ups</div>
-              <div className="settingsOverviewValue">{followUpsPending}</div>
-              <div className="settingsOverviewMeta">Awaiting closure</div>
-            </div>
-          </div>
-
-          <div className="dashboardActionRow dashboardActionRow-compact">
-            <Link to="/admin/dispatch" className="btn btn-primary">
-              Open Dispatch Center
-            </Link>
-            <Link to="/admin/clinician-review" className="btn">
-              Review Notes
-            </Link>
-          </div>
+          </section>
         </div>
-
-        <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
 
         <div className="dashboardSideColumn dashboardSideColumn-compact">
           <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
-        </div>
-      </section>
-
-      <section className="dashboardSummaryGrid">
-        <div className="summaryStrip">
-          <IntegrationsSummaryCard />
-          <AuditSummaryCard />
-          <AnalyticsSummaryCard />
-          <AccessSummaryCard />
-          <ReliabilitySummaryCard />
-          <FhirSummaryCard />
         </div>
       </section>
     </main>

@@ -18329,3 +18329,46 @@ button[aria-label='Open assistant'] {
     font-size: 24px;
   }
 }
+
+/* =========================
+   Dashboard structural gap fix
+   ========================= */
+
+.opsDashboard .dashboardWorkspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 16px;
+  align-items: start;
+}
+
+.opsDashboard .dashboardMainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.opsDashboard .dashboardSummaryGrid {
+  grid-column: 1 / -1;
+  margin-top: -2px;
+}
+
+.opsDashboard .dashboardSideColumn {
+  display: grid;
+  gap: 14px;
+  align-self: start;
+}
+
+@media (max-width: 1400px) {
+  .opsDashboard .dashboardWorkspaceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .opsDashboard .dashboardMainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .opsDashboard .dashboardSummaryGrid {
+    margin-top: 0;
+  }
+}
