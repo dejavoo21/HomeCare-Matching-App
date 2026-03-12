@@ -17629,3 +17629,208 @@ button[aria-label='Open assistant'] {
     padding: 0 16px;
   }
 }
+
+/* =========================
+   Dashboard + sidebar compact override
+   ========================= */
+
+.dashboardPageCompact {
+  display: grid;
+  gap: 18px;
+}
+
+.dashboardHeroCompact {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  padding: 18px 20px;
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.dashboardEyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.dashboardTitle {
+  margin: 6px 0 0;
+  font-size: 28px;
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.dashboardIntro {
+  margin: 8px 0 0;
+  max-width: 640px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.dashboardHeroActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboardMainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) 320px;
+  gap: 18px;
+  align-items: start;
+}
+
+.dashboardMainColumn,
+.dashboardSideColumn {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.dashboardSummaryGrid {
+  display: grid;
+  gap: 0;
+}
+
+.opsDashboard .pageTitle,
+.opsDashboard .dashboardPanelTitle,
+.opsDashboard .summaryCardTitle,
+.opsDashboard .workforcePanelTitle,
+.opsDashboard .railCardTitle {
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.opsDashboard .dashboardMetricLabel {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.opsDashboard .dashboardMetricValue {
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.opsDashboard .dashboardMetricMeta {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.opsDashboard .summaryLinkText,
+.opsDashboard .subtitle,
+.opsDashboard p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.appSidebar {
+  top: 82px;
+  height: calc(100vh - 82px);
+  padding: 10px 12px;
+}
+
+.appSidebarCard {
+  border-radius: 22px;
+  padding: 14px 14px 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  box-shadow:
+    0 12px 26px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.appSidebarBrandRow {
+  grid-template-columns: 56px minmax(0, 1fr) 40px;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.appSidebarBrandMark {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  font-size: 26px;
+}
+
+.appSidebarBrandName {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.appSidebarBrandSubtext {
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.appSidebarSearchWrap {
+  margin-top: 10px;
+}
+
+.appSidebarSearchShell {
+  min-height: 48px;
+  border-radius: 16px;
+  background: #f3f4f6;
+}
+
+.appSidebarSearch {
+  font-size: 14px;
+}
+
+.appSidebarSectionTitle {
+  margin: 16px 8px 8px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.appSidebarItem {
+  min-height: 52px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 12px;
+}
+
+.appSidebarItem-active {
+  background: #dff3ea;
+  color: #059669;
+}
+
+.appSidebarItemIcon {
+  width: 20px;
+  color: #6b7280;
+}
+
+@media (max-width: 1280px) {
+  .dashboardMainGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardTitle {
+    font-size: 26px;
+  }
+
+  .opsDashboard .dashboardTopGrid,
+  .opsDashboard .summaryStrip {
+    grid-template-columns: 1fr;
+  }
+}

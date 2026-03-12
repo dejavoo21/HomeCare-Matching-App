@@ -42,28 +42,43 @@ const navSections: NavSection[] = [
       { label: 'Request Queue', to: '/admin/requests', icon: <ClipboardList size={18} />, permission: PERMISSIONS.DISPATCH_READ },
       { label: 'Scheduling Board', to: '/admin/scheduling', icon: <Calendar size={18} />, permission: PERMISSIONS.SCHEDULING_READ },
       { label: 'Analytics', to: '/admin/analytics', icon: <BarChart3 size={18} />, permission: PERMISSIONS.ANALYTICS_READ },
+    ],
+  },
+  {
+    title: 'Operations',
+    items: [
       { label: 'Escalations', to: '/admin/escalations', icon: <AlertTriangle size={18} />, permission: PERMISSIONS.DASHBOARD_READ },
       { label: 'Unresolved Items', to: '/admin/unresolved-items', icon: <AlertTriangle size={18} />, permission: PERMISSIONS.DASHBOARD_READ },
     ],
   },
   {
-    title: 'Communication',
+    title: 'Workforce',
     items: [
       { label: 'Team', to: '/admin/team', icon: <Users size={18} />, permission: PERMISSIONS.TEAM_READ },
       { label: 'Clinician Review', to: '/admin/clinician-review', icon: <ClipboardList size={18} />, permission: PERMISSIONS.NOTES_REVIEW },
     ],
   },
   {
-    title: 'Settings',
+    title: 'Compliance',
     items: [
       { label: 'Audit', to: '/admin/audit', icon: <ShieldCheck size={18} />, permission: PERMISSIONS.AUDIT_READ },
       { label: 'Reliability', to: '/admin/integrations/reliability', icon: <Database size={18} />, permission: PERMISSIONS.RELIABILITY_READ },
       { label: 'FHIR API', to: '/admin/integrations/fhir', icon: <Files size={18} />, permission: PERMISSIONS.FHIR_READ },
+    ],
+  },
+  {
+    title: 'Platform',
+    items: [
       { label: 'Connected Systems', to: '/admin/integrations', icon: <Plug size={18} />, permission: PERMISSIONS.CONNECTED_SYSTEMS_READ, end: true },
       { label: 'Access Requests', to: '/admin/access', icon: <UserCheck size={18} />, permission: PERMISSIONS.ACCESS_REQUESTS_READ },
+      { label: 'Settings', to: '/admin/settings', icon: <Settings size={18} />, permission: PERMISSIONS.DASHBOARD_READ },
+    ],
+  },
+  {
+    title: 'Internal',
+    items: [
       { label: 'Release Readiness', to: '/admin/release-readiness', icon: <ShieldCheck size={18} />, permission: PERMISSIONS.DASHBOARD_READ },
       { label: 'Delivery Roadmap', to: '/admin/delivery-roadmap', icon: <ClipboardList size={18} />, permission: PERMISSIONS.DASHBOARD_READ },
-      { label: 'Settings', to: '/admin/settings', icon: <Settings size={18} />, permission: PERMISSIONS.DASHBOARD_READ },
     ],
   },
 ];

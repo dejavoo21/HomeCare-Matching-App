@@ -1,21 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
-import { useRealTime } from '../contexts/RealTimeContext';
-import { AttentionPanel } from '../components/AttentionPanel';
-import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
 import { ActivityFeed } from '../components/ActivityFeed';
-import { IntegrationsSummaryCard } from '../components/IntegrationsSummaryCard';
-import { AuditSummaryCard } from '../components/AuditSummaryCard';
-import { AnalyticsSummaryCard } from '../components/AnalyticsSummaryCard';
+import { AttentionPanel } from '../components/AttentionPanel';
 import { AccessSummaryCard } from '../components/AccessSummaryCard';
-import { ReliabilitySummaryCard } from '../components/ReliabilitySummaryCard';
+import { AnalyticsSummaryCard } from '../components/AnalyticsSummaryCard';
+import { AuditSummaryCard } from '../components/AuditSummaryCard';
 import { FhirSummaryCard } from '../components/FhirSummaryCard';
+import { IntegrationsSummaryCard } from '../components/IntegrationsSummaryCard';
+import { ProfessionalsPanel } from '../components/ProfessionalsPanel';
+import { ReliabilitySummaryCard } from '../components/ReliabilitySummaryCard';
+import { useRealTime } from '../contexts/RealTimeContext';
+import { api } from '../services/api';
 
 type DashboardRequest = {
   urgency?: string;
   status?: string;
-  offerExpiresAt?: string | null;
   followUpRequired?: boolean;
   follow_up_required?: boolean;
   adminFollowUpScheduled?: boolean;
@@ -95,154 +94,121 @@ export function AdminDashboardPage() {
       !(request.adminFollowUpScheduled || request.admin_follow_up_scheduled)
   ).length;
   const underControlCount = Math.max(stats.completedRequests - followUpsPending, 0);
-  const criticalQueueCount = requests.filter((request) => {
-    const urgency = String(request.urgency || '').toLowerCase();
-    const status = String(request.status || '').toLowerCase();
-    return urgency === 'critical' && ['queued', 'offered'].includes(status);
-  }).length;
 
   return (
-      <main className="opsDashboard" role="main" aria-label="Operations dashboard">
-        <section className="pageHeaderBlock">
-          <div className="pageHeaderRow">
-            <div className="pageHeaderContent">
-              <div className="pageHeaderEyebrow">Care operations command center</div>
-              <h1 className="pageTitle">Operations Hub</h1>
-              <p className="subtitle">
-                See what is under control, what is at risk, and where the operations team should act next.
-              </p>
-            </div>
+    <main className="opsDashboard dashboardPageCompact" role="main" aria-label="Operations dashboard">
+      <section className="dashboardHeroCompact">
+        <div>
+          <div className="dashboardEyebrow">Care operations command center</div>
+          <h1 className="dashboardTitle">Operations Hub</h1>
+          <p className="dashboardIntro">
+            Monitor service posture, queue pressure, workforce activity, and follow-up work from one
+            operational view.
+          </p>
+        </div>
 
-            <div className="pageActions">
-              <button className="btn btn-primary" onClick={() => navigate('/admin/dispatch')}>
-                Open Live Dispatch
-              </button>
-              <Link to="/admin/escalations" className="btn">
-                Open Escalations
-              </Link>
-              <Link to="/admin/release-readiness" className="btn">
-                Open Release Readiness
-              </Link>
-              <Link to="/admin/unresolved-items" className="btn">
-                Open Unresolved Items
-              </Link>
-              <Link to="/admin/scheduling" className="btn">
-                Open Scheduling
-              </Link>
-            </div>
-          </div>
-
-          <div className="pageHeaderMeta">
-            <div className="pageHeaderMetaCard">
-              <div className="pageHeaderMetaLabel">Immediate attention</div>
-              <div className="pageHeaderMetaValue">
-                {criticalQueueCount > 0
-                  ? `${criticalQueueCount} critical requests still need intervention`
-                  : 'No critical requests are ageing in the queue'}
-              </div>
-            </div>
-
-            <div className="pageHeaderMetaCard">
-              <div className="pageHeaderMetaLabel">Under control</div>
-              <div className="pageHeaderMetaValue">
-                {underControlCount} visit{underControlCount === 1 ? '' : 's'} closed cleanly today
-              </div>
-            </div>
-
-            <div className="pageHeaderMetaCard">
-              <div className="pageHeaderMetaLabel">Next admin move</div>
-              <div className="pageHeaderMetaValue">
-                {followUpsPending > 0
-                  ? `Review ${followUpsPending} follow-up item${followUpsPending === 1 ? '' : 's'} before end of shift`
-                  : 'Verification and follow-up queues are stable'}
-              </div>
-            </div>
-          </div>
-        </section>
+        <div className="dashboardHeroActions">
+          <button className="btn btn-primary" onClick={() => navigate('/admin/dispatch')}>
+            Open Live Dispatch
+          </button>
+          <Link to="/admin/requests" className="btn">
+            Review Requests
+          </Link>
+        </div>
+      </section>
 
       <section className="dashboardTopGrid" aria-label="Operations summary">
         <div className="dashboardMetricCard dashboardMetricCard-indigo">
-          <div className="dashboardMetricLabel">Visits Closed Today</div>
-          <div className="dashboardMetricValue">{stats.completedRequests}</div>
-          <div className="dashboardMetricMeta">Completed care activity already documented and out of active risk.</div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Under control</div>
+          <div className="dashboardMetricLabel">Under Control</div>
+          <div className="dashboardMetricValue">{underControlCount}</div>
+          <div className="dashboardMetricMeta">Visits closed cleanly and out of active risk.</div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-success">Stable</div>
         </div>
         <div className="dashboardMetricCard dashboardMetricCard-blue">
           <div className="dashboardMetricLabel">Clinicians In Motion</div>
           <div className="dashboardMetricValue">{activeVisitsCount}</div>
-          <div className="dashboardMetricMeta">Accepted and in-progress assignments moving through live delivery.</div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-success">In motion</div>
+          <div className="dashboardMetricMeta">Accepted and in-progress assignments moving through delivery.</div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-success">Active</div>
         </div>
         <div className="dashboardMetricCard dashboardMetricCard-amber">
           <div className="dashboardMetricLabel">Requests Waiting</div>
           <div className="dashboardMetricValue">{stats.queuedRequests}</div>
-          <div className="dashboardMetricMeta">Queue volume still waiting for matching, assignment, or escalation.</div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-warning">Needs attention</div>
+          <div className="dashboardMetricMeta">Queue items still waiting for matching, assignment, or escalation.</div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-warning">At risk</div>
         </div>
         <div className="dashboardMetricCard dashboardMetricCard-green">
-          <div className="dashboardMetricLabel">Follow-up Queue</div>
+          <div className="dashboardMetricLabel">Next Admin Move</div>
           <div className="dashboardMetricValue">{followUpsPending}</div>
-          <div className="dashboardMetricMeta">Clinician outcomes that still need admin follow-through or scheduling.</div>
-          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Next action</div>
+          <div className="dashboardMetricMeta">
+            {followUpsPending > 0
+              ? 'Follow-up work still needs admin review or scheduling closure.'
+              : 'Verification and follow-up queues are stable.'}
+          </div>
+          <div className="dashboardMetricTrend dashboardMetricTrend-neutral">Review</div>
         </div>
       </section>
 
-      <section className="dashboardGrid">
-        <div className="dashboardPanel dashboardPanel-premium">
-          <div className="dashboardPanelHeader">
-            <div>
-              <div className="summaryLinkEyebrow">Operations Health</div>
-              <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
+      <section className="dashboardMainGrid">
+        <div className="dashboardMainColumn">
+          <div className="dashboardPanel dashboardPanel-premium">
+            <div className="dashboardPanelHeader">
+              <div>
+                <div className="summaryLinkEyebrow">Operations Health</div>
+                <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
+              </div>
+              <Link to="/admin/scheduling" className="summaryLinkAction">
+                Review Scheduling Board <span aria-hidden="true">→</span>
+              </Link>
             </div>
-            <Link to="/admin/scheduling" className="summaryLinkAction">
-              Review Scheduling Board <span aria-hidden="true">→</span>
-            </Link>
+
+            <p className="summaryLinkText">
+              Balance queue pressure, monitor live offers, and keep follow-up work moving back into
+              scheduling without leaving the operations hub.
+            </p>
+
+            <div className="settingsOverviewGrid">
+              <div className="settingsOverviewCard settingsOverviewCard-queued">
+                <div className="settingsOverviewLabel">Queued</div>
+                <div className="settingsOverviewValue">{stats.queuedRequests}</div>
+                <div className="settingsOverviewMeta">Waiting for dispatch action</div>
+              </div>
+              <div className="settingsOverviewCard settingsOverviewCard-offered">
+                <div className="settingsOverviewLabel">Offered</div>
+                <div className="settingsOverviewValue">{stats.offeredRequests}</div>
+                <div className="settingsOverviewMeta">Offer workflow in progress</div>
+              </div>
+              <div className="settingsOverviewCard settingsOverviewCard-motion">
+                <div className="settingsOverviewLabel">In Motion</div>
+                <div className="settingsOverviewValue">{activeVisitsCount}</div>
+                <div className="settingsOverviewMeta">Visits already in motion</div>
+              </div>
+              <div className="settingsOverviewCard settingsOverviewCard-followups">
+                <div className="settingsOverviewLabel">Follow-ups</div>
+                <div className="settingsOverviewValue">{followUpsPending}</div>
+                <div className="settingsOverviewMeta">Review actions still awaiting closure</div>
+              </div>
+            </div>
+
+            <div className="dashboardActionRow">
+              <Link to="/admin/dispatch" className="btn btn-primary">
+                Open Live Dispatch
+              </Link>
+              <Link to="/admin/clinician-review" className="btn">
+                Review Clinician Notes
+              </Link>
+            </div>
           </div>
 
-          <p className="summaryLinkText">
-            Balance queue pressure, monitor live offers, and keep follow-up work moving back into the
-            scheduling board without leaving the operations hub.
-          </p>
-
-          <div className="settingsOverviewGrid">
-            <div className="settingsOverviewCard settingsOverviewCard-queued">
-              <div className="settingsOverviewLabel">Queued</div>
-              <div className="settingsOverviewValue">{stats.queuedRequests}</div>
-              <div className="settingsOverviewMeta">Requests waiting for dispatch action</div>
-            </div>
-            <div className="settingsOverviewCard settingsOverviewCard-offered">
-              <div className="settingsOverviewLabel">Offered</div>
-              <div className="settingsOverviewValue">{stats.offeredRequests}</div>
-              <div className="settingsOverviewMeta">Requests currently in offer flow</div>
-            </div>
-            <div className="settingsOverviewCard settingsOverviewCard-motion">
-              <div className="settingsOverviewLabel">In Motion</div>
-              <div className="settingsOverviewValue">{activeVisitsCount}</div>
-              <div className="settingsOverviewMeta">Accepted and in-progress visits</div>
-            </div>
-            <div className="settingsOverviewCard settingsOverviewCard-followups">
-              <div className="settingsOverviewLabel">Follow-ups</div>
-              <div className="settingsOverviewValue">{followUpsPending}</div>
-              <div className="settingsOverviewMeta">Review actions still requiring closure</div>
-            </div>
-          </div>
-
-          <div className="dashboardActionRow">
-            <Link to="/admin/dispatch" className="btn btn-primary">
-              Review live dispatch
-            </Link>
-            <Link to="/admin/clinician-review" className="btn">
-              Review Clinician Notes
-            </Link>
-          </div>
+          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
         </div>
 
-        <div className="dashboardAsideStack">
+        <div className="dashboardSideColumn">
           <AttentionPanel requests={requests} />
+          <ActivityFeed refreshKey={activityKey} />
         </div>
       </section>
 
-      <section className="dashboardSummarySection">
+      <section className="dashboardSummaryGrid">
         <div className="summaryStrip">
           <IntegrationsSummaryCard />
           <AuditSummaryCard />
@@ -251,11 +217,6 @@ export function AdminDashboardPage() {
           <ReliabilitySummaryCard />
           <FhirSummaryCard />
         </div>
-      </section>
-
-      <section className="pageGridTwo dashboardLowerGrid">
-        <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
-        <ActivityFeed refreshKey={activityKey} />
       </section>
     </main>
   );
