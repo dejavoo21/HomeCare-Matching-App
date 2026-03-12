@@ -108,15 +108,46 @@ app.use((req: Request, res: Response, next: Function) => {
   next();
 });
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
+const authLimiterBase = {
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' },
+} as const;
+
+// Treat credential-entry routes differently from refresh/session routes.
+// A blanket /auth limiter causes normal browser refresh flows to lock users out.
+const authLoginLimiter = rateLimit({
+  ...authLimiterBase,
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.AUTH_LOGIN_RATE_LIMIT_MAX || '30', 10),
+  skipSuccessfulRequests: true,
+  message: { error: 'Too many login attempts, please try again later.' },
 });
 
-app.use('/auth', authLimiter);
+const authOtpLimiter = rateLimit({
+  ...authLimiterBase,
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.AUTH_OTP_RATE_LIMIT_MAX || '20', 10),
+  skipSuccessfulRequests: true,
+  message: { error: 'Too many verification attempts, please try again later.' },
+});
+
+const authRefreshLimiter = rateLimit({
+  ...authLimiterBase,
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.AUTH_REFRESH_RATE_LIMIT_MAX || '120', 10),
+  skipSuccessfulRequests: true,
+  message: { error: 'Too many session refresh attempts, please try again later.' },
+});
+
+app.use('/auth/demo-login', authLoginLimiter);
+app.use('/auth/login', authLoginLimiter);
+app.use('/auth/phase4/login', authLoginLimiter);
+app.use('/auth/verify-totp-login', authOtpLimiter);
+app.use('/auth/phase4/verify-totp-login', authOtpLimiter);
+app.use('/auth/request-otp', authOtpLimiter);
+app.use('/auth/verify-otp', authOtpLimiter);
+app.use('/auth/refresh', authRefreshLimiter);
+app.use('/auth/phase4/refresh', authRefreshLimiter);
 
 // Operational routes
 app.use('/', createOpsRouter(pool));
