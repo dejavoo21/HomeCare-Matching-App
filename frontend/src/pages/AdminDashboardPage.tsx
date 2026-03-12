@@ -77,12 +77,15 @@ export function AdminDashboardPage() {
 
   if (isLoading || !data) {
     return (
-      <div className="pageStack">
-        <div className="pageHeaderBlock">
-          <h1 className="pageTitle">Operations Hub</h1>
-          <p className="subtitle">Loading operations view...</p>
-        </div>
-      </div>
+      <main className="opsDashboard dashboardPageCompact" role="main" aria-label="Operations dashboard">
+        <section className="dashboardHeroCompact">
+          <div>
+            <div className="dashboardEyebrow">Care operations command center</div>
+            <h1 className="dashboardTitle">Operations Hub</h1>
+            <p className="dashboardIntro">Loading operations view...</p>
+          </div>
+        </section>
+      </main>
     );
   }
 
@@ -149,60 +152,55 @@ export function AdminDashboardPage() {
       </section>
 
       <section className="dashboardMainGrid">
-        <div className="dashboardMainColumn">
-          <div className="dashboardPanel dashboardPanel-premium">
-            <div className="dashboardPanelHeader">
-              <div>
-                <div className="summaryLinkEyebrow">Operations Health</div>
-                <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
-              </div>
-              <Link to="/admin/scheduling" className="summaryLinkAction">
-                Review Scheduling Board <span aria-hidden="true">→</span>
-              </Link>
+        <div className="dashboardPanel dashboardPanel-premium dashboardPanel-scheduling">
+          <div className="dashboardPanelHeader">
+            <div>
+              <div className="summaryLinkEyebrow">Operations Health</div>
+              <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
             </div>
+            <Link to="/admin/scheduling" className="summaryLinkAction">
+              Open Scheduling Board <span aria-hidden="true">→</span>
+            </Link>
+          </div>
 
-            <p className="summaryLinkText">
-              Balance queue pressure, monitor live offers, and keep follow-up work moving back into
-              scheduling without leaving the operations hub.
-            </p>
+          <p className="summaryLinkText">Monitor queue pressure, live offers, and follow-up flow.</p>
 
-            <div className="settingsOverviewGrid">
-              <div className="settingsOverviewCard settingsOverviewCard-queued">
-                <div className="settingsOverviewLabel">Queued</div>
-                <div className="settingsOverviewValue">{stats.queuedRequests}</div>
-                <div className="settingsOverviewMeta">Waiting for dispatch action</div>
-              </div>
-              <div className="settingsOverviewCard settingsOverviewCard-offered">
-                <div className="settingsOverviewLabel">Offered</div>
-                <div className="settingsOverviewValue">{stats.offeredRequests}</div>
-                <div className="settingsOverviewMeta">Offer workflow in progress</div>
-              </div>
-              <div className="settingsOverviewCard settingsOverviewCard-motion">
-                <div className="settingsOverviewLabel">In Motion</div>
-                <div className="settingsOverviewValue">{activeVisitsCount}</div>
-                <div className="settingsOverviewMeta">Visits already in motion</div>
-              </div>
-              <div className="settingsOverviewCard settingsOverviewCard-followups">
-                <div className="settingsOverviewLabel">Follow-ups</div>
-                <div className="settingsOverviewValue">{followUpsPending}</div>
-                <div className="settingsOverviewMeta">Review actions still awaiting closure</div>
-              </div>
+          <div className="settingsOverviewGrid">
+            <div className="settingsOverviewCard settingsOverviewCard-queued">
+              <div className="settingsOverviewLabel">Queued</div>
+              <div className="settingsOverviewValue">{stats.queuedRequests}</div>
+              <div className="settingsOverviewMeta">Waiting</div>
             </div>
-
-            <div className="dashboardActionRow">
-              <Link to="/admin/dispatch" className="btn btn-primary">
-                Open Live Dispatch
-              </Link>
-              <Link to="/admin/clinician-review" className="btn">
-                Review Clinician Notes
-              </Link>
+            <div className="settingsOverviewCard settingsOverviewCard-offered">
+              <div className="settingsOverviewLabel">Offered</div>
+              <div className="settingsOverviewValue">{stats.offeredRequests}</div>
+              <div className="settingsOverviewMeta">In offer flow</div>
+            </div>
+            <div className="settingsOverviewCard settingsOverviewCard-motion">
+              <div className="settingsOverviewLabel">In Motion</div>
+              <div className="settingsOverviewValue">{activeVisitsCount}</div>
+              <div className="settingsOverviewMeta">Already moving</div>
+            </div>
+            <div className="settingsOverviewCard settingsOverviewCard-followups">
+              <div className="settingsOverviewLabel">Follow-ups</div>
+              <div className="settingsOverviewValue">{followUpsPending}</div>
+              <div className="settingsOverviewMeta">Awaiting closure</div>
             </div>
           </div>
 
-          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
+          <div className="dashboardActionRow dashboardActionRow-compact">
+            <Link to="/admin/dispatch" className="btn btn-primary">
+              Open Dispatch Center
+            </Link>
+            <Link to="/admin/clinician-review" className="btn">
+              Review Notes
+            </Link>
+          </div>
         </div>
 
-        <div className="dashboardSideColumn">
+        <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
+
+        <div className="dashboardSideColumn dashboardSideColumn-compact">
           <AttentionPanel requests={requests} />
           <ActivityFeed refreshKey={activityKey} />
         </div>

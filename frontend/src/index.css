@@ -17834,3 +17834,144 @@ button[aria-label='Open assistant'] {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+   Dashboard final balance pass
+   ========================= */
+
+.opsDashboard .dashboardMainGrid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 320px;
+}
+
+.opsDashboard .dashboardPanelTitle,
+.opsDashboard .workforcePanelTitle,
+.opsDashboard .railCardTitle,
+.opsDashboard .summaryCardTitle {
+  font-size: 22px;
+}
+
+.opsDashboard .dashboardPanel-scheduling .summaryLinkText {
+  max-width: 520px;
+}
+
+.opsDashboard .settingsOverviewCard {
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.opsDashboard .settingsOverviewLabel {
+  font-size: 11px;
+}
+
+.opsDashboard .settingsOverviewValue {
+  font-size: 18px;
+}
+
+.opsDashboard .settingsOverviewMeta {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+
+.opsDashboard .dashboardActionRow-compact .btn {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.opsDashboard .workforcePanelInner {
+  padding: 18px 18px 16px;
+}
+
+.opsDashboard .workforcePanelSubtitle,
+.opsDashboard .workforceMeta,
+.opsDashboard .workforceRosterEyebrow {
+  font-size: 12px;
+}
+
+.opsDashboard .workforceMetricCard {
+  padding: 12px;
+  border-radius: 14px;
+}
+
+.opsDashboard .workforceMetricValue {
+  font-size: 22px;
+}
+
+.opsDashboard .workforceRoleBadge,
+.opsDashboard .workforcePill {
+  font-size: 12px;
+}
+
+.opsDashboard .dashboardSideColumn-compact .railCard {
+  border-radius: 18px;
+}
+
+.opsDashboard .dashboardSideColumn-compact .railCardInner {
+  padding: 16px 16px 14px;
+}
+
+.opsDashboard .dashboardSideColumn-compact .railCardTitle {
+  font-size: 18px;
+}
+
+.opsDashboard .dashboardSideColumn-compact .railCardSubtitle {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.opsDashboard .dashboardSideColumn-compact .railSignalGrid {
+  gap: 8px;
+}
+
+.opsDashboard .dashboardSideColumn-compact .railSignalCard {
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.opsDashboard .dashboardSideColumn-compact .railSignalLabel {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.opsDashboard .dashboardSideColumn-compact .railSignalValue {
+  font-size: 20px;
+}
+
+.opsDashboard .summaryStrip > * {
+  min-height: auto;
+  padding-bottom: 14px;
+}
+
+.opsDashboard .summaryCardTitle,
+.opsDashboard .integrationPathTitle {
+  font-size: 20px;
+}
+
+.opsDashboard .summaryCardBody,
+.opsDashboard .integrationCardBody {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1280px) {
+  .opsDashboard .dashboardMainGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .opsDashboard .dashboardSideColumn {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .opsDashboard .dashboardMainGrid,
+  .opsDashboard .dashboardSideColumn,
+  .opsDashboard .dashboardTopGrid,
+  .opsDashboard .summaryStrip {
+    grid-template-columns: 1fr;
+  }
+}

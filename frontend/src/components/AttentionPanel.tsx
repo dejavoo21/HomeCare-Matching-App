@@ -34,9 +34,7 @@ export function AttentionPanel({ requests }: { requests: AttentionRequest[] }) {
           <div>
             <div className="railCardEyebrow">Dispatch priority</div>
             <h3 className="railCardTitle">Dispatch Attention</h3>
-            <p className="railCardSubtitle">
-              High-signal queue conditions that can still disrupt today&apos;s service posture.
-            </p>
+            <p className="railCardSubtitle">High-signal queue conditions that need rapid review.</p>
           </div>
 
           <div className={`railPill ${criticalCount > 0 ? 'railPill-danger' : 'railPill-neutral'}`}>
@@ -50,19 +48,19 @@ export function AttentionPanel({ requests }: { requests: AttentionRequest[] }) {
           <div
             className={`railSignalCard ${criticalCount > 0 ? 'railSignalCard-danger' : 'railSignalCard-neutral'}`}
           >
-            <div className="railSignalLabel">Critical requests still needing intervention</div>
+            <div className="railSignalLabel">Critical requests</div>
             <div className="railSignalValue">{criticalCount}</div>
           </div>
 
           <div
             className={`railSignalCard ${expiringSoonCount > 0 ? 'railSignalCard-warning' : 'railSignalCard-neutral'}`}
           >
-            <div className="railSignalLabel">Offers expiring in the next 30 minutes</div>
+            <div className="railSignalLabel">Offers expiring soon</div>
             <div className="railSignalValue">{expiringSoonCount}</div>
           </div>
 
           <div className="railSignalCard railSignalCard-neutral">
-            <div className="railSignalLabel">Queued requests still waiting for assignment</div>
+            <div className="railSignalLabel">Queued requests waiting</div>
             <div className="railSignalValue">{queuePressure}</div>
           </div>
         </div>
