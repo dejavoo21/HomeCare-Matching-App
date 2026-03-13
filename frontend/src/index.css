@@ -19391,9 +19391,16 @@ button[aria-label='Open assistant'] {
 
 .dispatchExecutionLower {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 16px;
   align-items: start;
+}
+
+.dispatchExecutionMainColumn {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
 }
 
 .dispatchExecutionMain {
@@ -19407,6 +19414,7 @@ button[aria-label='Open assistant'] {
   display: grid;
   gap: 16px;
   align-content: start;
+  min-width: 0;
 }
 
 .dispatchSelectedCard,
