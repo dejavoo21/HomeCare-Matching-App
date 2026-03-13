@@ -18331,6 +18331,286 @@ button[aria-label='Open assistant'] {
 }
 
 /* =========================
+   Sidebar rail redesign
+   ========================= */
+
+.appSidebar.appSidebarShell {
+  position: sticky;
+  top: 82px;
+  align-self: start;
+  height: calc(100vh - 82px);
+  padding: 12px;
+}
+
+.appSidebarShell .appSidebarCard {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 0;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 26px;
+  padding: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 18px 32px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.appSidebarRail {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 18px;
+  padding: 18px 12px 16px;
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.98));
+}
+
+.appSidebarRailBrand {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.appSidebarRailNav {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.appSidebarRailItem {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto;
+  border: 0;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.appSidebarRailItem:hover {
+  background: #eef2f7;
+  color: #334155;
+}
+
+.appSidebarRailItem-current {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.appSidebarRailItem-selected {
+  background: #1e293b;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.18);
+}
+
+.appSidebarPane {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 14px;
+  padding: 18px 16px 18px 14px;
+  min-width: 0;
+}
+
+.appSidebarPaneHeader {
+  display: grid;
+  gap: 14px;
+}
+
+.appSidebarPaneBrandRow {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.appSidebarPaneBrandMark {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #34d399, #10b981);
+  color: #083344;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.appSidebarPaneBrandName {
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.appSidebarPaneBrandMeta {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #94a3b8;
+}
+
+.appSidebarPaneContext {
+  display: grid;
+  gap: 4px;
+}
+
+.appSidebarPaneEyebrow {
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.appSidebarPaneTitle {
+  font-size: 24px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.appSidebarShell .appSidebarSearchWrap {
+  margin-top: 0;
+}
+
+.appSidebarShell .appSidebarSearchShell {
+  min-height: 48px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+}
+
+.appSidebarShell .appSidebarSearchShell svg {
+  color: #94a3b8;
+}
+
+.appSidebarShell .appSidebarSearch {
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: #0f172a;
+  font-size: 14px;
+  outline: none;
+}
+
+.appSidebarShell .appSidebarNav {
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 2px;
+}
+
+.appSidebarShell .appSidebarSectionTitle {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.appSidebarShell .appSidebarItemList {
+  display: grid;
+  gap: 10px;
+}
+
+.appSidebarShell .appSidebarItem {
+  min-height: 52px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 10px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  text-decoration: none;
+  color: #334155;
+  font-size: 15px;
+  font-weight: 700;
+  background: transparent;
+  transition: all 0.18s ease;
+}
+
+.appSidebarShell .appSidebarItem:hover {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.06);
+}
+
+.appSidebarShell .appSidebarItem-active {
+  background: #1e293b;
+  color: #fff;
+  border-color: #1e293b;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+}
+
+.appSidebarShell .appSidebarItemIcon {
+  width: 20px;
+  display: inline-flex;
+  justify-content: center;
+  color: inherit;
+}
+
+.appSidebarShell .appSidebarItemLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appSidebarItemStatus {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.appSidebarShell .appSidebarItem-active .appSidebarItemStatus {
+  background: #34d399;
+}
+
+@media (max-width: 1280px) {
+  .appSidebar.appSidebarShell {
+    padding: 10px;
+  }
+
+  .appSidebarShell .appSidebarCard {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .appSidebarPane {
+    padding: 16px 14px 16px 12px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .appSidebar.appSidebarShell {
+    display: none;
+  }
+}
+
+/* =========================
    Dashboard structural gap fix
    ========================= */
 
