@@ -19926,6 +19926,81 @@ button[aria-label='Open assistant'] {
   line-height: 1.55;
 }
 
+/* =========================
+   Request Queue final table tightening
+   ========================= */
+
+.requestQueueTableWrap,
+.queueTableWrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.requestQueueTable,
+.queueTable,
+.requestQueueTableCard table,
+.queueTableCard table {
+  min-width: 1280px;
+}
+
+.requestQueueTable thead th:nth-child(1),
+.queueTable thead th:nth-child(1),
+.requestQueueTableCard th:nth-child(1),
+.queueTableCard th:nth-child(1) {
+  width: 260px;
+}
+
+.requestQueueTable thead th:nth-child(2),
+.queueTable thead th:nth-child(2),
+.requestQueueTableCard th:nth-child(2),
+.queueTableCard th:nth-child(2) {
+  width: 120px;
+}
+
+.requestQueueTable thead th:nth-child(3),
+.queueTable thead th:nth-child(3),
+.requestQueueTableCard th:nth-child(3),
+.queueTableCard th:nth-child(3) {
+  width: 110px;
+}
+
+.requestQueueTable thead th:nth-child(4),
+.queueTable thead th:nth-child(4),
+.requestQueueTableCard th:nth-child(4),
+.queueTableCard th:nth-child(4) {
+  width: 170px;
+}
+
+.requestQueueTable thead th:nth-child(5),
+.queueTable thead th:nth-child(5),
+.requestQueueTableCard th:nth-child(5),
+.queueTableCard th:nth-child(5) {
+  width: 170px;
+}
+
+.requestQueueTable thead th:nth-child(6),
+.queueTable thead th:nth-child(6),
+.requestQueueTableCard th:nth-child(6),
+.queueTableCard th:nth-child(6) {
+  width: 90px;
+}
+
+.requestQueueTable thead th:nth-child(7),
+.queueTable thead th:nth-child(7),
+.requestQueueTableCard th:nth-child(7),
+.queueTableCard th:nth-child(7) {
+  width: 260px;
+}
+
+.requestQueueActions,
+.queueActions,
+.requestQueueTableCard .queueActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 240px;
+}
+
 /* Pull utility cards directly under Service Risk + Next Steps */
 
 .dispatchExecutionMain {

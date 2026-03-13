@@ -72,13 +72,42 @@ function Countdown({ expiresAt }: { expiresAt?: string }) {
   return <span className={danger ? 'countdown countdown-danger' : 'countdown'}>{m}:{s}</span>;
 }
 
+function getPrimaryRowAction(
+  request: CareRequest,
+  onOffer?: (requestId: string) => Promise<void>,
+  onRequeue?: (requestId: string) => Promise<void>
+) {
+  const status = String(request.status || '').toLowerCase();
+
+  if (status === 'queued' && onOffer) {
+    return {
+      label: 'Offer',
+      disabled: false,
+      onClick: () => void onOffer(request.id),
+    };
+  }
+
+  if (!['completed', 'cancelled'].includes(status) && onRequeue) {
+    return {
+      label: 'Reassign',
+      disabled: false,
+      onClick: () => void onRequeue(request.id),
+    };
+  }
+
+  return {
+    label: 'View',
+    disabled: false,
+    onClick: () => undefined,
+  };
+}
+
 export function DispatchQueueTable({
   requests,
   onView,
   onOpenThread,
   onOffer,
   onRequeue,
-  onCancel,
   onSetUrgency,
   search,
   onSearchChange,
@@ -255,52 +284,33 @@ export function DispatchQueueTable({
                   </td>
 
                   <td className="actionsCell queueActions">
-                    <div className="actionsRow">
-                      <button className="btn btn-small" onClick={() => onView(r)}>
-                        Review request
-                      </button>
+                    {(() => {
+                      const primaryAction = getPrimaryRowAction(r, onOffer, onRequeue);
+                      return (
+                        <div className="actionsRow">
+                          <button className="btn btn-small" onClick={() => onView(r)}>
+                            Review
+                          </button>
 
-                      <button
-                        className="btn btn-small btn-ghost"
-                        type="button"
-                        onClick={() => onOpenThread?.(r.id)}
-                      >
-                        Open thread
-                      </button>
+                          <button
+                            className="btn btn-small btn-ghost"
+                            type="button"
+                            onClick={() => onOpenThread?.(r.id)}
+                          >
+                            Thread
+                          </button>
 
-                      <button
-                        className="btn btn-small btn-ghost"
-                        onClick={() => {
-                          if (onOffer) onOffer(r.id);
-                        }}
-                        disabled={!['queued'].includes(String(r.status).toLowerCase())}
-                        aria-disabled={!['queued'].includes(String(r.status).toLowerCase())}
-                      >
-                        Send offer
-                      </button>
-
-                      <button
-                        className="btn btn-small btn-ghost"
-                        onClick={() => {
-                          if (onRequeue) onRequeue(r.id);
-                        }}
-                        disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
-                        aria-disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
-                      >
-                        Reassign
-                      </button>
-
-                      <button
-                        className="btn btn-small btn-danger"
-                        onClick={() => {
-                          if (onCancel) onCancel(r.id);
-                        }}
-                        disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
-                        aria-disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
-                      >
-                        Cancel request
-                      </button>
-                    </div>
+                          <button
+                            className="btn btn-small btn-ghost"
+                            onClick={primaryAction.onClick}
+                            disabled={primaryAction.disabled}
+                            aria-disabled={primaryAction.disabled}
+                          >
+                            {primaryAction.label}
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))
@@ -349,36 +359,31 @@ export function DispatchQueueTable({
               </div>
 
               <div className="queueMobileActions">
-                <button className="btn btn-small" onClick={() => onView(r)}>
-                  Review request
-                </button>
-                <button
-                  className="btn btn-small btn-ghost"
-                  type="button"
-                  onClick={() => onOpenThread?.(r.id)}
-                >
-                  Open thread
-                </button>
-                <button
-                  className="btn btn-small btn-ghost"
-                  onClick={() => {
-                    if (onOffer) onOffer(r.id);
-                  }}
-                  disabled={!['queued'].includes(String(r.status).toLowerCase())}
-                  aria-disabled={!['queued'].includes(String(r.status).toLowerCase())}
-                >
-                  Send offer
-                </button>
-                <button
-                  className="btn btn-small btn-danger"
-                  onClick={() => {
-                    if (onCancel) onCancel(r.id);
-                  }}
-                  disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
-                  aria-disabled={['completed', 'cancelled'].includes(String(r.status).toLowerCase())}
-                >
-                  Cancel request
-                </button>
+                {(() => {
+                  const primaryAction = getPrimaryRowAction(r, onOffer, onRequeue);
+                  return (
+                    <>
+                      <button className="btn btn-small" onClick={() => onView(r)}>
+                        Review
+                      </button>
+                      <button
+                        className="btn btn-small btn-ghost"
+                        type="button"
+                        onClick={() => onOpenThread?.(r.id)}
+                      >
+                        Thread
+                      </button>
+                      <button
+                        className="btn btn-small btn-ghost"
+                        onClick={primaryAction.onClick}
+                        disabled={primaryAction.disabled}
+                        aria-disabled={primaryAction.disabled}
+                      >
+                        {primaryAction.label}
+                      </button>
+                    </>
+                  );
+                })()}
               </div>
             </article>
           ))
