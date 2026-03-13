@@ -18652,6 +18652,34 @@ button[aria-label='Open assistant'] {
 }
 
 /* =========================
+   Sidebar width / truncation refinement
+   ========================= */
+
+.appSidebar.appSidebarShell {
+  width: 356px;
+}
+
+.appSidebarShell .appSidebarCard {
+  grid-template-columns: 72px minmax(0, 1fr);
+}
+
+.appSidebarPane {
+  min-width: 0;
+}
+
+.appSidebarShell .appSidebarItemLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1400px) {
+  .appSidebar.appSidebarShell {
+    width: 320px;
+  }
+}
+
+/* =========================
    Dashboard structural gap fix
    ========================= */
 
@@ -19193,4 +19221,147 @@ button[aria-label='Open assistant'] {
   .dashboardAnalyticsLegend {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* =========================
+   Premium KPI polish
+   ========================= */
+
+.opsDashboard .dashboardMetricCard {
+  position: relative;
+  min-height: 188px;
+  padding: 16px 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 14px 32px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.opsDashboard .dashboardMetricCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 4px;
+  border-radius: 22px 22px 0 0;
+  background: linear-gradient(90deg, #4f46e5, #38bdf8);
+}
+
+.opsDashboard .dashboardMetricCard::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.opsDashboard .dashboardMetricLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.opsDashboard .dashboardMetricValue {
+  margin-top: 14px;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+}
+
+.opsDashboard .dashboardMetricMeta {
+  margin-top: 12px;
+  max-width: 24ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.dashboardMetricPill {
+  margin-top: 16px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* =========================
+   Team Availability preview polish
+   ========================= */
+
+.workforceRosterPreview {
+  margin-top: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
+  background: rgba(248, 250, 252, 0.72);
+  padding: 6px 14px;
+}
+
+.workforceRosterItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.workforceRosterItem + .workforceRosterItem {
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.workforceRosterIdentity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.workforceRosterAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #e0e7ff, #c7d2fe);
+  color: #3730a3;
+  font-size: 18px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+.workforceRosterName {
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.workforceRosterMeta {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.workforceRosterBadge {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(238, 242, 255, 0.95);
+  color: #4338ca;
 }
