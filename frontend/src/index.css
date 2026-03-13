@@ -19731,6 +19731,201 @@ button[aria-label='Open assistant'] {
   color: #4338ca;
 }
 
+/* =========================
+   Request Queue density pass
+   ========================= */
+
+.requestQueuePage,
+.queuePage,
+.opsRequestQueuePage {
+  gap: 16px;
+}
+
+.requestQueueHeaderTitle,
+.queuePageTitle {
+  font-size: 24px;
+  line-height: 1.05;
+}
+
+.requestQueueHeaderText,
+.queuePageSubtitle {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.requestQueueTopStats,
+.requestQueueKpiGrid {
+  gap: 14px;
+}
+
+.requestQueueTopStats > div,
+.requestQueueKpiGrid > div,
+.requestQueueHeader .adminStatStripCard {
+  min-height: 112px;
+  padding: 14px 16px;
+  border-radius: 18px;
+}
+
+.requestQueueTabs {
+  gap: 18px;
+}
+
+.requestQueueTabs button,
+.requestQueueTab,
+.requestQueueTabs .tab {
+  font-size: 13px;
+  min-height: 40px;
+}
+
+.requestQueueFilters,
+.queueFiltersRow {
+  gap: 12px;
+  align-items: center;
+}
+
+.requestQueueFilters input,
+.requestQueueFilters select,
+.queueFiltersRow input,
+.queueFiltersRow select {
+  min-height: 44px;
+  border-radius: 14px;
+  font-size: 13px;
+}
+
+.requestQueueTableCard,
+.queueTableCard {
+  border-radius: 20px;
+  padding: 12px 14px;
+}
+
+.requestQueueTable,
+.queueTable,
+.requestQueueTableCard table,
+.queueTableCard table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.requestQueueTable thead th,
+.queueTable thead th,
+.requestQueueTableCard th,
+.queueTableCard th {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #64748b;
+  padding: 14px 12px;
+}
+
+.requestQueueTable tbody td,
+.queueTable tbody td,
+.requestQueueTableCard td,
+.queueTableCard td {
+  padding: 16px 12px;
+  vertical-align: top;
+  font-size: 13px;
+}
+
+.requestQueueTable tbody tr,
+.queueTable tbody tr {
+  height: auto;
+}
+
+.requestQueueRequestTitle,
+.queueRequestTitle,
+.requestQueueTableCard .reqTitle {
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.requestQueueRequestMeta,
+.queueRequestMeta,
+.requestQueueMuted,
+.queueMuted,
+.requestQueueTableCard .reqMeta,
+.requestQueueTableCard .subtle {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.requestQueueStatusPill,
+.queueStatusPill,
+.requestQueueTableCard .statusBadge {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 999px;
+}
+
+.requestQueueUrgencyControl,
+.queueUrgencyControl,
+.requestQueueUrgencySelect,
+.queueUrgencySelect,
+.requestQueueTableCard .urgencySelect {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.requestQueueActions,
+.queueActions,
+.requestQueueTableCard .queueActions,
+.requestQueueTableCard .actionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.requestQueueActions .btn,
+.queueActions .btn,
+.requestQueueActions button,
+.queueActions button,
+.requestQueueTableCard .queueActions .btn,
+.requestQueueTableCard .queueActions button,
+.requestQueueTableCard .actionsRow .btn,
+.requestQueueTableCard .actionsRow button {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.requestQueueFooter,
+.queueTableFooter {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #64748b;
+  padding-top: 10px;
+}
+
+.requestQueueGuidance,
+.queueGuidanceCard {
+  border-radius: 18px;
+  padding: 16px 18px;
+}
+
+.requestQueueGuidanceTitle,
+.queueGuidanceTitle,
+.requestQueueGuidance .dispatchGuidanceTitle {
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.requestQueueGuidanceText,
+.queueGuidanceText,
+.requestQueueGuidance .dispatchGuidanceBody {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 /* Pull utility cards directly under Service Risk + Next Steps */
 
 .dispatchExecutionMain {
