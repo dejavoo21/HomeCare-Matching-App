@@ -102,6 +102,7 @@ function matchesPath(pathname: string, item: NavItem) {
 export default function AdminSidebar() {
   const [query, setQuery] = useState('');
   const [activeSectionTitle, setActiveSectionTitle] = useState('Dashboard');
+  const [paneOpen, setPaneOpen] = useState(true);
   const initials = useMemo(() => 'HC', []);
   const { user } = useAuth();
   const location = useLocation();
@@ -120,6 +121,7 @@ export default function AdminSidebar() {
 
     if (matchedSection) {
       setActiveSectionTitle(matchedSection.title);
+      setPaneOpen(true);
       return;
     }
 
@@ -138,7 +140,7 @@ export default function AdminSidebar() {
     : [];
 
   return (
-    <aside className="appSidebar appSidebarShell">
+    <aside className={paneOpen ? 'appSidebar appSidebarShell' : 'appSidebar appSidebarShell appSidebarShell-collapsed'}>
       <div className="appSidebarCard">
         <div className="appSidebarRail">
           <div className="appSidebarRailBrand" aria-hidden="true">
@@ -161,7 +163,15 @@ export default function AdminSidebar() {
                         ? 'appSidebarRailItem appSidebarRailItem-current'
                         : 'appSidebarRailItem'
                   }
-                  onClick={() => setActiveSectionTitle(section.title)}
+                  onClick={() => {
+                    if (section.title === activeSection?.title) {
+                      setPaneOpen((value) => !value);
+                      return;
+                    }
+
+                    setActiveSectionTitle(section.title);
+                    setPaneOpen(true);
+                  }}
                   aria-label={section.title}
                   title={section.title}
                 >
@@ -172,7 +182,7 @@ export default function AdminSidebar() {
           </nav>
         </div>
 
-        <div className="appSidebarPane">
+        <div className="appSidebarPane" aria-hidden={!paneOpen}>
           <div className="appSidebarPaneHeader">
             <div className="appSidebarPaneBrandRow">
               <div className="appSidebarPaneBrandMark">{initials}</div>
@@ -190,6 +200,16 @@ export default function AdminSidebar() {
                   'Overview'}
               </div>
             </div>
+
+            <button
+              type="button"
+              className="appSidebarPaneCollapse"
+              onClick={() => setPaneOpen(false)}
+              aria-label="Collapse section panel"
+              title="Collapse section panel"
+            >
+              <span aria-hidden="true">←</span>
+            </button>
           </div>
 
           <div className="appSidebarSearchWrap">

@@ -18355,6 +18355,11 @@ button[aria-label='Open assistant'] {
   box-shadow:
     0 18px 32px rgba(15, 23, 42, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  transition: grid-template-columns 0.22s ease;
+}
+
+.appSidebarShell.appSidebarShell-collapsed .appSidebarCard {
+  grid-template-columns: 72px 0;
 }
 
 .appSidebarRail {
@@ -18424,11 +18429,25 @@ button[aria-label='Open assistant'] {
   gap: 14px;
   padding: 18px 16px 18px 14px;
   min-width: 0;
+  overflow: hidden;
+  transition:
+    opacity 0.18s ease,
+    padding 0.22s ease,
+    transform 0.22s ease;
+}
+
+.appSidebarShell.appSidebarShell-collapsed .appSidebarPane {
+  opacity: 0;
+  pointer-events: none;
+  padding-left: 0;
+  padding-right: 0;
+  transform: translateX(-8px);
 }
 
 .appSidebarPaneHeader {
   display: grid;
-  gap: 14px;
+  gap: 12px;
+  position: relative;
 }
 
 .appSidebarPaneBrandRow {
@@ -18485,6 +18504,28 @@ button[aria-label='Open assistant'] {
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #0f172a;
+}
+
+.appSidebarPaneCollapse {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.appSidebarPaneCollapse:hover {
+  background: #eef2f7;
+  color: #334155;
 }
 
 .appSidebarShell .appSidebarSearchWrap {
