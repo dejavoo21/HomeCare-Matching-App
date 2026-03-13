@@ -428,57 +428,55 @@ export function AdminDispatchPage() {
 
           {selectedRequest ? (
             <div className="dispatchExecutionLower">
-              <div className="dispatchExecutionMainColumn">
-                <div className="dispatchExecutionMain">
-                  <div className="dispatchDetailCard">
-                    <div className="dispatchSectionTitle">Service Risk Summary</div>
+              <div className="dispatchExecutionMain">
+                <div className="dispatchDetailCard">
+                  <div className="dispatchSectionTitle">Service Risk Summary</div>
 
-                    <div className="dispatchSummaryGrid">
-                      <div className="dispatchWorkPanel">
-                        <div className="dispatchInfoStack">
-                          <div className="dispatchInfoRow">
-                            <span className="dispatchInfoLabel">Assigned clinician</span>
-                            <strong>{selectedAssignedProfessional?.name || 'Not assigned'}</strong>
-                          </div>
-                          <div className="dispatchInfoRow">
-                            <span className="dispatchInfoLabel">Offer expiry</span>
-                            <strong>
-                              {selectedRequest.offerExpiresAt
-                                ? new Date(selectedRequest.offerExpiresAt).toLocaleString()
-                                : 'No active offer'}
-                            </strong>
-                          </div>
-                          <div className="dispatchInfoRow">
-                            <span className="dispatchInfoLabel">Current status</span>
-                            <strong>{normalizeRequestStatus(String(selectedRequest.status || '')).replace('_', ' ')}</strong>
-                          </div>
-                          <div className="dispatchInfoRow">
-                            <span className="dispatchInfoLabel">Request ID</span>
-                            <strong className="mono">{selectedRequest.id.slice(0, 8)}</strong>
-                          </div>
+                  <div className="dispatchSummaryGrid">
+                    <div className="dispatchWorkPanel">
+                      <div className="dispatchInfoStack">
+                        <div className="dispatchInfoRow">
+                          <span className="dispatchInfoLabel">Assigned clinician</span>
+                          <strong>{selectedAssignedProfessional?.name || 'Not assigned'}</strong>
+                        </div>
+                        <div className="dispatchInfoRow">
+                          <span className="dispatchInfoLabel">Offer expiry</span>
+                          <strong>
+                            {selectedRequest.offerExpiresAt
+                              ? new Date(selectedRequest.offerExpiresAt).toLocaleString()
+                              : 'No active offer'}
+                          </strong>
+                        </div>
+                        <div className="dispatchInfoRow">
+                          <span className="dispatchInfoLabel">Current status</span>
+                          <strong>{normalizeRequestStatus(String(selectedRequest.status || '')).replace('_', ' ')}</strong>
+                        </div>
+                        <div className="dispatchInfoRow">
+                          <span className="dispatchInfoLabel">Request ID</span>
+                          <strong className="mono">{selectedRequest.id.slice(0, 8)}</strong>
                         </div>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="dispatchDetailCard">
-                    <div className="dispatchSectionTitle">Recommended Next Steps</div>
+                <div className="dispatchDetailCard">
+                  <div className="dispatchSectionTitle">Recommended Next Steps</div>
 
-                    <div className="dispatchNextStepsGrid">
-                      {[
-                        'Confirm assigned clinician coverage and ETA.',
-                        'Notify patient or family if timing changes materially.',
-                        'Open the request thread to coordinate the next action.',
-                      ].map((item) => (
-                        <div key={item} className="dispatchPriorityNote">
-                          {item}
-                        </div>
-                      ))}
-                    </div>
+                  <div className="dispatchNextStepsGrid">
+                    {[
+                      'Confirm assigned clinician coverage and ETA.',
+                      'Notify patient or family if timing changes materially.',
+                      'Open the request thread to coordinate the next action.',
+                    ].map((item) => (
+                      <div key={item} className="dispatchPriorityNote">
+                        {item}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="dispatchUtilityBand dispatchUtilityBand-inline">
+                <div className="dispatchUtilityBandInlineSpan">
                   <Link to="/admin/requests" className="dispatchUtilityCard">
                     <div className="dispatchUtilityTitle">Open Request Queue</div>
                     <div className="dispatchUtilityText">
