@@ -142,99 +142,96 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="dashboardColumns">
-        <div className="dashboardColumn">
-          <div className="dashboardPanel">
-            <div className="dashboardPanelHeader">
-              <div>
-                <div className="summaryLinkEyebrow">Operations Health</div>
-                <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
-              </div>
-
-              <Link to="/admin/scheduling" className="summaryLinkAction">
-                Open Scheduling Board →
-              </Link>
+      <section className="dashboardMainRow">
+        <div className="dashboardPanel">
+          <div className="dashboardPanelHeader">
+            <div>
+              <div className="summaryLinkEyebrow">Operations Health</div>
+              <h2 className="dashboardPanelTitle">Scheduling Overview</h2>
             </div>
 
-            <p className="summaryLinkText">
-              Monitor queue pressure, live offers, and follow-up flow.
-            </p>
+            <Link to="/admin/scheduling" className="summaryLinkAction">
+              Open Scheduling Board →
+            </Link>
+          </div>
 
-            <div className="settingsOverviewGrid">
-              <div className="settingsOverviewCard">
-                <div className="settingsOverviewLabel">Queued</div>
-                <div className="settingsOverviewValue">{stats.queuedRequests}</div>
-                <div className="settingsOverviewMeta">Waiting</div>
-              </div>
+          <p className="summaryLinkText">
+            Monitor queue pressure, live offers, and follow-up flow.
+          </p>
 
-              <div className="settingsOverviewCard">
-                <div className="settingsOverviewLabel">Offered</div>
-                <div className="settingsOverviewValue">{stats.offeredRequests}</div>
-                <div className="settingsOverviewMeta">In offer flow</div>
-              </div>
-
-              <div className="settingsOverviewCard">
-                <div className="settingsOverviewLabel">In Motion</div>
-                <div className="settingsOverviewValue">{activeVisitsCount}</div>
-                <div className="settingsOverviewMeta">Already moving</div>
-              </div>
-
-              <div className="settingsOverviewCard">
-                <div className="settingsOverviewLabel">Follow-ups</div>
-                <div className="settingsOverviewValue">{followUpsPending}</div>
-                <div className="settingsOverviewMeta">Awaiting closure</div>
-              </div>
+          <div className="settingsOverviewGrid">
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">Queued</div>
+              <div className="settingsOverviewValue">{stats.queuedRequests}</div>
+              <div className="settingsOverviewMeta">Waiting</div>
             </div>
 
-            <div className="dashboardActionRow">
-              <Link to="/admin/dispatch" className="btn btn-primary">
-                Open Dispatch Center
-              </Link>
-              <Link to="/admin/clinician-review" className="btn">
-                Review Notes
-              </Link>
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">Offered</div>
+              <div className="settingsOverviewValue">{stats.offeredRequests}</div>
+              <div className="settingsOverviewMeta">In offer flow</div>
+            </div>
+
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">In Motion</div>
+              <div className="settingsOverviewValue">{activeVisitsCount}</div>
+              <div className="settingsOverviewMeta">Already moving</div>
+            </div>
+
+            <div className="settingsOverviewCard">
+              <div className="settingsOverviewLabel">Follow-ups</div>
+              <div className="settingsOverviewValue">{followUpsPending}</div>
+              <div className="settingsOverviewMeta">Awaiting closure</div>
             </div>
           </div>
 
-          <div className="dashboardFeatureCard dashboardFeatureCard-warm">
-            <div className="summaryLinkEyebrow">Exception Management</div>
-            <h3 className="dashboardFeatureTitle">Unresolved Items</h3>
-            <p className="dashboardFeatureText">
-              Review open request blockers, follow-up work, and service exceptions that still need ownership.
-            </p>
-
-            <div className="dashboardFeatureFooter">
-              <span className="dashboardFeatureBadge">{stats.queuedRequests} items to review</span>
-              <Link to="/admin/unresolved-items" className="summaryLinkAction">
-                Open Unresolved Items →
-              </Link>
-            </div>
+          <div className="dashboardActionRow">
+            <Link to="/admin/dispatch" className="btn btn-primary">
+              Open Dispatch Center
+            </Link>
+            <Link to="/admin/clinician-review" className="btn">
+              Review Notes
+            </Link>
           </div>
         </div>
 
-        <div className="dashboardColumn">
-          <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
+        <ProfessionalsPanel refreshKey={activityKey} summaryOnly />
 
-          <div className="dashboardFeatureCard dashboardFeatureCard-cool">
-            <div className="summaryLinkEyebrow">Release Confidence</div>
-            <h3 className="dashboardFeatureTitle">Release Readiness</h3>
-            <p className="dashboardFeatureText">
-              Check production health, schema readiness, and live environment signals before stakeholder demos.
-            </p>
+        <AttentionPanel requests={requests} />
+      </section>
 
-            <div className="dashboardFeatureFooter">
-              <span className="dashboardFeatureBadge">6 active live checks</span>
-              <Link to="/admin/release-readiness" className="summaryLinkAction">
-                Review Release Readiness →
-              </Link>
-            </div>
+      <section className="dashboardSecondaryRow">
+        <div className="dashboardFeatureCard dashboardFeatureCard-warm">
+          <div className="summaryLinkEyebrow">Exception Management</div>
+          <h3 className="dashboardFeatureTitle">Unresolved Items</h3>
+          <p className="dashboardFeatureText">
+            Review open request blockers, follow-up work, and service exceptions that still need ownership.
+          </p>
+
+          <div className="dashboardFeatureFooter">
+            <span className="dashboardFeatureBadge">{stats.queuedRequests} items to review</span>
+            <Link to="/admin/unresolved-items" className="summaryLinkAction">
+              Open Unresolved Items →
+            </Link>
           </div>
         </div>
 
-        <div className="dashboardColumn">
-          <AttentionPanel requests={requests} />
-          <ActivityFeed refreshKey={activityKey} />
+        <div className="dashboardFeatureCard dashboardFeatureCard-cool">
+          <div className="summaryLinkEyebrow">Release Confidence</div>
+          <h3 className="dashboardFeatureTitle">Release Readiness</h3>
+          <p className="dashboardFeatureText">
+            Check production health, schema readiness, and live environment signals before stakeholder demos.
+          </p>
+
+          <div className="dashboardFeatureFooter">
+            <span className="dashboardFeatureBadge">6 active live checks</span>
+            <Link to="/admin/release-readiness" className="summaryLinkAction">
+              Review Release Readiness →
+            </Link>
+          </div>
         </div>
+
+        <ActivityFeed refreshKey={activityKey} />
       </section>
     </main>
   );

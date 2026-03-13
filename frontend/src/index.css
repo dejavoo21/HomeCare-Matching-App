@@ -18755,6 +18755,42 @@ button[aria-label='Open assistant'] {
   }
 }
 
+/* =========================
+   Dashboard row-based layout fix
+   ========================= */
+
+.opsDashboard .dashboardColumns,
+.opsDashboard .dashboardColumn,
+.opsDashboard .dashboardFeatureSplit {
+  display: none !important;
+}
+
+.opsDashboard .dashboardMainRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.opsDashboard .dashboardSecondaryRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.opsDashboard .dashboardMainRow > *,
+.opsDashboard .dashboardSecondaryRow > * {
+  min-width: 0;
+}
+
+@media (max-width: 1400px) {
+  .opsDashboard .dashboardMainRow,
+  .opsDashboard .dashboardSecondaryRow {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Remove stacked-right-column gap on dashboard */
 
 .opsDashboard .dashboardGrid {
