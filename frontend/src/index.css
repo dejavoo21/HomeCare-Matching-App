@@ -19368,6 +19368,213 @@ button[aria-label='Open assistant'] {
 }
 
 /* =========================
+   Dispatch work-surface layout fix
+   ========================= */
+
+.dispatchWorkSurface {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.dispatchQueueColumn,
+.dispatchExecutionSurface {
+  min-width: 0;
+}
+
+.dispatchExecutionSurface {
+  display: grid;
+  gap: 16px;
+}
+
+.dispatchExecutionLower {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+}
+
+.dispatchExecutionMain {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.dispatchRailColumn {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.dispatchSelectedCard,
+.dispatchDetailCard,
+.dispatchRailCard,
+.dispatchListCard {
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  padding: 18px 20px;
+}
+
+.dispatchSectionEyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.dispatchSelectedTitle,
+.dispatchSectionTitle {
+  margin-top: 8px;
+  font-size: 18px;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dispatchSelectedMeta,
+.dispatchSectionText,
+.dispatchActionText,
+.dispatchUtilityText {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.dispatchSelectedBadges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.dispatchBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dispatchBadge-warning,
+.dispatchBadge-offered {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+}
+
+.dispatchBadge-danger,
+.dispatchBadge-critical {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+}
+
+.dispatchBadge-accepted,
+.dispatchBadge-en-route,
+.dispatchBadge-en_route {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.dispatchActionGrid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dispatchActionCard {
+  min-height: 116px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  background: #fff;
+  padding: 16px;
+}
+
+.dispatchActionTitle {
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dispatchSummaryGrid,
+.dispatchNextStepsGrid,
+.dispatchPriorityStack,
+.dispatchListStack {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.dispatchPriorityNote {
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.dispatchPriorityNote-warning {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.dispatchUtilityBand {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.dispatchUtilityCard {
+  display: block;
+  text-decoration: none;
+  border-radius: 20px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(255, 255, 255, 0.98));
+  padding: 18px 20px;
+  color: #0f172a;
+}
+
+.dispatchUtilityTitle {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+@media (max-width: 1500px) {
+  .dispatchExecutionLower {
+    grid-template-columns: 1fr;
+  }
+
+  .dispatchExecutionMain {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 1280px) {
+  .dispatchWorkSurface,
+  .dispatchActionGrid,
+  .dispatchExecutionMain,
+  .dispatchUtilityBand {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
    Premium KPI polish
    ========================= */
 

@@ -279,19 +279,16 @@ export function AdminDispatchPage() {
         />
       </section>
 
-      <section className="dispatchTopGrid" aria-label="Dispatch command area">
-        <div className="dispatchColumn">
-          <div className="dispatchCommandCard">
-            <div className="dispatchCommandCardHeader">
-              <div>
-                <h2 className="dispatchCommandTitle">Live Exceptions</h2>
-                <p className="muted">
-                  Prioritize coverage gaps, expiring offers, and high-risk requests before the next handover.
-                </p>
-              </div>
-            </div>
+      <section className="dispatchWorkSurface" aria-label="Dispatch work surface">
+        <div className="dispatchQueueColumn">
+          <div className="dispatchListCard">
+            <div className="dispatchSectionEyebrow">Live Exceptions</div>
+            <h2 className="dispatchSectionTitle">Live Exceptions</h2>
+            <p className="dispatchSectionText">
+              Prioritize coverage gaps, expiring offers, and high-risk requests before the next handover.
+            </p>
 
-            <div className="dispatchExceptionList">
+            <div className="dispatchListStack">
               {exceptionRequests.length === 0 ? (
                 <div className="premiumEmptyState">
                   <div className="premiumEmptyTitle">No live exceptions</div>
@@ -332,9 +329,7 @@ export function AdminDispatchPage() {
                         <span className={`dispatchPriorityTag dispatchPriorityTag-${urgency}`}>
                           {urgency} priority
                         </span>
-                        {request.offerExpiresAt ? (
-                          <span className="dispatchInfoTag">Offer live</span>
-                        ) : null}
+                        {request.offerExpiresAt ? <span className="dispatchInfoTag">Offer live</span> : null}
                       </div>
 
                       <p className="dispatchExceptionNote">{request.address}</p>
@@ -346,8 +341,8 @@ export function AdminDispatchPage() {
           </div>
         </div>
 
-        <section className="dispatchCenterColumn dispatchMainFill">
-          <div className="dispatchSelectedPanel">
+        <div className="dispatchExecutionSurface">
+          <div className="dispatchSelectedCard">
             {!selectedRequest ? (
               <div className="premiumEmptyState">
                 <div className="premiumEmptyTitle">Select a dispatch item</div>
@@ -357,30 +352,26 @@ export function AdminDispatchPage() {
               </div>
             ) : (
               <>
-                <div className="dispatchSelectedHeader">
-                  <div>
-                    <div className="dispatchWorkEyebrow">Selected Request</div>
-                    <h2 className="dispatchSelectedTitle">
-                      {selectedRequest.description || formatServiceType(String(selectedRequest.serviceType))}
-                    </h2>
-                    <p className="dispatchSelectedMeta">
-                      {formatServiceType(String(selectedRequest.serviceType))} |{' '}
-                      {formatShortTime(selectedRequest.scheduledDateTime)} | {selectedRequest.address}
-                    </p>
-                  </div>
+                <div className="dispatchSectionEyebrow">Selected Request</div>
+                <h2 className="dispatchSelectedTitle">
+                  {selectedRequest.description || formatServiceType(String(selectedRequest.serviceType))}
+                </h2>
+                <div className="dispatchSelectedMeta">
+                  {formatServiceType(String(selectedRequest.serviceType))} |{' '}
+                  {formatShortTime(selectedRequest.scheduledDateTime)} | {selectedRequest.address}
+                </div>
 
-                  <div className="dispatchWorkBadges">
-                    <span
-                      className={`dispatchStatusTag dispatchStatusTag-${normalizeRequestStatus(String(selectedRequest.status || '')).replace(/[^a-z]+/g, '-')}`}
-                    >
-                      {normalizeRequestStatus(String(selectedRequest.status || '')).replace('_', ' ')}
-                    </span>
-                    <span
-                      className={`dispatchPriorityTag dispatchPriorityTag-${String(selectedRequest.urgency || '').toLowerCase()}`}
-                    >
-                      {String(selectedRequest.urgency || '').toLowerCase()} priority
-                    </span>
-                  </div>
+                <div className="dispatchSelectedBadges">
+                  <span
+                    className={`dispatchBadge dispatchBadge-${normalizeRequestStatus(String(selectedRequest.status || '')).replace(/[^a-z]+/g, '-')}`}
+                  >
+                    {normalizeRequestStatus(String(selectedRequest.status || '')).replace('_', ' ')}
+                  </span>
+                  <span
+                    className={`dispatchBadge dispatchBadge-${String(selectedRequest.urgency || '').toLowerCase()}`}
+                  >
+                    {String(selectedRequest.urgency || '').toLowerCase()} priority
+                  </span>
                 </div>
 
                 {!canManageDispatch ? (
@@ -431,92 +422,101 @@ export function AdminDispatchPage() {
                     <span className="dispatchActionText">Stop dispatching and remove it from active queue flow.</span>
                   </ProtectedAction>
                 </div>
-
-                <div className="dispatchWorkGrid">
-                  <div className="dispatchWorkPanel">
-                    <div className="dispatchPanelTitle">Service Risk Summary</div>
-                    <div className="dispatchInfoStack">
-                      <div className="dispatchInfoRow">
-                        <span className="dispatchInfoLabel">Assigned clinician</span>
-                        <strong>{selectedAssignedProfessional?.name || 'Not assigned'}</strong>
-                      </div>
-                      <div className="dispatchInfoRow">
-                        <span className="dispatchInfoLabel">Offer expiry</span>
-                        <strong>
-                          {selectedRequest.offerExpiresAt
-                            ? new Date(selectedRequest.offerExpiresAt).toLocaleString()
-                            : 'No active offer'}
-                        </strong>
-                      </div>
-                      <div className="dispatchInfoRow">
-                        <span className="dispatchInfoLabel">Current status</span>
-                        <strong>{normalizeRequestStatus(String(selectedRequest.status || '')).replace('_', ' ')}</strong>
-                      </div>
-                      <div className="dispatchInfoRow">
-                        <span className="dispatchInfoLabel">Request ID</span>
-                        <strong className="mono">{selectedRequest.id.slice(0, 8)}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="dispatchWorkPanel">
-                    <div className="dispatchPanelTitle">Recommended Next Steps</div>
-                    <div className="dispatchPriorityList">
-                      {[
-                        'Confirm assigned clinician coverage and ETA.',
-                        'Notify patient or family if timing changes materially.',
-                        'Open the request thread to coordinate the next action.',
-                      ].map((item) => (
-                        <div key={item} className="dispatchPriorityItem dispatchPriorityItem-soft">
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
               </>
             )}
           </div>
-        </section>
 
-        <aside className="dispatchSupportStack">
-          <div className="dispatchCompactCard">
-            <div className="dispatchCompactCardTitle">Request threads</div>
-            <div className="dispatchCompactCardHeading">Work-linked communication</div>
-            <div className="dispatchCompactCardText">
-              Keep coordination inside the selected request thread instead of spreading it across generic chat.
-            </div>
-            <div className="dispatchCompactActions">
-              <button
-                className="btn"
-                onClick={() => {
-                  if (!selectedRequest) return;
-                  setDetailDrawerTab('thread');
-                  setDetailDrawerOpen(true);
-                }}
-                type="button"
-              >
-                Review selected thread
-              </button>
-            </div>
-          </div>
+          {selectedRequest ? (
+            <div className="dispatchExecutionLower">
+              <div className="dispatchExecutionMain">
+                <div className="dispatchDetailCard">
+                  <div className="dispatchSectionTitle">Service Risk Summary</div>
 
-          <div className="dispatchCompactCard">
-            <div className="dispatchCompactCardTitle">Dispatch priorities</div>
-            <div className="dispatchCompactCardHeading">Immediate focus</div>
-            <div className="dispatchCompactCardText">
-              Work critical queued and offered requests before they age into escalation.
-            </div>
-            <div className="dispatchCompactActions">
-              <div className="dispatchPriorityItem dispatchPriorityItem-1">
-                Assign coverage or escalate ownership for unresolved critical items.
+                  <div className="dispatchSummaryGrid">
+                    <div className="dispatchWorkPanel">
+                      <div className="dispatchInfoStack">
+                        <div className="dispatchInfoRow">
+                          <span className="dispatchInfoLabel">Assigned clinician</span>
+                          <strong>{selectedAssignedProfessional?.name || 'Not assigned'}</strong>
+                        </div>
+                        <div className="dispatchInfoRow">
+                          <span className="dispatchInfoLabel">Offer expiry</span>
+                          <strong>
+                            {selectedRequest.offerExpiresAt
+                              ? new Date(selectedRequest.offerExpiresAt).toLocaleString()
+                              : 'No active offer'}
+                          </strong>
+                        </div>
+                        <div className="dispatchInfoRow">
+                          <span className="dispatchInfoLabel">Current status</span>
+                          <strong>{normalizeRequestStatus(String(selectedRequest.status || '')).replace('_', ' ')}</strong>
+                        </div>
+                        <div className="dispatchInfoRow">
+                          <span className="dispatchInfoLabel">Request ID</span>
+                          <strong className="mono">{selectedRequest.id.slice(0, 8)}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="dispatchDetailCard">
+                  <div className="dispatchSectionTitle">Recommended Next Steps</div>
+
+                  <div className="dispatchNextStepsGrid">
+                    {[
+                      'Confirm assigned clinician coverage and ETA.',
+                      'Notify patient or family if timing changes materially.',
+                      'Open the request thread to coordinate the next action.',
+                    ].map((item) => (
+                      <div key={item} className="dispatchPriorityNote">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="dispatchPriorityItem dispatchPriorityItem-2">
-                Rebalance clinician load when one region starts taking concentrated demand.
+
+              <div className="dispatchRailColumn">
+                <div className="dispatchRailCard">
+                  <div className="dispatchSectionEyebrow">Request Threads</div>
+                  <div className="dispatchSectionTitle">Work-linked communication</div>
+                  <p className="dispatchSectionText">
+                    Keep coordination inside the selected request thread instead of spreading it across generic chat.
+                  </p>
+
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      setDetailDrawerTab('thread');
+                      setDetailDrawerOpen(true);
+                    }}
+                    type="button"
+                  >
+                    Review selected thread
+                  </button>
+                </div>
+
+                <div className="dispatchRailCard">
+                  <div className="dispatchSectionEyebrow">Dispatch Priorities</div>
+                  <div className="dispatchSectionTitle">Immediate focus</div>
+                  <p className="dispatchSectionText">
+                    Work critical queued and offered requests before they age into escalation.
+                  </p>
+
+                  <div className="dispatchPriorityStack">
+                    <div className="dispatchPriorityNote dispatchPriorityNote-warning">
+                      Assign coverage or escalate ownership for unresolved critical items.
+                    </div>
+                    <div className="dispatchPriorityNote">
+                      Rebalance clinician load when one region starts taking concentrated demand.
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </aside>
+          ) : null}
+        </div>
       </section>
 
       <section className="dispatchUtilityBand" aria-label="Dispatch utilities">
