@@ -19224,6 +19224,150 @@ button[aria-label='Open assistant'] {
 }
 
 /* =========================
+   Dispatch final tightening pass
+   ========================= */
+
+.dispatchPage,
+.dispatchCenterPage,
+.opsDispatchPage {
+  gap: 16px;
+}
+
+.dispatchHeaderTitle,
+.dispatchTitle {
+  font-size: 24px;
+  line-height: 1.05;
+}
+
+.dispatchHeaderText,
+.dispatchSubtitle,
+.dispatchPage p {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.dispatchTopStats,
+.dispatchKpiGrid {
+  gap: 14px;
+}
+
+.dispatchTopGrid {
+  grid-template-columns: 340px minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+}
+
+.dispatchTopGrid > * {
+  min-width: 0;
+}
+
+.dispatchColumn .dispatchCommandCard,
+.dispatchSelectedPanel,
+.dispatchCompactCard {
+  border-radius: 20px;
+  padding: 16px 18px;
+}
+
+.dispatchExceptionCard {
+  padding: 14px 16px;
+  border-radius: 16px;
+}
+
+.dispatchExceptionTitle,
+.dispatchSelectedTitle,
+.dispatchPanelTitle,
+.dispatchCompactCardHeading {
+  font-size: 16px;
+  line-height: 1.15;
+}
+
+.dispatchExceptionMeta,
+.dispatchExceptionNote,
+.dispatchSelectedMeta,
+.dispatchCompactCardText,
+.dispatchPriorityItem,
+.dispatchActionText,
+.dispatchInfoLabel,
+.dispatchInfoRow strong,
+.dispatchCoverageMeta,
+.dispatchGuidanceBody,
+.dispatchUtilityText {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dispatchActionGrid {
+  gap: 12px;
+}
+
+.dispatchActionGrid > * {
+  min-height: 108px;
+  padding: 14px 16px;
+  border-radius: 16px;
+}
+
+.dispatchWorkGrid {
+  gap: 12px;
+}
+
+.dispatchWorkPanel {
+  min-height: 96px;
+  padding: 14px 16px;
+  border-radius: 16px;
+}
+
+.dispatchWorkEyebrow,
+.dispatchCompactCardTitle {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.dispatchWorkBadges,
+.dispatchCompactActions {
+  gap: 10px;
+}
+
+.dispatchUtilityBand {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dispatchUtilityCard {
+  display: block;
+  text-decoration: none;
+  border-radius: 20px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(255, 255, 255, 0.98));
+  padding: 18px 20px;
+  color: #0f172a;
+}
+
+.dispatchUtilityTitle {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.dispatchUtilityText {
+  margin-top: 8px;
+  color: #64748b;
+}
+
+@media (max-width: 1500px) {
+  .dispatchTopGrid {
+    grid-template-columns: 320px minmax(0, 1fr) 320px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .dispatchTopGrid,
+  .dispatchUtilityBand {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
    Premium KPI polish
    ========================= */
 
