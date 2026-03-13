@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CareRequest } from '../types/index';
 import { UrgencyQuickSet } from './UrgencyQuickSet';
 
@@ -44,34 +44,6 @@ function urgencyPill(u: string) {
   return 'pill pill-urg-low';
 }
 
-function useCountdown(expiresAtIso?: string) {
-  const [ms, setMs] = useState<number>(() => {
-    if (!expiresAtIso) return 0;
-    return Math.max(0, new Date(expiresAtIso).getTime() - Date.now());
-  });
-
-  useEffect(() => {
-    if (!expiresAtIso) return;
-    const id = window.setInterval(() => {
-      setMs(Math.max(0, new Date(expiresAtIso).getTime() - Date.now()));
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [expiresAtIso]);
-
-  return ms;
-}
-
-function Countdown({ expiresAt }: { expiresAt?: string }) {
-  const ms = useCountdown(expiresAt);
-  if (!expiresAt) return <span className="muted">-</span>;
-  if (ms <= 0) return <span className="pill pill-expired">Expired</span>;
-  const totalSec = Math.floor(ms / 1000);
-  const m = String(Math.floor(totalSec / 60)).padStart(2, '0');
-  const s = String(totalSec % 60).padStart(2, '0');
-  const danger = ms <= 60_000;
-  return <span className={danger ? 'countdown countdown-danger' : 'countdown'}>{m}:{s}</span>;
-}
-
 function getPrimaryRowAction(
   request: CareRequest,
   onOffer?: (requestId: string) => Promise<void>,
@@ -96,7 +68,7 @@ function getPrimaryRowAction(
   }
 
   return {
-    label: 'View',
+    label: 'More',
     disabled: false,
     onClick: () => undefined,
   };
@@ -222,14 +194,13 @@ export function DispatchQueueTable({
               <th>Status</th>
               <th>Scheduled</th>
               <th>Assigned/Offered To</th>
-              <th>Offer Expires</th>
               <th className="actionsHeader">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="empty">
+                <td colSpan={6} className="empty">
                   No requests match your filters.
                 </td>
               </tr>
@@ -277,10 +248,6 @@ export function DispatchQueueTable({
                     ) : (
                       <span className="muted">-</span>
                     )}
-                  </td>
-
-                  <td>
-                    <Countdown expiresAt={(r as any).offerExpiresAt} />
                   </td>
 
                   <td className="actionsCell queueActions">
@@ -351,10 +318,6 @@ export function DispatchQueueTable({
                 <div className="queueMobileMetaItem">
                   <span className="queueMobileMetaLabel">Scheduled</span>
                   <span>{formatDate(r.scheduledDateTime)}</span>
-                </div>
-                <div className="queueMobileMetaItem">
-                  <span className="queueMobileMetaLabel">Offer Expires</span>
-                  <Countdown expiresAt={(r as any).offerExpiresAt} />
                 </div>
               </div>
 

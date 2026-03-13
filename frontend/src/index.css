@@ -20001,6 +20001,105 @@ button[aria-label='Open assistant'] {
   max-width: 240px;
 }
 
+/* Request Queue fit-to-page desktop layout */
+
+.requestQueueTableWrap,
+.queueTableWrap {
+  overflow-x: hidden;
+}
+
+.requestQueueTable,
+.queueTable,
+.requestQueueTableCard table,
+.queueTableCard table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.requestQueueTable thead th:nth-child(1),
+.queueTable thead th:nth-child(1),
+.requestQueueTableCard th:nth-child(1),
+.queueTableCard th:nth-child(1) {
+  width: 28%;
+}
+
+.requestQueueTable thead th:nth-child(2),
+.queueTable thead th:nth-child(2),
+.requestQueueTableCard th:nth-child(2),
+.queueTableCard th:nth-child(2) {
+  width: 12%;
+}
+
+.requestQueueTable thead th:nth-child(3),
+.queueTable thead th:nth-child(3),
+.requestQueueTableCard th:nth-child(3),
+.queueTableCard th:nth-child(3) {
+  width: 12%;
+}
+
+.requestQueueTable thead th:nth-child(4),
+.queueTable thead th:nth-child(4),
+.requestQueueTableCard th:nth-child(4),
+.queueTableCard th:nth-child(4) {
+  width: 16%;
+}
+
+.requestQueueTable thead th:nth-child(5),
+.queueTable thead th:nth-child(5),
+.requestQueueTableCard th:nth-child(5),
+.queueTableCard th:nth-child(5) {
+  width: 16%;
+}
+
+.requestQueueTable thead th:nth-child(6),
+.queueTable thead th:nth-child(6),
+.requestQueueTableCard th:nth-child(6),
+.queueTableCard th:nth-child(6) {
+  width: 16%;
+}
+
+.requestQueueActions,
+.queueActions,
+.requestQueueTableCard .queueActions,
+.requestQueueTableCard .actionsRow {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  justify-content: flex-start;
+  max-width: none;
+}
+
+.requestQueueActions .btn,
+.queueActions .btn,
+.requestQueueActions button,
+.queueActions button,
+.requestQueueTableCard .queueActions .btn,
+.requestQueueTableCard .queueActions button,
+.requestQueueTableCard .actionsRow .btn,
+.requestQueueTableCard .actionsRow button {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.requestQueueTable td,
+.queueTable td,
+.requestQueueTableCard td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.requestQueueRequestTitle,
+.queueRequestTitle,
+.requestQueueTableCard .reqTitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Pull utility cards directly under Service Risk + Next Steps */
 
 .dispatchExecutionMain {
