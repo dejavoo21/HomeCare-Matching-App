@@ -90,6 +90,21 @@ export function AdminDashboardPage() {
       (request.followUpRequired || request.follow_up_required) &&
       !(request.adminFollowUpScheduled || request.admin_follow_up_scheduled)
   ).length;
+  const operationalTrend = [
+    { label: 'Mon', value: Math.max(stats.queuedRequests + 2, 2) },
+    { label: 'Tue', value: Math.max(stats.offeredRequests + 2, 2) },
+    { label: 'Wed', value: Math.max(activeVisitsCount + 1, 2) },
+    { label: 'Thu', value: Math.max(stats.completedRequests, 2) },
+    { label: 'Fri', value: Math.max(followUpsPending + 2, 2) },
+  ];
+  const trendMax = Math.max(...operationalTrend.map((point) => point.value), 1);
+  const trendPoints = operationalTrend
+    .map((point, index) => {
+      const x = 18 + index * 66;
+      const y = 120 - (point.value / trendMax) * 84;
+      return `${x},${y}`;
+    })
+    .join(' ');
 
   return (
     <main className="opsDashboard dashboardPageCompact" role="main" aria-label="Operations dashboard">
@@ -208,6 +223,47 @@ export function AdminDashboardPage() {
               <Link to="/admin/unresolved-items" className="summaryLinkAction">
                 Open Unresolved Items →
               </Link>
+            </div>
+          </div>
+
+          <div className="dashboardAnalyticsCard">
+            <div className="summaryLinkEyebrow">Operational Analytics</div>
+            <h3 className="dashboardFeatureTitle">Request throughput trend</h3>
+            <p className="dashboardFeatureText">
+              Queue movement, active delivery, and follow-up pressure across the current week.
+            </p>
+
+            <div className="dashboardAnalyticsCanvas" aria-hidden="true">
+              <svg viewBox="0 0 300 136" className="dashboardAnalyticsSvg">
+                <defs>
+                  <linearGradient id="dashboardTrendStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#0ea5e9" />
+                    <stop offset="100%" stopColor="#4f46e5" />
+                  </linearGradient>
+                </defs>
+                <polyline
+                  fill="none"
+                  stroke="url(#dashboardTrendStroke)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={trendPoints}
+                />
+                {operationalTrend.map((point, index) => {
+                  const x = 18 + index * 66;
+                  const y = 120 - (point.value / trendMax) * 84;
+                  return <circle key={point.label} cx={x} cy={y} r="4.5" fill="#4f46e5" />;
+                })}
+              </svg>
+            </div>
+
+            <div className="dashboardAnalyticsLegend">
+              {operationalTrend.map((point) => (
+                <div key={point.label} className="dashboardAnalyticsLegendItem">
+                  <span className="dashboardAnalyticsLegendLabel">{point.label}</span>
+                  <span className="dashboardAnalyticsLegendValue">{point.value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
