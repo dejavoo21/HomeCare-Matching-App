@@ -18756,37 +18756,43 @@ button[aria-label='Open assistant'] {
 }
 
 /* =========================
-   Dashboard row-based layout fix
+   Dashboard column layout restore
    ========================= */
 
-.opsDashboard .dashboardColumns,
-.opsDashboard .dashboardColumn,
+.opsDashboard .dashboardMainRow,
+.opsDashboard .dashboardSecondaryRow,
 .opsDashboard .dashboardFeatureSplit {
   display: none !important;
 }
 
-.opsDashboard .dashboardMainRow {
-  display: grid;
+.opsDashboard .dashboardColumns {
+  display: grid !important;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr) 320px;
   gap: 16px;
   align-items: start;
 }
 
-.opsDashboard .dashboardSecondaryRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 320px;
+.opsDashboard .dashboardColumn {
+  display: grid !important;
   gap: 16px;
-  align-items: start;
+  align-content: start;
 }
 
-.opsDashboard .dashboardMainRow > *,
-.opsDashboard .dashboardSecondaryRow > * {
+.opsDashboard .dashboardColumn > * {
   min-width: 0;
 }
 
+.opsDashboard .dashboardPanel,
+.opsDashboard .dashboardFeatureCard,
+.opsDashboard .dashboardColumn .workforcePanel,
+.opsDashboard .dashboardColumn .attentionPanel,
+.opsDashboard .dashboardColumn .railCard {
+  height: auto;
+  min-height: 0;
+}
+
 @media (max-width: 1400px) {
-  .opsDashboard .dashboardMainRow,
-  .opsDashboard .dashboardSecondaryRow {
+  .opsDashboard .dashboardColumns {
     grid-template-columns: 1fr;
   }
 }
