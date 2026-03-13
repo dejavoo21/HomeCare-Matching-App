@@ -516,23 +516,23 @@ export function AdminDispatchPage() {
               </div>
             </div>
           ) : null}
+
+          <div className="dispatchUtilityBand dispatchUtilityBand-inline">
+            <Link to="/admin/requests" className="dispatchUtilityCard">
+              <div className="dispatchUtilityTitle">Open Request Queue</div>
+              <div className="dispatchUtilityText">
+                Search backlog, manage statuses, and work the broader queue.
+              </div>
+            </Link>
+
+            <Link to="/admin/scheduling" className="dispatchUtilityCard">
+              <div className="dispatchUtilityTitle">Review Scheduling Board</div>
+              <div className="dispatchUtilityText">
+                Rebalance visits and review workload distribution.
+              </div>
+            </Link>
+          </div>
         </div>
-      </section>
-
-      <section className="dispatchUtilityBand" aria-label="Dispatch utilities">
-        <Link to="/admin/requests" className="dispatchUtilityCard">
-          <div className="dispatchUtilityTitle">Open Request Queue</div>
-          <div className="dispatchUtilityText">
-            Search backlog, manage statuses, and work the broader queue.
-          </div>
-        </Link>
-
-        <Link to="/admin/scheduling" className="dispatchUtilityCard">
-          <div className="dispatchUtilityTitle">Review Scheduling Board</div>
-          <div className="dispatchUtilityText">
-            Rebalance visits and review workload distribution.
-          </div>
-        </Link>
       </section>
 
       <RequestDetailDrawer
