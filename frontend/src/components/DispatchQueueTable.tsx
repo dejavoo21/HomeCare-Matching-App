@@ -53,7 +53,7 @@ function getPrimaryRowAction(
 
   if (status === 'queued' && onOffer) {
     return {
-      label: 'Offer',
+      label: 'More',
       disabled: false,
       onClick: () => void onOffer(request.id),
     };
@@ -61,7 +61,7 @@ function getPrimaryRowAction(
 
   if (!['completed', 'cancelled'].includes(status) && onRequeue) {
     return {
-      label: 'Reassign',
+      label: 'More',
       disabled: false,
       onClick: () => void onRequeue(request.id),
     };
@@ -208,12 +208,14 @@ export function DispatchQueueTable({
               filtered.slice(0, 20).map((r) => (
                 <tr key={r.id}>
                   <td>
-                    <div className="reqMain">
-                      <div className="reqTitleRow">
-                        <div className="reqTitle">{r.description || r.serviceType}</div>
-                        <span className="reqId mono">{r.id.slice(0, 8)}</span>
+                    <div className="requestQueueRequestCell reqMain">
+                      <div className="requestQueueRequestTitleRow reqTitleRow">
+                        <div className="requestQueueRequestTitle reqTitle">
+                          {r.description || r.serviceType}
+                        </div>
+                        <span className="requestQueueInlineId reqId mono">{r.id.slice(0, 8)}</span>
                       </div>
-                      <div className="reqMeta">
+                      <div className="requestQueueRequestMeta reqMeta">
                         <span className="reqMetaItem">{String(r.serviceType).replace(/_/g, ' ')}</span>
                         <span className="dotSep" aria-hidden="true">|</span>
                         <span className="reqMetaItem">{r.address}</span>
@@ -256,7 +258,7 @@ export function DispatchQueueTable({
                       return (
                         <div className="actionsRow">
                           <button className="btn btn-small" onClick={() => onView(r)}>
-                            Review
+                            View
                           </button>
 
                           <button
@@ -264,7 +266,7 @@ export function DispatchQueueTable({
                             type="button"
                             onClick={() => onOpenThread?.(r.id)}
                           >
-                            Thread
+                            Chat
                           </button>
 
                           <button
@@ -293,12 +295,12 @@ export function DispatchQueueTable({
           filtered.slice(0, 20).map((r) => (
             <article key={`mobile-${r.id}`} className="queueMobileCard">
               <div className="queueMobileTop">
-                <div className="reqMain">
-                  <div className="reqTitleRow">
-                    <div className="reqTitle">{r.description || r.serviceType}</div>
-                    <span className="reqId mono">{r.id.slice(0, 8)}</span>
+                <div className="requestQueueRequestCell reqMain">
+                  <div className="requestQueueRequestTitleRow reqTitleRow">
+                    <div className="requestQueueRequestTitle reqTitle">{r.description || r.serviceType}</div>
+                    <span className="requestQueueInlineId reqId mono">{r.id.slice(0, 8)}</span>
                   </div>
-                  <div className="reqMeta">
+                  <div className="requestQueueRequestMeta reqMeta">
                     <span className="reqMetaItem">{String(r.serviceType).replace(/_/g, ' ')}</span>
                     <span className="dotSep" aria-hidden="true">|</span>
                     <span className="reqMetaItem">{r.address}</span>
@@ -327,14 +329,14 @@ export function DispatchQueueTable({
                   return (
                     <>
                       <button className="btn btn-small" onClick={() => onView(r)}>
-                        Review
+                        View
                       </button>
                       <button
                         className="btn btn-small btn-ghost"
                         type="button"
                         onClick={() => onOpenThread?.(r.id)}
                       >
-                        Thread
+                        Chat
                       </button>
                       <button
                         className="btn btn-small btn-ghost"

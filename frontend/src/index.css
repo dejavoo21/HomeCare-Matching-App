@@ -20100,6 +20100,154 @@ button[aria-label='Open assistant'] {
   text-overflow: ellipsis;
 }
 
+/* =========================
+   Request Queue true fit pass
+   ========================= */
+
+.requestQueueTableWrap,
+.queueTableWrap {
+  overflow-x: hidden;
+}
+
+.requestQueueTable,
+.queueTable,
+.requestQueueTableCard table,
+.queueTableCard table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.requestQueueTable thead th:nth-child(1),
+.queueTable thead th:nth-child(1),
+.requestQueueTableCard th:nth-child(1),
+.queueTableCard th:nth-child(1) {
+  width: 30%;
+}
+
+.requestQueueTable thead th:nth-child(2),
+.queueTable thead th:nth-child(2),
+.requestQueueTableCard th:nth-child(2),
+.queueTableCard th:nth-child(2) {
+  width: 12%;
+}
+
+.requestQueueTable thead th:nth-child(3),
+.queueTable thead th:nth-child(3),
+.requestQueueTableCard th:nth-child(3),
+.queueTableCard th:nth-child(3) {
+  width: 12%;
+}
+
+.requestQueueTable thead th:nth-child(4),
+.queueTable thead th:nth-child(4),
+.requestQueueTableCard th:nth-child(4),
+.queueTableCard th:nth-child(4) {
+  width: 17%;
+}
+
+.requestQueueTable thead th:nth-child(5),
+.queueTable thead th:nth-child(5),
+.requestQueueTableCard th:nth-child(5),
+.queueTableCard th:nth-child(5) {
+  width: 13%;
+}
+
+.requestQueueTable thead th:nth-child(6),
+.queueTable thead th:nth-child(6),
+.requestQueueTableCard th:nth-child(6),
+.queueTableCard th:nth-child(6) {
+  width: 16%;
+}
+
+.requestQueueRequestCell {
+  min-width: 0;
+}
+
+.requestQueueRequestTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.requestQueueRequestTitle,
+.queueRequestTitle,
+.requestQueueTableCard .reqTitle {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.requestQueueInlineId {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 11px;
+  color: #64748b;
+}
+
+.requestQueueRequestMeta,
+.queueRequestMeta {
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.requestQueueActions,
+.queueActions,
+.requestQueueTableCard .queueActions,
+.requestQueueTableCard .actionsRow {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+.requestQueueActions .btn,
+.queueActions .btn,
+.requestQueueActions button,
+.queueActions button,
+.requestQueueTableCard .queueActions .btn,
+.requestQueueTableCard .queueActions button,
+.requestQueueTableCard .actionsRow .btn,
+.requestQueueTableCard .actionsRow button {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.requestQueueActions .btn span,
+.queueActions .btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.requestQueueTable td,
+.queueTable td,
+.requestQueueTableCard td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
 /* Pull utility cards directly under Service Risk + Next Steps */
 
 .dispatchExecutionMain {
