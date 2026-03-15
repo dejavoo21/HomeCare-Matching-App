@@ -224,6 +224,8 @@ export function SchedulingBoard() {
   const [quickCreate, setQuickCreate] = useState<QuickCreateState | null>(null);
   const [quickCreateBusy, setQuickCreateBusy] = useState(false);
   const [quickCreateMode, setQuickCreateMode] = useState<QuickCreateMode>('single');
+  const [showQuickCreatePanel, setShowQuickCreatePanel] = useState(false);
+  const [showRecurringPanel, setShowRecurringPanel] = useState(false);
   const [requestChatRequestId, setRequestChatRequestId] = useState<string | null>(null);
   const [quickCreateForm, setQuickCreateForm] = useState({
     clientId: '',
@@ -377,6 +379,48 @@ export function SchedulingBoard() {
     setDropTargetKey(null);
   };
 
+  const seedQuickCreateContext = ({
+    professionalId,
+    professionalName,
+    day,
+    preferredStart,
+  }: {
+    professionalId: string;
+    professionalName: string;
+    day: string;
+    preferredStart: string;
+  }) => {
+    setQuickCreate({
+      professionalId,
+      professionalName,
+      day,
+    });
+    setQuickCreateForm((current) => ({
+      ...current,
+      professionalId,
+      preferredStart,
+    }));
+    setMessage('');
+  };
+
+  const openQuickCreatePanel = (seed?: Partial<typeof quickCreateForm>) => {
+    if (seed) {
+      setQuickCreateForm((current) => ({ ...current, ...seed }));
+    }
+    setQuickCreateMode('single');
+    setShowRecurringPanel(false);
+    setShowQuickCreatePanel(true);
+  };
+
+  const openRecurringPanel = (seed?: Partial<typeof quickCreateForm>) => {
+    if (seed) {
+      setQuickCreateForm((current) => ({ ...current, ...seed }));
+    }
+    setQuickCreateMode('recurring');
+    setShowQuickCreatePanel(false);
+    setShowRecurringPanel(true);
+  };
+
   const onDropVisit = async (professionalId: string, day: Date) => {
     if (!dragging) {
       return;
@@ -421,18 +465,16 @@ export function SchedulingBoard() {
       .toISOString()
       .slice(0, 16);
 
-    setQuickCreate({
+    seedQuickCreateContext({
       professionalId: professional.id,
       professionalName: professional.name,
       day: day.toISOString(),
+      preferredStart,
     });
-    setQuickCreateMode('single');
-    setQuickCreateForm((current) => ({
-      ...current,
+    openQuickCreatePanel({
       professionalId: professional.id,
       preferredStart,
-    }));
-    setMessage('');
+    });
   };
 
   const openUnassignedQuickCreate = () => {
@@ -444,24 +486,24 @@ export function SchedulingBoard() {
       .toISOString()
       .slice(0, 16);
 
-    setQuickCreate({
+    seedQuickCreateContext({
       professionalId: '',
       professionalName: 'Unassigned visit',
       day: localDefault.toISOString(),
+      preferredStart,
     });
-    setQuickCreateMode('single');
-    setQuickCreateForm((current) => ({
-      ...current,
+    openQuickCreatePanel({
       professionalId: '',
       preferredStart,
-    }));
-    setMessage('');
+    });
   };
 
   const closeQuickCreate = () => {
     setQuickCreate(null);
     setQuickCreateBusy(false);
     setQuickCreateMode('single');
+    setShowQuickCreatePanel(false);
+    setShowRecurringPanel(false);
     setQuickCreateForm({
       clientId: '',
       professionalId: '',
@@ -537,187 +579,132 @@ export function SchedulingBoard() {
   const boardMinWidth = viewMode === 'day' ? '500px' : '1480px';
   const canCreateSchedule = hasPermission(user, PERMISSIONS.SCHEDULING_CREATE);
   const canAssignSchedule = hasPermission(user, PERMISSIONS.SCHEDULING_ASSIGN);
+  const quickCreateContextLabel = quickCreate
+    ? `${quickCreate.professionalName} on ${formatDay(new Date(quickCreate.day))}`
+    : 'Use the live board to create or repeat visits.';
 
   return (
     <main className="scheduleBoardWrap" role="main" aria-label="Scheduling board">
-      <section className="scheduleHeroCard">
-        <div className="scheduleHeroGrid">
-          <div>
-            <div className="scheduleHeroEyebrow">Scheduling Operations</div>
-            <h1 className="scheduleHeroTitle">Care delivery board</h1>
-            <p className="scheduleHeroText">
-              Assign visits, close coverage gaps, manage recurrence, and respond to
-              conflicts from one live scheduling surface.
-            </p>
-          </div>
-
-          <div className="scheduleHeroControls">
-            <div className="scheduleHeroControlsTitle">Board controls</div>
-
-            <div className="scheduleBoardControls">
-              <div className="scheduleViewToggle" role="tablist" aria-label="Scheduling view mode">
-                <button
-                  type="button"
-                  className={viewMode === 'day' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
-                  onClick={() => handleViewModeChange('day')}
-                  role="tab"
-                  aria-selected={viewMode === 'day'}
-                >
-                  Day
-                </button>
-                <button
-                  type="button"
-                  className={viewMode === 'week' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
-                  onClick={() => handleViewModeChange('week')}
-                  role="tab"
-                  aria-selected={viewMode === 'week'}
-                >
-                  Week
-                </button>
-              </div>
-
-              <div className="scheduleHeroNav">
-                <button className="btn" onClick={moveBackward}>
-                  Previous
-                </button>
-                <div className="scheduleRangePill">{rangeLabel}</div>
-                <button className="btn" onClick={moveForward}>
-                  Next
-                </button>
-              </div>
-
-              <select
-                className="select scheduleRoleSelect"
-                value={role}
-                onChange={(event) => setRole(event.target.value as 'all' | 'nurse' | 'doctor')}
-              >
-                <option value="all">All professionals</option>
-                <option value="nurse">Nurses only</option>
-                <option value="doctor">Doctors only</option>
-              </select>
-
-              <div className="scheduleHeroActionRow">
-                <ProtectedAction
-                  permission={PERMISSIONS.SCHEDULING_CREATE}
-                  variant="primary"
-                  deniedReason="You can view the board, but only schedulers can create visits."
-                  onClick={openUnassignedQuickCreate}
-                >
-                  Quick create
-                </ProtectedAction>
-                <ProtectedAction
-                  permission={PERMISSIONS.SCHEDULING_CREATE}
-                  variant="secondary"
-                  deniedReason="You do not have permission to create recurring scheduling instances."
-                  onClick={() => {
-                    openUnassignedQuickCreate();
-                    setQuickCreateMode('recurring');
-                  }}
-                >
-                  Repeat from board
-                </ProtectedAction>
-              </div>
+      <section className="scheduleTopShell">
+        <div className="scheduleCompactControlsCard">
+          <div className="scheduleControlsHeader">
+            <div>
+              <div className="pageEyebrow">Board controls</div>
+              <h2 className="sectionTitle">Board controls</h2>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section className="schedulingControlBand" aria-label="Scheduling controls">
-        <div className="schedulingControlMain">
-          <div className="schedulingControlLabel">Board controls</div>
-
-          <div className="schedulingControlTop">
-            <div className="schedulingControlGroup">
-              <div className="scheduleViewToggle" role="tablist" aria-label="Scheduling view mode">
-                <button
-                  type="button"
-                  className={viewMode === 'day' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
-                  onClick={() => handleViewModeChange('day')}
-                  role="tab"
-                  aria-selected={viewMode === 'day'}
-                >
-                  Day
-                </button>
-                <button
-                  type="button"
-                  className={viewMode === 'week' ? 'scheduleViewToggleButton scheduleViewToggleButton-active' : 'scheduleViewToggleButton'}
-                  onClick={() => handleViewModeChange('week')}
-                  role="tab"
-                  aria-selected={viewMode === 'week'}
-                >
-                  Week
-                </button>
-              </div>
-
-              <div className="scheduleHeroNav">
-                <button className="btn" onClick={moveBackward}>
-                  Previous
-                </button>
-                <div className="scheduleRangePill">{rangeLabel}</div>
-                <button className="btn" onClick={moveForward}>
-                  Next
-                </button>
-              </div>
-
-              <select
-                className="select scheduleRoleSelect"
-                value={role}
-                onChange={(event) => setRole(event.target.value as 'all' | 'nurse' | 'doctor')}
+          <div className="scheduleControlRow">
+            <div className="segmentedToggle" role="tablist" aria-label="Scheduling view mode">
+              <button
+                type="button"
+                className={viewMode === 'day' ? 'segmentedToggleBtn is-active' : 'segmentedToggleBtn'}
+                onClick={() => handleViewModeChange('day')}
+                role="tab"
+                aria-selected={viewMode === 'day'}
               >
-                <option value="all">All professionals</option>
-                <option value="nurse">Nurses only</option>
-                <option value="doctor">Doctors only</option>
-              </select>
-            </div>
-
-            <div className="schedulingControlGroup">
-              <ProtectedAction
-                permission={PERMISSIONS.SCHEDULING_CREATE}
-                variant="primary"
-                deniedReason="You can view the board, but only schedulers can create visits."
-                onClick={openUnassignedQuickCreate}
+                Day
+              </button>
+              <button
+                type="button"
+                className={viewMode === 'week' ? 'segmentedToggleBtn is-active' : 'segmentedToggleBtn'}
+                onClick={() => handleViewModeChange('week')}
+                role="tab"
+                aria-selected={viewMode === 'week'}
               >
-                Quick create
-              </ProtectedAction>
-              <ProtectedAction
-                permission={PERMISSIONS.SCHEDULING_CREATE}
-                variant="secondary"
-                deniedReason="You do not have permission to create recurring scheduling instances."
-                onClick={() => {
-                  openUnassignedQuickCreate();
-                  setQuickCreateMode('recurring');
-                }}
-              >
-                Repeat from board
-              </ProtectedAction>
-              <button className="btn" onClick={load}>
-                Refresh
+                Week
               </button>
             </div>
+
+            <button type="button" className="btn" onClick={moveBackward}>
+              Previous
+            </button>
+
+            <div className="scheduleWeekLabel">
+              {board?.range
+                ? `${formatDay(new Date(board.range.start))} - ${formatDay(
+                    new Date(board.range.end)
+                  )}`
+                : rangeLabel}
+            </div>
+
+            <button type="button" className="btn" onClick={moveForward}>
+              Next
+            </button>
           </div>
 
-          <div className="schedulingInlineActions">
-            <div className="schedulingActionChip">Unassigned lane active</div>
-            <div className="schedulingActionChip">Conflict badges enabled</div>
-            <div className="schedulingActionChip">Authorization warnings visible</div>
-            <div className="schedulingActionChip">Workload badges visible</div>
+          <div className="scheduleControlRow scheduleControlRow-secondary">
+            <select
+              className="input"
+              value={role}
+              onChange={(event) => setRole(event.target.value as 'all' | 'nurse' | 'doctor')}
+            >
+              <option value="all">All professionals</option>
+              <option value="nurse">Nurses</option>
+              <option value="doctor">Doctors</option>
+            </select>
+
+            <ProtectedAction
+              permission={PERMISSIONS.SCHEDULING_CREATE}
+              variant="primary"
+              deniedReason="You can view the board, but only schedulers can create visits."
+              onClick={openUnassignedQuickCreate}
+            >
+              Quick create
+            </ProtectedAction>
+
+            <ProtectedAction
+              permission={PERMISSIONS.SCHEDULING_CREATE}
+              variant="secondary"
+              deniedReason="You do not have permission to create recurring scheduling instances."
+              onClick={() => {
+                const localDefault = new Date(weekStart);
+                localDefault.setHours(9, 0, 0, 0);
+                const preferredStart = new Date(
+                  localDefault.getTime() - localDefault.getTimezoneOffset() * 60000
+                )
+                  .toISOString()
+                  .slice(0, 16);
+
+                seedQuickCreateContext({
+                  professionalId: '',
+                  professionalName: 'Recurring schedule',
+                  day: localDefault.toISOString(),
+                  preferredStart,
+                });
+                openRecurringPanel({
+                  professionalId: '',
+                  preferredStart,
+                });
+              }}
+            >
+              Create recurring schedule
+            </ProtectedAction>
+
+            <button type="button" className="btn" onClick={load}>
+              Refresh
+            </button>
+          </div>
+
+          <div className="scheduleStatusChips">
+            <span className="statusChip">Unassigned lane active</span>
+            <span className="statusChip">Conflict badges enabled</span>
+            <span className="statusChip">Authorization warnings visible</span>
+            <span className="statusChip">Workload badges visible</span>
           </div>
         </div>
 
-        <div className="schedulingRecommendationCard">
-          <div className="schedulingRecommendationEyebrow">Recommended actions</div>
-          <div className="schedulingRecommendationTitle">Board guidance</div>
-          <div className="schedulingRecommendationText">
-            Keep planning guidance close to controls instead of leaving it below the board.
-          </div>
+        <aside className="scheduleGuidanceCard">
+          <div className="pageEyebrow">Recommended actions</div>
+          <h2 className="sectionTitle">Board guidance</h2>
 
           {!canCreateSchedule || !canAssignSchedule ? (
-            <div className="schedulingRecommendationList">
+            <div className="guidanceStack">
               <PermissionNotice description="You can view this scheduling board, but creation and reassignment controls are restricted by role." />
             </div>
           ) : null}
 
-          <div className="schedulingRecommendationList">
+          <div className="guidanceStack">
             {(schedulePriorities.length === 0
               ? [
                   'No urgent scheduling priorities right now.',
@@ -726,12 +713,12 @@ export function SchedulingBoard() {
                 ]
               : schedulePriorities
             ).slice(0, 3).map((item) => (
-              <div key={item} className="schedulingRecommendationItem">
+              <div key={item} className="guidanceNote">
                 {item}
               </div>
             ))}
           </div>
-        </div>
+        </aside>
       </section>
 
       {message ? (
@@ -1121,57 +1108,24 @@ export function SchedulingBoard() {
         </div>
       ) : null}
 
-      {quickCreate ? (
-        <div className="scheduleQuickCreateOverlay" onClick={closeQuickCreate}>
-          <section
-            className="scheduleQuickCreateCard"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="scheduleQuickCreateHeader">
+      {quickCreate && (showQuickCreatePanel || showRecurringPanel) ? (
+        <div className="scheduleOverlay" onClick={closeQuickCreate}>
+          <div className="schedulePanel" onClick={(event) => event.stopPropagation()}>
+            <div className="schedulePanelHeader">
               <div>
-                <h3 className="settingsCardTitle">Create from Board</h3>
-                <p className="settingsCardText">
-                  {quickCreate.professionalName} on {formatDay(new Date(quickCreate.day))}
-                </p>
+                <div className="pageEyebrow">Scheduling</div>
+                <h2 className="sectionTitle">
+                  {showRecurringPanel ? 'Create recurring schedule' : 'Quick create visit'}
+                </h2>
+                <p className="settingsCardText">{quickCreateContextLabel}</p>
                 <p className="modalSub">
-                  Create a one-time visit or a recurring schedule directly from the live board.
+                  {showRecurringPanel
+                    ? 'Create a recurring schedule directly from the live board.'
+                    : 'Create a one-time visit directly from the live board.'}
                 </p>
               </div>
-              <button
-                type="button"
-                className="scheduleQuickCreateClose"
-                onClick={closeQuickCreate}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="createModeToggle" role="tablist" aria-label="Create mode">
-              <button
-                type="button"
-                className={
-                  quickCreateMode === 'single'
-                    ? 'createModeBtn createModeBtn-active'
-                    : 'createModeBtn'
-                }
-                onClick={() => setQuickCreateMode('single')}
-                role="tab"
-                aria-selected={quickCreateMode === 'single'}
-              >
-                One Visit
-              </button>
-              <button
-                type="button"
-                className={
-                  quickCreateMode === 'recurring'
-                    ? 'createModeBtn createModeBtn-active'
-                    : 'createModeBtn'
-                }
-                onClick={() => setQuickCreateMode('recurring')}
-                role="tab"
-                aria-selected={quickCreateMode === 'recurring'}
-              >
-                Recurring
+              <button type="button" className="btn" onClick={closeQuickCreate}>
+                Close
               </button>
             </div>
 
@@ -1285,7 +1239,7 @@ export function SchedulingBoard() {
 
               <div className="formGroup">
                 <label className="formLabel">
-                  {quickCreateMode === 'single' ? 'Date & Time' : 'Start Date & Time'}
+                  {showRecurringPanel ? 'Start Date & Time' : 'Date & Time'}
                 </label>
                 <input
                   className="input"
@@ -1301,7 +1255,7 @@ export function SchedulingBoard() {
                 />
               </div>
 
-              {quickCreateMode === 'recurring' ? (
+              {showRecurringPanel ? (
                 <>
                   <div className="formGroup">
                     <label className="formLabel">Recurrence</label>
@@ -1363,13 +1317,13 @@ export function SchedulingBoard() {
                 <button type="submit" className="btn btn-primary" disabled={quickCreateBusy}>
                   {quickCreateBusy
                     ? 'Saving...'
-                    : quickCreateMode === 'single'
-                      ? 'Create Visit'
-                      : 'Create Recurring Schedule'}
+                    : showRecurringPanel
+                      ? 'Create Recurring Schedule'
+                      : 'Create Visit'}
                 </button>
               </div>
             </form>
-          </section>
+          </div>
         </div>
       ) : null}
 
