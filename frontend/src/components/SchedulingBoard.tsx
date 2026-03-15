@@ -421,6 +421,27 @@ export function SchedulingBoard() {
     setShowRecurringPanel(true);
   };
 
+  const openBoardRecurringPanel = () => {
+    const localDefault = new Date(weekStart);
+    localDefault.setHours(9, 0, 0, 0);
+    const preferredStart = new Date(
+      localDefault.getTime() - localDefault.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .slice(0, 16);
+
+    seedQuickCreateContext({
+      professionalId: '',
+      professionalName: 'Recurring schedule',
+      day: localDefault.toISOString(),
+      preferredStart,
+    });
+    openRecurringPanel({
+      professionalId: '',
+      preferredStart,
+    });
+  };
+
   const onDropVisit = async (professionalId: string, day: Date) => {
     if (!dragging) {
       return;
@@ -644,42 +665,33 @@ export function SchedulingBoard() {
               <option value="doctor">Doctors</option>
             </select>
 
-            <ProtectedAction
-              permission={PERMISSIONS.SCHEDULING_CREATE}
-              variant="primary"
-              deniedReason="You can view the board, but only schedulers can create visits."
+            <button
+              type="button"
+              className="btn btn-primary"
               onClick={openUnassignedQuickCreate}
+              disabled={!canCreateSchedule}
+              title={
+                !canCreateSchedule
+                  ? 'You can view the board, but only schedulers can create visits.'
+                  : undefined
+              }
             >
               Quick create
-            </ProtectedAction>
+            </button>
 
-            <ProtectedAction
-              permission={PERMISSIONS.SCHEDULING_CREATE}
-              variant="secondary"
-              deniedReason="You do not have permission to create recurring scheduling instances."
-              onClick={() => {
-                const localDefault = new Date(weekStart);
-                localDefault.setHours(9, 0, 0, 0);
-                const preferredStart = new Date(
-                  localDefault.getTime() - localDefault.getTimezoneOffset() * 60000
-                )
-                  .toISOString()
-                  .slice(0, 16);
-
-                seedQuickCreateContext({
-                  professionalId: '',
-                  professionalName: 'Recurring schedule',
-                  day: localDefault.toISOString(),
-                  preferredStart,
-                });
-                openRecurringPanel({
-                  professionalId: '',
-                  preferredStart,
-                });
-              }}
+            <button
+              type="button"
+              className="btn"
+              onClick={openBoardRecurringPanel}
+              disabled={!canCreateSchedule}
+              title={
+                !canCreateSchedule
+                  ? 'You do not have permission to create recurring scheduling instances.'
+                  : undefined
+              }
             >
               Create recurring schedule
-            </ProtectedAction>
+            </button>
 
             <button type="button" className="btn" onClick={load}>
               Refresh
@@ -1029,6 +1041,52 @@ export function SchedulingBoard() {
                 })}
               </div>
             </div>
+          </section>
+
+          <section className="scheduleFooterActions">
+            <section className="scheduleSecondaryActionCard">
+              <div>
+                <div className="pageEyebrow">Recurring scheduling</div>
+                <h3 className="sectionTitle sectionTitle-sm">Create repeat visits</h3>
+                <p className="sectionCopy">
+                  Create repeated home care visits without leaving the board workspace open.
+                </p>
+              </div>
+
+              <div className="scheduleSecondaryActionRow">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={openBoardRecurringPanel}
+                  disabled={!canCreateSchedule}
+                  title={
+                    !canCreateSchedule
+                      ? 'You do not have permission to create recurring scheduling instances.'
+                      : undefined
+                  }
+                >
+                  Create recurring schedule
+                </button>
+              </div>
+            </section>
+
+            <section className="scheduleFooterLinksCard">
+              <div>
+                <h3 className="sectionTitle sectionTitle-sm">Planning shortcuts</h3>
+                <p className="sectionCopy">
+                  Use the board for assignment and rebalance work.
+                </p>
+              </div>
+
+              <div className="scheduleSecondaryActionRow">
+                <a className="btn" href="/admin/dispatch">
+                  Review live dispatch
+                </a>
+                <a className="btn" href="/admin/requests">
+                  Open Request Queue
+                </a>
+              </div>
+            </section>
           </section>
             </div>
           </section>
