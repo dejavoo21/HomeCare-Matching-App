@@ -185,107 +185,94 @@ export function DispatchQueueTable({
         </div>
       ) : null}
 
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Request</th>
-              <th>Urgency</th>
-              <th>Status</th>
-              <th>Scheduled</th>
-              <th>Assigned/Offered To</th>
-              <th className="actionsHeader">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="empty">
-                  No requests match your filters.
-                </td>
-              </tr>
-            ) : (
-              filtered.slice(0, 20).map((r) => (
-                <tr key={r.id}>
-                  <td>
-                    <div className="requestQueueRequestCell reqMain">
-                      <div className="requestQueueRequestTitleRow reqTitleRow">
-                        <div className="requestQueueRequestTitle reqTitle">
-                          {r.description || r.serviceType}
-                        </div>
-                        <span className="requestQueueInlineId reqId mono">{r.id.slice(0, 8)}</span>
+      <div className="queueDesktopList" aria-label="Request queue desktop list">
+        <div className="queueDesktopHeader" role="row">
+          <div className="queueDesktopHeaderCell">Request</div>
+          <div className="queueDesktopHeaderCell">Urgency</div>
+          <div className="queueDesktopHeaderCell">Status</div>
+          <div className="queueDesktopHeaderCell">Scheduled</div>
+          <div className="queueDesktopHeaderCell">Owner</div>
+          <div className="queueDesktopHeaderCell">Actions</div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="empty">No requests match your filters.</div>
+        ) : (
+          filtered.slice(0, 20).map((r) => {
+            const primaryAction = getPrimaryRowAction(r, onOffer, onRequeue);
+            return (
+              <article key={r.id} className="queueDesktopRow">
+                <div className="queueDesktopCell queueDesktopCell-request">
+                  <div className="requestQueueRequestCell reqMain">
+                    <div className="requestQueueRequestTitleRow reqTitleRow">
+                      <div className="requestQueueRequestTitle reqTitle">
+                        {r.description || r.serviceType}
                       </div>
-                      <div className="requestQueueRequestMeta reqMeta">
-                        <span className="reqMetaItem">{String(r.serviceType).replace(/_/g, ' ')}</span>
-                        <span className="dotSep" aria-hidden="true">|</span>
-                        <span className="reqMetaItem">{r.address}</span>
-                      </div>
+                      <span className="requestQueueInlineId reqId mono">{r.id.slice(0, 8)}</span>
                     </div>
-                  </td>
-
-                  <td>
-                    <div className="urgencyCell">
-                      <span className={`urgencyDot urgency-${String(r.urgency).toLowerCase()}`} />
-                      {onSetUrgency ? (
-                        <UrgencyQuickSet
-                          requestId={r.id}
-                          currentUrgency={r.urgency || 'low'}
-                          onSetUrgency={onSetUrgency}
-                        />
-                      ) : (
-                        <span className={urgencyPill(r.urgency)}>{String(r.urgency).toUpperCase()}</span>
-                      )}
+                    <div className="requestQueueRequestMeta reqMeta">
+                      <span className="reqMetaItem">{String(r.serviceType).replace(/_/g, ' ')}</span>
+                      <span className="dotSep" aria-hidden="true">|</span>
+                      <span className="reqMetaItem">{r.address}</span>
                     </div>
-                  </td>
+                  </div>
+                </div>
 
-                  <td>
-                    <span className={statusPill(r.status)}>{String(r.status).toUpperCase()}</span>
-                  </td>
-
-                  <td className="nowrap">{formatDate(r.scheduledDateTime)}</td>
-
-                  <td>
-                    {r.assignedProfessionalId ? (
-                      <span className="chip mono">{r.assignedProfessionalId.slice(0, 8)}</span>
+                <div className="queueDesktopCell">
+                  <div className="urgencyCell">
+                    <span className={`urgencyDot urgency-${String(r.urgency).toLowerCase()}`} />
+                    {onSetUrgency ? (
+                      <UrgencyQuickSet
+                        requestId={r.id}
+                        currentUrgency={r.urgency || 'low'}
+                        onSetUrgency={onSetUrgency}
+                      />
                     ) : (
-                      <span className="muted">-</span>
+                      <span className={urgencyPill(r.urgency)}>{String(r.urgency).toUpperCase()}</span>
                     )}
-                  </td>
+                  </div>
+                </div>
 
-                  <td className="actionsCell queueActions">
-                    {(() => {
-                      const primaryAction = getPrimaryRowAction(r, onOffer, onRequeue);
-                      return (
-                        <div className="actionsRow">
-                          <button className="btn btn-small" onClick={() => onView(r)}>
-                            View
-                          </button>
+                <div className="queueDesktopCell">
+                  <span className={statusPill(r.status)}>{String(r.status).toUpperCase()}</span>
+                </div>
 
-                          <button
-                            className="btn btn-small btn-ghost"
-                            type="button"
-                            onClick={() => onOpenThread?.(r.id)}
-                          >
-                            Chat
-                          </button>
+                <div className="queueDesktopCell queueDesktopValue">{formatDate(r.scheduledDateTime)}</div>
 
-                          <button
-                            className="btn btn-small btn-ghost"
-                            onClick={primaryAction.onClick}
-                            disabled={primaryAction.disabled}
-                            aria-disabled={primaryAction.disabled}
-                          >
-                            {primaryAction.label}
-                          </button>
-                        </div>
-                      );
-                    })()}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                <div className="queueDesktopCell">
+                  {r.assignedProfessionalId ? (
+                    <span className="chip mono">{r.assignedProfessionalId.slice(0, 8)}</span>
+                  ) : (
+                    <span className="muted">-</span>
+                  )}
+                </div>
+
+                <div className="queueDesktopCell queueDesktopActions requestQueueActions queueActions">
+                  <button className="btn btn-small" onClick={() => onView(r)}>
+                    View
+                  </button>
+
+                  <button
+                    className="btn btn-small btn-ghost"
+                    type="button"
+                    onClick={() => onOpenThread?.(r.id)}
+                  >
+                    Chat
+                  </button>
+
+                  <button
+                    className="btn btn-small btn-ghost"
+                    onClick={primaryAction.onClick}
+                    disabled={primaryAction.disabled}
+                    aria-disabled={primaryAction.disabled}
+                  >
+                    {primaryAction.label}
+                  </button>
+                </div>
+              </article>
+            );
+          })
+        )}
       </div>
 
       <div className="queueMobileList" aria-label="Dispatch queue mobile cards">
