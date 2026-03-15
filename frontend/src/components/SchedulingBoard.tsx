@@ -575,10 +575,8 @@ export function SchedulingBoard() {
       ? formatDay(weekDays[0])
       : `${formatDay(weekDays[0])} - ${formatDay(weekDays[weekDays.length - 1])}`;
 
-  const boardColumns =
-    viewMode === 'day'
-      ? `200px repeat(${weekDays.length}, minmax(0, 1fr))`
-      : `190px repeat(${weekDays.length}, minmax(0, 1fr))`;
+  const boardColumns = `220px repeat(${weekDays.length}, minmax(${viewMode === 'day' ? 280 : 180}px, 1fr))`;
+  const boardMinWidth = viewMode === 'day' ? '500px' : '1480px';
   const canCreateSchedule = hasPermission(user, PERMISSIONS.SCHEDULING_CREATE);
   const canAssignSchedule = hasPermission(user, PERMISSIONS.SCHEDULING_ASSIGN);
   const quickCreateContextLabel = quickCreate
@@ -879,7 +877,7 @@ export function SchedulingBoard() {
 
           <section className="scheduleBoardCard">
             <div className="scheduleBoardGridScroll">
-              <div className="scheduleBoardHeaderRow" style={{ gridTemplateColumns: boardColumns }}>
+              <div className="scheduleBoardHeaderRow" style={{ gridTemplateColumns: boardColumns, minWidth: boardMinWidth }}>
                 <div className="scheduleBoardCorner">Professional</div>
                 {weekDays.map((day) => (
                   <div key={day.toISOString()} className="scheduleBoardDayHeader">
@@ -888,7 +886,7 @@ export function SchedulingBoard() {
                 ))}
               </div>
 
-              <div className="scheduleBoardGrid">
+              <div className="scheduleBoardGrid" style={{ minWidth: boardMinWidth }}>
                 {(board.professionals || []).map((professional) => {
                   const professionalVisits = visitsByProfessional.get(professional.id) || [];
 
