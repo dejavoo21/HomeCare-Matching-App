@@ -1166,20 +1166,165 @@ export function SchedulingBoard() {
         </div>
       ) : null}
 
-      {quickCreate && (showQuickCreatePanel || showRecurringPanel) ? (
+      {quickCreate && showQuickCreatePanel ? (
         <div className="scheduleOverlay" onClick={closeQuickCreate}>
           <div className="schedulePanel" onClick={(event) => event.stopPropagation()}>
             <div className="schedulePanelHeader">
               <div>
                 <div className="pageEyebrow">Scheduling</div>
-                <h2 className="sectionTitle">
-                  {showRecurringPanel ? 'Create recurring schedule' : 'Quick create visit'}
-                </h2>
+                <h2 className="sectionTitle">Quick create visit</h2>
+                <p className="settingsCardText">{quickCreateContextLabel}</p>
+                <p className="modalSub">Create a one-time visit directly from the live board.</p>
+              </div>
+              <button type="button" className="btn" onClick={closeQuickCreate}>
+                Close
+              </button>
+            </div>
+
+            <form className="recurringGrid" onSubmit={submitQuickCreate}>
+              <div className="formGroup">
+                <label className="formLabel">Client</label>
+                <select
+                  className="select"
+                  value={quickCreateForm.clientId}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      clientId: event.target.value,
+                    }))
+                  }
+                  required
+                >
+                  <option value="">Select client</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name} ({client.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="formGroup">
+                <label className="formLabel">Professional</label>
+                <select
+                  className="select"
+                  value={quickCreateForm.professionalId}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      professionalId: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Unassigned</option>
+                  {(board?.professionals || []).map((professional) => (
+                    <option key={professional.id} value={professional.id}>
+                      {professional.name} ({professional.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="formGroup">
+                <label className="formLabel">Service Type</label>
+                <input
+                  className="input"
+                  value={quickCreateForm.serviceType}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      serviceType: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+
+              <div className="formGroup">
+                <label className="formLabel">Urgency</label>
+                <select
+                  className="select"
+                  value={quickCreateForm.urgency}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      urgency: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+
+              <div className="formGroup recurringGrid-full">
+                <label className="formLabel">Address</label>
+                <input
+                  className="input"
+                  value={quickCreateForm.addressText}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      addressText: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+
+              <div className="formGroup recurringGrid-full">
+                <label className="formLabel">Description</label>
+                <textarea
+                  className="input recurringTextarea"
+                  rows={3}
+                  value={quickCreateForm.description}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="formGroup">
+                <label className="formLabel">Date & Time</label>
+                <input
+                  className="input"
+                  type="datetime-local"
+                  value={quickCreateForm.preferredStart}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      preferredStart: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+
+              <div className="recurringActions recurringGrid-full">
+                <button type="submit" className="btn btn-primary" disabled={quickCreateBusy}>
+                  {quickCreateBusy ? 'Saving...' : 'Create Visit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {quickCreate && showRecurringPanel ? (
+        <div className="scheduleOverlay" onClick={closeQuickCreate}>
+          <div className="schedulePanel" onClick={(event) => event.stopPropagation()}>
+            <div className="schedulePanelHeader">
+              <div>
+                <div className="pageEyebrow">Scheduling</div>
+                <h2 className="sectionTitle">Create recurring schedule</h2>
                 <p className="settingsCardText">{quickCreateContextLabel}</p>
                 <p className="modalSub">
-                  {showRecurringPanel
-                    ? 'Create a recurring schedule directly from the live board.'
-                    : 'Create a one-time visit directly from the live board.'}
+                  Create a recurring schedule directly from the live board.
                 </p>
               </div>
               <button type="button" className="btn" onClick={closeQuickCreate}>
@@ -1296,9 +1441,7 @@ export function SchedulingBoard() {
               </div>
 
               <div className="formGroup">
-                <label className="formLabel">
-                  {showRecurringPanel ? 'Start Date & Time' : 'Date & Time'}
-                </label>
+                <label className="formLabel">Start Date & Time</label>
                 <input
                   className="input"
                   type="datetime-local"
@@ -1313,71 +1456,63 @@ export function SchedulingBoard() {
                 />
               </div>
 
-              {showRecurringPanel ? (
-                <>
-                  <div className="formGroup">
-                    <label className="formLabel">Recurrence</label>
-                    <select
-                      className="select"
-                      value={quickCreateForm.recurrenceType}
-                      onChange={(event) =>
-                        setQuickCreateForm((current) => ({
-                          ...current,
-                          recurrenceType: event.target.value,
-                        }))
-                      }
-                    >
-                      <option value="daily">Daily</option>
-                      <option value="every_x_days">Every X days</option>
-                      <option value="weekly">Weekly</option>
-                    </select>
-                  </div>
+              <div className="formGroup">
+                <label className="formLabel">Recurrence</label>
+                <select
+                  className="select"
+                  value={quickCreateForm.recurrenceType}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      recurrenceType: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="daily">Daily</option>
+                  <option value="every_x_days">Every X days</option>
+                  <option value="weekly">Weekly</option>
+                </select>
+              </div>
 
-                  {quickCreateForm.recurrenceType === 'every_x_days' ? (
-                    <div className="formGroup">
-                      <label className="formLabel">Interval (days)</label>
-                      <input
-                        className="input"
-                        type="number"
-                        min={1}
-                        max={30}
-                        value={quickCreateForm.intervalValue}
-                        onChange={(event) =>
-                          setQuickCreateForm((current) => ({
-                            ...current,
-                            intervalValue: Number(event.target.value),
-                          }))
-                        }
-                      />
-                    </div>
-                  ) : null}
-
-                  <div className="formGroup">
-                    <label className="formLabel">Occurrences</label>
-                    <input
-                      className="input"
-                      type="number"
-                      min={1}
-                      max={30}
-                      value={quickCreateForm.occurrences}
-                      onChange={(event) =>
-                        setQuickCreateForm((current) => ({
-                          ...current,
-                          occurrences: Number(event.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                </>
+              {quickCreateForm.recurrenceType === 'every_x_days' ? (
+                <div className="formGroup">
+                  <label className="formLabel">Interval (days)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={quickCreateForm.intervalValue}
+                    onChange={(event) =>
+                      setQuickCreateForm((current) => ({
+                        ...current,
+                        intervalValue: Number(event.target.value),
+                      }))
+                    }
+                  />
+                </div>
               ) : null}
+
+              <div className="formGroup">
+                <label className="formLabel">Occurrences</label>
+                <input
+                  className="input"
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={quickCreateForm.occurrences}
+                  onChange={(event) =>
+                    setQuickCreateForm((current) => ({
+                      ...current,
+                      occurrences: Number(event.target.value),
+                    }))
+                  }
+                />
+              </div>
 
               <div className="recurringActions recurringGrid-full">
                 <button type="submit" className="btn btn-primary" disabled={quickCreateBusy}>
-                  {quickCreateBusy
-                    ? 'Saving...'
-                    : showRecurringPanel
-                      ? 'Create Recurring Schedule'
-                      : 'Create Visit'}
+                  {quickCreateBusy ? 'Saving...' : 'Create Recurring Schedule'}
                 </button>
               </div>
             </form>
