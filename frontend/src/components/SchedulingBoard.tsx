@@ -596,8 +596,8 @@ export function SchedulingBoard() {
       ? formatDay(weekDays[0])
       : `${formatDay(weekDays[0])} - ${formatDay(weekDays[weekDays.length - 1])}`;
 
-  const boardColumns = `220px repeat(${weekDays.length}, minmax(${viewMode === 'day' ? 280 : 180}px, 1fr))`;
-  const boardMinWidth = viewMode === 'day' ? '500px' : '1480px';
+  const boardColumns = `minmax(180px, 1.15fr) repeat(${weekDays.length}, minmax(0, 1fr))`;
+  const boardMinWidth = '0px';
   const canCreateSchedule = hasPermission(user, PERMISSIONS.SCHEDULING_CREATE);
   const canAssignSchedule = hasPermission(user, PERMISSIONS.SCHEDULING_ASSIGN);
   const quickCreateContextLabel = quickCreate

@@ -10199,15 +10199,15 @@ html {
 }
 
 .scheduleBoardGridScroll {
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .scheduleBoardHeaderRow {
   display: grid;
-  grid-template-columns: 220px repeat(7, minmax(180px, 1fr));
+  grid-template-columns: minmax(180px, 1.15fr) repeat(7, minmax(0, 1fr));
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   background: #f8fafc;
-  min-width: 1480px;
+  min-width: 0;
 }
 
 .scheduleBoardCorner,
@@ -10216,15 +10216,16 @@ html {
   font-weight: 700;
   color: #334155;
   border-right: 1px solid rgba(15, 23, 42, 0.06);
+  min-width: 0;
 }
 
 .scheduleBoardGrid {
-  min-width: 1480px;
+  min-width: 0;
 }
 
 .scheduleBoardRow {
   display: grid;
-  grid-template-columns: 220px repeat(7, minmax(180px, 1fr));
+  grid-template-columns: minmax(180px, 1.15fr) repeat(7, minmax(0, 1fr));
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
 
@@ -10232,18 +10233,25 @@ html {
   padding: 16px;
   border-right: 1px solid rgba(15, 23, 42, 0.06);
   background: #fcfdff;
+  min-width: 0;
 }
 
 .scheduleProfessionalName {
   font-size: 16px;
   font-weight: 800;
   color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scheduleProfessionalMeta {
   margin-top: 4px;
   font-size: 12px;
   color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scheduleBoardDayCell {
@@ -10251,6 +10259,7 @@ html {
   padding: 12px;
   border-right: 1px solid rgba(15, 23, 42, 0.06);
   transition: background 0.18s ease, box-shadow 0.18s ease;
+  min-width: 0;
 }
 
 .scheduleBoardDayCell-droppable {
@@ -10415,6 +10424,9 @@ html {
   font-size: 11px;
   font-weight: 700;
   color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scheduleCreateButton {
@@ -10907,12 +10919,18 @@ html {
   font-weight: 700;
   color: #0f172a;
   margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scheduleVisitMeta {
   font-size: 12px;
   color: #64748b;
   line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scheduleMessage {
@@ -11008,6 +11026,19 @@ html {
 
   .scheduleSummaryGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scheduleBoardGridScroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scheduleBoardHeaderRow {
+    min-width: 1100px;
+  }
+
+  .scheduleBoardGrid {
+    min-width: 1100px;
   }
 }
 
