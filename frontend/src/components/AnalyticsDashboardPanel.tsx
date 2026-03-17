@@ -240,60 +240,6 @@ export function AnalyticsDashboardPanel({ refreshKey }: { refreshKey?: number })
               )}
             </div>
 
-            <div className="analyticsExceptionCard">
-              <div className="analyticsCardTitle">Operational pressure</div>
-              <div className="analyticsCardSubtitle">
-                Exception indicators affecting service delivery.
-              </div>
-
-              <div className="analyticsMiniList">
-                <div className="analyticsMiniRow">
-                  <div>
-                    <div className="analyticsMiniRowLabel">Coverage gaps</div>
-                    <div className="analyticsMiniRowMeta">Total unresolved over period</div>
-                  </div>
-                  <div className="analyticsMiniRowValue">{summary.totals.queued}</div>
-                </div>
-
-                <div className="analyticsMiniRow">
-                  <div>
-                    <div className="analyticsMiniRowLabel">Late EVV events</div>
-                    <div className="analyticsMiniRowMeta">Potential verification exceptions</div>
-                  </div>
-                  <div className="analyticsMiniRowValue">{summary.totals.cancelled}</div>
-                </div>
-
-                <div className="analyticsMiniRow">
-                  <div>
-                    <div className="analyticsMiniRowLabel">Dispatch lag</div>
-                    <div className="analyticsMiniRowMeta">Average time to move work</div>
-                  </div>
-                  <div className="analyticsMiniRowValue analyticsMiniRowValue-wide">
-                    {formatSeconds(summary.performance.avgDispatchSeconds)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="analyticsInterpretationCard">
-              <div className="analyticsCardTitle">Analytics interpretation</div>
-              <div className="analyticsCardSubtitle">
-                Executive summary for operational leaders.
-              </div>
-
-              <div className="analyticsNarrativePoints">
-                <div className="analyticsNarrativePoint">
-                  Completion performance is strong and trending positively.
-                </div>
-                <div className="analyticsNarrativePoint">
-                  EVV and review-related exceptions still create operational drag.
-                </div>
-                <div className="analyticsNarrativePoint">
-                  Regional and workload analytics should guide staffing, dispatch, and follow-up
-                  decisions.
-                </div>
-              </div>
-            </div>
           </div>
         </section>
       )}

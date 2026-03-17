@@ -17016,14 +17016,16 @@ button,
 
 .analyticsWorkspaceGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr);
   gap: 18px;
   align-items: start;
+  width: 100%;
 }
 
 .analyticsStack {
   display: grid;
   gap: 18px;
+  align-content: start;
 }
 
 .analyticsChartCard,
