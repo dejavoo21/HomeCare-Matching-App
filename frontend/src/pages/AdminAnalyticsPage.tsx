@@ -40,10 +40,29 @@ export function AdminAnalyticsPage() {
               Refresh executive metrics and operational trends for the current reporting window.
             </div>
 
-            <div className="mt-4">
-              <button className="btn btn-primary" onClick={load}>
-                Refresh analytics
-              </button>
+            <div className="analyticsControlBody">
+              <div className="analyticsControlGroup">
+                <div className="analyticsControlLabel">Primary action</div>
+                <button className="btn btn-primary" onClick={load}>
+                  Refresh analytics
+                </button>
+              </div>
+
+              <div className="analyticsControlGroup">
+                <div className="analyticsControlLabel">Controls checklist</div>
+                <div className="analyticsControlList">
+                  <div className="analyticsControlListItem">Refresh the reporting window before review.</div>
+                  <div className="analyticsControlListItem">Compare trend movement against active clinician load.</div>
+                  <div className="analyticsControlListItem">Use this panel as the command surface for the cards below.</div>
+                </div>
+              </div>
+
+              <div className="analyticsControlFooter">
+                <div className="analyticsControlLabel">Surface note</div>
+                <div className="analyticsControlFootnote">
+                  Keep operational follow-up decisions anchored to the analytics surface rather than treating this as a separate sidebar.
+                </div>
+              </div>
             </div>
           </div>
         </div>

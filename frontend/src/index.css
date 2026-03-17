@@ -16089,7 +16089,7 @@ button,
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .analyticsShell {
@@ -16261,8 +16261,67 @@ button,
 }
 
 .analyticsControlStack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  align-self: stretch;
+}
+
+.analyticsControlCard {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+
+.analyticsControlBody {
   display: grid;
-  gap: 14px;
+  gap: 18px;
+  flex: 1 1 auto;
+  align-content: start;
+}
+
+.analyticsControlGroup {
+  display: grid;
+  gap: 10px;
+}
+
+.analyticsControlLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.analyticsControlList {
+  display: grid;
+  gap: 10px;
+}
+
+.analyticsControlListItem {
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.analyticsControlFooter {
+  margin-top: auto;
+  display: grid;
+  gap: 8px;
+  border-radius: 18px;
+  background: rgba(238, 242, 255, 0.7);
+  padding: 14px 16px;
+}
+
+.analyticsControlFootnote {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4338ca;
 }
 
 .analyticsSurfaceHeader {
