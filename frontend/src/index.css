@@ -16092,6 +16092,77 @@ button,
   align-items: start;
 }
 
+.analyticsShell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+.analyticsMainColumn,
+.analyticsRail {
+  display: grid;
+  gap: 20px;
+}
+
+.analyticsInsightBand {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.analyticsInsightBandCard {
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255,255,255,0.72);
+  padding: 20px 22px;
+}
+
+.analyticsInsightBandTitle {
+  font-size: 20px;
+  line-height: 1.15;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.analyticsInsightBandText {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #475569;
+}
+
+.analyticsInsightBandList {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.analyticsInsightBandItem {
+  display: grid;
+  gap: 4px;
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 14px 16px;
+}
+
+.analyticsInsightBandItemLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.analyticsInsightBandItemMeta {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #334155;
+}
+
 .analyticsHeroCard,
 .analyticsControlCard,
 .analyticsSurfaceCard,
@@ -16218,7 +16289,12 @@ button,
 }
 
 @media (max-width: 1280px) {
-  .analyticsTopGrid {
+  .analyticsTopGrid,
+  .analyticsShell {
+    grid-template-columns: 1fr;
+  }
+
+  .analyticsInsightBand {
     grid-template-columns: 1fr;
   }
 }
